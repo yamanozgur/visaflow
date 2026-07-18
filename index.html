@@ -1080,6 +1080,68 @@ function flagImg(country,cs,size){
   return '<div class="'+cls+'"><img src="https://flagcdn.com/w80/'+c+'.png" onerror="this.parentElement.innerHTML=\'🌍\'" alt="'+country+'" loading="lazy"></div>';
 }
 
+const COUNTRY_PHOTOS = {
+  'jp': 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80',
+  'tr': 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80',
+  'de': 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80',
+  'fr': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
+  'it': 'https://images.unsplash.com/photo-1529260839382-3ff52d3cd04e?auto=format&fit=crop&w=800&q=80',
+  'es': 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=800&q=80',
+  'pt': 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=800&q=80',
+  'gb': 'https://images.unsplash.com/photo-1513635269975-59663e0ca1ad?auto=format&fit=crop&w=800&q=80',
+  'us': 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=800&q=80',
+  'gr': 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
+  'au': 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80',
+  'sg': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=800&q=80',
+  'id': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
+  'kr': 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80',
+  'tw': 'https://images.unsplash.com/photo-1504618223053-559bdef9dd5a?auto=format&fit=crop&w=800&q=80',
+  'ae': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
+  'nl': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+  'vn': 'https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=800&q=80',
+  'th': 'https://images.unsplash.com/photo-1504214208698-ea1916a2195a?auto=format&fit=crop&w=800&q=80',
+  'my': 'https://images.unsplash.com/photo-1541059157181-727831126c60?auto=format&fit=crop&w=800&q=80',
+  'ch': 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=800&q=80',
+  'at': 'https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=800&q=80',
+  'ca': 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=800&q=80',
+  'br': 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=800&q=80',
+  'mx': 'https://images.unsplash.com/photo-1512813583145-baaa340ef29f?auto=format&fit=crop&w=800&q=80',
+  'in': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80'
+};
+const GENERIC_PHOTO = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
+
+function loadCountryBackground(bgId, code) {
+  if (!code) return;
+  const localPhoto = './' + code + '.webp';
+  const unsplashPhoto = COUNTRY_PHOTOS[code];
+  const githubPhoto = 'https://raw.githubusercontent.com/yamanozgur/visaapp/main/' + code + '.webp';
+
+  const tryLoad = (urls, index) => {
+    if (index >= urls.length) return;
+    const img = new Image();
+    img.onload = () => {
+      const bg = document.getElementById(bgId);
+      if (bg) {
+        bg.style.backgroundImage = 'url("' + urls[index] + '")';
+        bg.style.backgroundSize = 'cover';
+        bg.style.backgroundPosition = 'center';
+        bg.style.backgroundRepeat = 'no-repeat';
+      }
+    };
+    img.onerror = () => {
+      tryLoad(urls, index + 1);
+    };
+    img.src = urls[index];
+  };
+
+  const candidateUrls = [localPhoto];
+  if (unsplashPhoto) candidateUrls.push(unsplashPhoto);
+  candidateUrls.push(githubPhoto);
+  candidateUrls.push(GENERIC_PHOTO);
+
+  tryLoad(candidateUrls, 0);
+}
+
 // ============================================================
 // STORAGE
 // ============================================================
@@ -1369,33 +1431,7 @@ function renderCurrentLocation(){
           '</div>'+
         '</div>'+
       '</div>';
-    if(homePhoto){
-      var localPhoto='./'+cs.code+'.webp';
-      var hImg=new Image();
-      hImg.onload=function(){
-        var bg=document.getElementById('loc-bg-home');
-        if(bg) {
-          bg.style.backgroundImage='url("'+localPhoto+'")';
-          bg.style.backgroundSize='cover';
-          bg.style.backgroundPosition='center';
-          bg.style.backgroundRepeat='no-repeat';
-        }
-      };
-      hImg.onerror=function(){
-        var hImgFallback=new Image();
-        hImgFallback.onload=function(){
-          var bg=document.getElementById('loc-bg-home');
-          if(bg) {
-            bg.style.backgroundImage='url("'+homePhoto+'")';
-            bg.style.backgroundSize='cover';
-            bg.style.backgroundPosition='center';
-            bg.style.backgroundRepeat='no-repeat';
-          }
-        };
-        hImgFallback.src=homePhoto;
-      };
-      hImg.src=localPhoto;
-    }
+    loadCountryBackground('loc-bg-home', cs.code);
     return;
   }
 
@@ -1511,34 +1547,7 @@ function renderCurrentLocation(){
 
       '</div>'+
     '</div>';
-  // Load photo — fallback to gradient if missing
-  if(photoUrl){
-    var localPhoto='./'+cs.code+'.webp';
-    var img=new Image();
-    img.onload=function(){
-      var bg=document.getElementById('loc-bg');
-      if(bg){
-        bg.style.backgroundImage='url("'+localPhoto+'")';
-        bg.style.backgroundSize='cover';
-        bg.style.backgroundPosition='center';
-        bg.style.backgroundRepeat='no-repeat';
-      }
-    };
-    img.onerror=function(){
-      var imgFallback=new Image();
-      imgFallback.onload=function(){
-        var bg=document.getElementById('loc-bg');
-        if(bg){
-          bg.style.backgroundImage='url("'+photoUrl+'")';
-          bg.style.backgroundSize='cover';
-          bg.style.backgroundPosition='center';
-          bg.style.backgroundRepeat='no-repeat';
-        }
-      };
-      imgFallback.src=photoUrl;
-    };
-    img.src=localPhoto;
-  }
+  loadCountryBackground('loc-bg', cs.code);
 }
 
 // ============================================================
