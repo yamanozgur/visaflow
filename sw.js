@@ -1,4 +1,4 @@
-const CACHE_NAME = 'border-guide-v3';
+const CACHE_NAME = 'border-guide-v4';
 const STATIC_ASSETS = [
   './index.html',
   './manifest.json',
@@ -42,11 +42,13 @@ self.addEventListener('fetch', function(e){
   e.respondWith(
     fetch(e.request)
       .then(function(response){
-        // Cache fresh responses
-        var clone = response.clone();
-        caches.open(CACHE_NAME).then(function(cache){
-          cache.put(e.request, clone);
-        });
+        // Cache fresh successful responses ONLY
+        if (response.status === 200) {
+          var clone = response.clone();
+          caches.open(CACHE_NAME).then(function(cache){
+            cache.put(e.request, clone);
+          });
+        }
         return response;
       })
       .catch(function(){

@@ -5,6 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>VisaFlow</title>
 
+<script>
+  // Onboarding placeholder functions to avoid early-click ReferenceErrors before main script loads
+  window.finishOnboarding = function() {
+    var ob = document.getElementById('onboarding');
+    if (ob) ob.classList.add('hidden');
+  };
+  window.finishOnboardingGuest = function() {
+    var ob = document.getElementById('onboarding');
+    if (ob) ob.classList.add('hidden');
+  };
+  window.obNext = function() {
+    var ob = document.getElementById('onboarding');
+    if (ob) ob.classList.add('hidden');
+  };
+  window.obCheckAgree = function() {};
+  window.submitObAuth = function() {
+    var ob = document.getElementById('onboarding');
+    if (ob) ob.classList.add('hidden');
+  };
+  window.setObAuthTab = function() {};
+  window.obFilterCitizenship = function() {};
+  window.obFilterLocation = function() {};
+</script>
+
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00A884">
@@ -422,6 +446,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 
     <!-- Visa Check -->
     <div id="subpage-check" style="display:none">
+      <div id="vc-passport-selector-container"></div>
       <div style="margin-bottom:16px">
         <label class="form-label">Destination Country</label>
         <input class="form-input" id="vc-destination" placeholder="e.g. Japan, USA…"
@@ -551,6 +576,16 @@ input:checked+.slider::before{transform:translateX(20px);}
     <input class="form-input" id="pp-exp" type="date">
     <button class="submit-btn" onclick="addPassport()">Save Passport</button>
     <button class="secondary-btn" onclick="closeModal('passport-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="manage-passports-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Manage Passports</div>
+    <div class="modal-sub">View or remove your registered passports</div>
+    <div id="manage-passports-list" style="margin-top:16px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px;"></div>
+    <button class="secondary-btn" onclick="closeModal('manage-passports-modal')">Close</button>
   </div>
 </div>
 
@@ -784,7 +819,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 let state = {
   user:{ name:'', initials:'', photo:null, notifVisa:true, notifReminder:true, onboarded:false, isPremium:false },
   passports:[], visas:[], residencies:[], travels:[],
-  currentCountry:null, currentEntry:null, activePassportId:null,
+  currentCountry:null, currentEntry:null, activePassportId:null, vcSelectedPassportId:null,
   currentUserEmail: null
 };
 let historyView = 'timeline';
@@ -1183,7 +1218,7 @@ function updateClock(){ document.getElementById('clock').textContent=new Date().
 // ============================================================
 // RENDER ALL
 // ============================================================
-function renderAll(){ updateGreeting(); renderDashboard(); renderAllVisas(); renderHistory(); }
+function renderAll(){ updateGreeting(); renderDashboard(); renderAllVisas(); renderHistory(); if(typeof currentVisaSubTab !== 'undefined' && currentVisaSubTab === 'check'){ renderVisaCheckPassportSelector(); runVisaCheck(); } }
 
 // ============================================================
 // DASHBOARD
@@ -1337,10 +1372,26 @@ function renderCurrentLocation(){
     if(homePhoto){
       var localPhoto='./'+cs.code+'.webp';
       var hImg=new Image();
-      hImg.onload=function(){ var bg=document.getElementById('loc-bg-home'); if(bg) bg.style.background='url("'+localPhoto+'") center/cover no-repeat'; };
+      hImg.onload=function(){
+        var bg=document.getElementById('loc-bg-home');
+        if(bg) {
+          bg.style.backgroundImage='url("'+localPhoto+'")';
+          bg.style.backgroundSize='cover';
+          bg.style.backgroundPosition='center';
+          bg.style.backgroundRepeat='no-repeat';
+        }
+      };
       hImg.onerror=function(){
         var hImgFallback=new Image();
-        hImgFallback.onload=function(){ var bg=document.getElementById('loc-bg-home'); if(bg) bg.style.background='url("'+homePhoto+'") center/cover no-repeat'; };
+        hImgFallback.onload=function(){
+          var bg=document.getElementById('loc-bg-home');
+          if(bg) {
+            bg.style.backgroundImage='url("'+homePhoto+'")';
+            bg.style.backgroundSize='cover';
+            bg.style.backgroundPosition='center';
+            bg.style.backgroundRepeat='no-repeat';
+          }
+        };
         hImgFallback.src=homePhoto;
       };
       hImg.src=localPhoto;
@@ -1466,13 +1517,23 @@ function renderCurrentLocation(){
     var img=new Image();
     img.onload=function(){
       var bg=document.getElementById('loc-bg');
-      if(bg){ bg.style.background='url("'+localPhoto+'") center/cover no-repeat'; }
+      if(bg){
+        bg.style.backgroundImage='url("'+localPhoto+'")';
+        bg.style.backgroundSize='cover';
+        bg.style.backgroundPosition='center';
+        bg.style.backgroundRepeat='no-repeat';
+      }
     };
     img.onerror=function(){
       var imgFallback=new Image();
       imgFallback.onload=function(){
         var bg=document.getElementById('loc-bg');
-        if(bg){ bg.style.background='url("'+photoUrl+'") center/cover no-repeat'; }
+        if(bg){
+          bg.style.backgroundImage='url("'+photoUrl+'")';
+          bg.style.backgroundSize='cover';
+          bg.style.backgroundPosition='center';
+          bg.style.backgroundRepeat='no-repeat';
+        }
       };
       imgFallback.src=photoUrl;
     };
@@ -1725,10 +1786,79 @@ function renderPassportTabs(){
       pp.country+
     '</div>';
   });
-  html+='<div class="passport-tab" onclick="triggerPassportAdd()">+ Add</div>';
+  if (state.passports.length < 2) {
+    html+='<div class="passport-tab" onclick="triggerPassportAdd()">+ Add</div>';
+  }
+  if (state.passports.length > 0) {
+    html+='<div class="passport-tab" onclick="openManagePassportsModal()" style="padding: 7px 10px; min-width: 32px; justify-content: center; color: var(--muted)">⚙️</div>';
+  }
   el.innerHTML=html;
 }
-function triggerPassportAdd(){ (!state.user.isPremium && state.passports.length>=1)?openPaywall('passport'):openModal('passport-modal'); }
+function triggerPassportAdd(){ 
+  if (state.passports.length >= 2) {
+    showToast('Maximum of 2 passports can be added.');
+    return;
+  }
+  (!state.user.isPremium && state.passports.length>=1)?openPaywall('passport'):openModal('passport-modal'); 
+}
+function openManagePassportsModal() {
+  const listEl = document.getElementById('manage-passports-list');
+  if (!listEl) return;
+  
+  let html = '';
+  if (state.passports.length === 0) {
+    html = '<div style="text-align:center; padding:12px; color:var(--muted); font-size:13px">No passports registered yet.</div>';
+  } else {
+    state.passports.forEach(function(pp) {
+      const cs = getCS(pp.country);
+      const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','style="width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0"');
+      
+      html += 
+        '<div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); border:1.5px solid var(--border2); padding:12px 14px; border-radius:12px">'+
+          '<div style="display:flex; align-items:center; gap:10px">'+
+            flagHtml+
+            '<div>'+
+              '<div style="font-size:14px; font-weight:700; color:var(--text)">'+pp.country+'</div>'+
+              (pp.no ? '<div style="font-size:11px; color:var(--muted)">No: '+pp.no+'</div>' : '')+
+            '</div>'+
+          '</div>'+
+          '<button onclick="deletePassport(\''+pp.id+'\')" style="background:var(--red-l); color:var(--red); border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all 0.2s">🗑️ Delete</button>'+
+        '</div>';
+    });
+  }
+  
+  listEl.innerHTML = html;
+  openModal('manage-passports-modal');
+}
+function deletePassport(id) {
+  if (confirm('Are you sure you want to delete this passport? This will also unassign it from any linked visas.')) {
+    // Unassign passportId from visas that use it
+    state.visas.forEach(function(v) {
+      if (v.passportId === id) {
+        v.passportId = null;
+      }
+    });
+    
+    // Remove from passports array
+    state.passports = state.passports.filter(function(p) { return p.id !== id; });
+    
+    // If deleted active passport, select the next available one or null
+    if (state.activePassportId === id) {
+      state.activePassportId = state.passports.length ? state.passports[0].id : null;
+    }
+    
+    // If deleted vcSelectedPassportId, reset it
+    if (state.vcSelectedPassportId === id) {
+      state.vcSelectedPassportId = state.passports.length ? state.passports[0].id : null;
+    }
+    
+    save();
+    renderAll();
+    // Refresh the modal content
+    openManagePassportsModal();
+    showToast('Passport deleted ✓');
+  }
+}
 function setActivePassport(id){ state.activePassportId=id; renderAllVisas(); }
 // ============================================================
 // VISA SUB-TABS
@@ -1751,8 +1881,66 @@ function setVisaSubTab(tab){
     myvisas.style.display='none'; check.style.display='block';
     btnChk.style.background='var(--card)'; btnChk.style.color='var(--green)'; btnChk.style.boxShadow='var(--shadow-sm)';
     btnMy.style.background='transparent'; btnMy.style.color='var(--muted)'; btnMy.style.boxShadow='none';
-    // passport dropdown removed - all passports shown simultaneously
+    renderVisaCheckPassportSelector();
+    runVisaCheck();
   }
+}
+
+function renderVisaCheckPassportSelector(){
+  const container = document.getElementById('vc-passport-selector-container');
+  if(!container) return;
+
+  if (state.passports.length < 2) {
+    container.innerHTML = '';
+    if (state.passports.length === 1) {
+      state.vcSelectedPassportId = state.passports[0].id;
+    } else {
+      state.vcSelectedPassportId = null;
+    }
+    return;
+  }
+
+  // Ensure we have a valid selected passport
+  if (!state.vcSelectedPassportId || !state.passports.find(function(p){ return p.id === state.vcSelectedPassportId; })) {
+    state.vcSelectedPassportId = state.activePassportId || state.passports[0].id;
+  }
+
+  let html = 
+    '<div class="card" style="margin-bottom: 16px; border: 1.5px solid var(--border); background: var(--bg2); padding: 14px">'+
+      '<div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px">'+
+        '<span>🛂</span> Which passport would you like to use?'+
+      '</div>'+
+      '<div style="display:flex; gap:10px">';
+
+  state.passports.forEach(function(pp){
+    const isSelected = state.vcSelectedPassportId === pp.id;
+    const cs = getCS(pp.country);
+    const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','style="width:18px;height:18px"');
+    
+    const cardBg = isSelected ? 'var(--green-l)' : 'var(--card)';
+    const cardBorder = isSelected ? '1.5px solid var(--green-b)' : '1.5px solid var(--border)';
+    const cardColor = isSelected ? 'var(--green)' : 'var(--text)';
+    const checkmark = isSelected ? '<span style="color:var(--green); font-size: 14px">✓</span>' : '';
+
+    html +=
+      '<div onclick="selectVCPassport(\''+pp.id+'\')" style="flex:1; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; background:'+cardBg+'; border:'+cardBorder+'; color:'+cardColor+'; border-radius:12px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.2s">'+
+        '<div style="display:flex; align-items:center; gap:8px">'+
+          '<div style="width:18px;height:18px;border-radius:50%;overflow:hidden;flex-shrink:0">'+flagHtml+'</div>'+
+          '<span>'+pp.country+'</span>'+
+        '</div>'+
+        checkmark+
+      '</div>';
+  });
+
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function selectVCPassport(id){
+  state.vcSelectedPassportId = id;
+  save();
+  renderVisaCheckPassportSelector();
+  runVisaCheck();
 }
 
 function onVCInput(val){
@@ -1790,6 +1978,11 @@ function runVisaCheck(){
     return;
   }
 
+  if (state.passports.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Please add a passport first.</div>';
+    return;
+  }
+
   var cs = getCS(dest);
   el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Loading…</div>';
 
@@ -1806,15 +1999,21 @@ function runVisaCheck(){
       '</div>'+
     '</div>';
 
-  // Fetch all passports in parallel
+  // Determine which passports to check
+  var checkPassports = state.passports;
+  if (state.passports.length >= 2 && state.vcSelectedPassportId) {
+    checkPassports = state.passports.filter(function(p) { return p.id === state.vcSelectedPassportId; });
+  }
+
+  // Fetch selected passports in parallel
   var results = {};
-  var remaining = state.passports.length;
+  var remaining = checkPassports.length;
 
   function checkDone(){
     remaining--;
     if(remaining > 0) return;
     var cardsHtml = '';
-    state.passports.forEach(function(pp){
+    checkPassports.forEach(function(pp){
       var req = results[pp.country];
       var fmt = req ? formatVisaRequirement(req) : null;
       var ppcs = getCS(pp.country);
@@ -1842,7 +2041,7 @@ function runVisaCheck(){
       '</div>';
   }
 
-  state.passports.forEach(function(pp){
+  checkPassports.forEach(function(pp){
     loadVisaDB(pp.country, function(){
       results[pp.country] = lookupVisa(pp.country, dest);
       checkDone();
@@ -2081,6 +2280,10 @@ function addVisa(){
 // PASSPORT
 // ============================================================
 function addPassport(){
+  if (state.passports.length >= 2) {
+    showToast('Maximum of 2 passports can be added.');
+    return;
+  }
   if(!state.user.isPremium && state.passports.length>=1){openPaywall('passport');return;}
   const country=document.getElementById('pp-country').value.trim();
   const code=document.getElementById('pp-code').value.trim().toLowerCase();
@@ -2112,7 +2315,7 @@ function selectResCountry(c){
 function openResModal(editId){
   if(!state.user.isPremium){ openPaywall('residency'); return; }
   if(!editId && state.residencies && state.residencies.length >= 1){
-    showToast('En fazla 1 adet oturum izni ekleyebilirsiniz.');
+    showToast('You can add a maximum of 1 residency permit.');
     return;
   }
   const modal=document.getElementById('res-modal');
@@ -2155,7 +2358,7 @@ function saveResidency(){
     showToast('Residency updated ✓');
   } else {
     if(state.residencies && state.residencies.length >= 1){
-      showToast('En fazla 1 adet oturum izni ekleyebilirsiniz.');
+      showToast('You can add a maximum of 1 residency permit.');
       return;
     }
     state.residencies.push({id:'r'+Date.now(),country:country,startDate:startDate,expiryDate:expiryDate,requiredDays:requiredDays,spentDays:spentDays,notes:notes});
