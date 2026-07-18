@@ -1080,42 +1080,11 @@ function flagImg(country,cs,size){
   return '<div class="'+cls+'"><img src="https://flagcdn.com/w80/'+c+'.png" onerror="this.parentElement.innerHTML=\'🌍\'" alt="'+country+'" loading="lazy"></div>';
 }
 
-const COUNTRY_PHOTOS = {
-  'jp': 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80',
-  'tr': 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=800&q=80',
-  'de': 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=800&q=80',
-  'fr': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
-  'it': 'https://images.unsplash.com/photo-1529260839382-3ff52d3cd04e?auto=format&fit=crop&w=800&q=80',
-  'es': 'https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=800&q=80',
-  'pt': 'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=800&q=80',
-  'gb': 'https://images.unsplash.com/photo-1513635269975-59663e0ca1ad?auto=format&fit=crop&w=800&q=80',
-  'us': 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=800&q=80',
-  'gr': 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
-  'au': 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=800&q=80',
-  'sg': 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=800&q=80',
-  'id': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
-  'kr': 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80',
-  'tw': 'https://images.unsplash.com/photo-1504618223053-559bdef9dd5a?auto=format&fit=crop&w=800&q=80',
-  'ae': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
-  'nl': 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
-  'vn': 'https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=800&q=80',
-  'th': 'https://images.unsplash.com/photo-1504214208698-ea1916a2195a?auto=format&fit=crop&w=800&q=80',
-  'my': 'https://images.unsplash.com/photo-1541059157181-727831126c60?auto=format&fit=crop&w=800&q=80',
-  'ch': 'https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=800&q=80',
-  'at': 'https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=800&q=80',
-  'ca': 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?auto=format&fit=crop&w=800&q=80',
-  'br': 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=800&q=80',
-  'mx': 'https://images.unsplash.com/photo-1512813583145-baaa340ef29f?auto=format&fit=crop&w=800&q=80',
-  'in': 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80'
-};
-const GENERIC_PHOTO = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
-
 function loadCountryBackground(bgId, code) {
   if (!code) return;
   const localPhoto = './' + code + '.webp';
-  const unsplashPhoto = COUNTRY_PHOTOS[code];
-  const githubPhoto = 'https://raw.githubusercontent.com/yamanozgur/visaapp/main/' + code + '.webp';
-
+  const githubPhoto = 'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + code + '.webp';
+  
   const tryLoad = (urls, index) => {
     if (index >= urls.length) return;
     const img = new Image();
@@ -1134,12 +1103,7 @@ function loadCountryBackground(bgId, code) {
     img.src = urls[index];
   };
 
-  const candidateUrls = [localPhoto];
-  if (unsplashPhoto) candidateUrls.push(unsplashPhoto);
-  candidateUrls.push(githubPhoto);
-  candidateUrls.push(GENERIC_PHOTO);
-
-  tryLoad(candidateUrls, 0);
+  tryLoad([localPhoto, githubPhoto], 0);
 }
 
 // ============================================================
@@ -1402,7 +1366,7 @@ function renderCurrentLocation(){
   if(isHomeCountry && !hasResidency){
     const CARD_GRADIENTS={'vn':'135deg,#C62828 0%,#7B1FA2 100%','jp':'135deg,#C62828 0%,#424242 100%','th':'135deg,#4A148C 0%,#1565C0 100%','my':'135deg,#1B5E20 0%,#0D47A1 100%','sg':'135deg,#AD1457 0%,#C62828 100%','id':'135deg,#C62828 0%,#6D4C41 100%','ph':'135deg,#1A5276 0%,#C62828 100%','tr':'135deg,#C62828 0%,#4E342E 100%','de':'135deg,#212121 0%,#C62828 100%','fr':'135deg,#1565C0 0%,#C62828 100%','it':'135deg,#1B5E20 0%,#C62828 100%','es':'135deg,#E65100 0%,#C62828 100%','pt':'135deg,#1B5E20 0%,#C62828 100%','gr':'135deg,#1565C0 0%,#1A237E 100%','nl':'135deg,#E65100 0%,#1565C0 100%','gb':'135deg,#1A237E 0%,#C62828 100%','us':'135deg,#B71C1C 0%,#1A237E 100%','au':'135deg,#1A237E 0%,#C62828 100%','ae':'135deg,#1B5E20 0%,#212121 100%','kr':'135deg,#C62828 0%,#1A237E 100%','in':'135deg,#E65100 0%,#1B5E20 100%','br':'135deg,#1B5E20 0%,#F57F17 100%','mx':'135deg,#1B5E20 0%,#C62828 100%','ca':'135deg,#C62828 0%,#B71C1C 100%','eu':'135deg,#1A237E 0%,#283593 100%'};
     const homeGrad = CARD_GRADIENTS[cs.code]||('135deg,'+cs.accent+' 0%,'+cs.accent+'88 100%');
-    const homePhoto = cs.code ? 'https://raw.githubusercontent.com/yamanozgur/visaapp/main/'+cs.code+'.webp' : null;
+    const homePhoto = cs.code ? 'https://raw.githubusercontent.com/yamanozgur/visaflow/main/'+cs.code+'.webp' : null;
     el.innerHTML=
       '<div class="section-title">📍 Current Location</div>'+
       '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:180px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card-home">'+
@@ -1491,7 +1455,7 @@ function renderCurrentLocation(){
     'ke':'135deg,#C62828 0%,#1B5E20 100%',
   };
   const grad=CARD_GRADIENTS[cs.code]||('135deg,'+cs.accent+' 0%,'+cs.accent+'88 100%');
-  const PHOTO_BASE='https://raw.githubusercontent.com/yamanozgur/visaapp/main/';
+  const PHOTO_BASE='https://raw.githubusercontent.com/yamanozgur/visaflow/main/';
   const photoUrl=cs.code?PHOTO_BASE+cs.code+'.webp':null;
   el.innerHTML=
     '<div class="section-title">📍 Current Location</div>'+
