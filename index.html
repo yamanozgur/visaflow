@@ -562,16 +562,6 @@ input:checked+.slider::before{transform:translateX(20px);}
   </div>
 </div>
 
-<!-- STATUS BAR -->
-<div class="statusbar">
-  <span id="clock">09:41</span>
-  <span style="display:flex;gap:8px;align-items:center">
-    <span id="statusbar-tier-badge" onclick="toggleSimulatePremium()" style="font-size:10px;color:var(--orange);font-weight:bold;background:var(--orange-l);padding:2px 6px;border-radius:4px;border:1px solid var(--orange-b);cursor:pointer" title="Click to toggle Premium status for testing">FREE</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1.42 9a16 16 0 0 1 21.16 0M5 12.55a11 11 0 0 1 14.08 0M10.54 16.1a6 6 0 0 1 2.92 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="11" rx="2"/><path d="M22 11v3" stroke-width="3" stroke-linecap="round"/><rect x="4" y="9" width="10" height="7" rx="1" fill="currentColor" stroke="none"/></svg>
-  </span>
-</div>
-
 <!-- HEADER -->
 <div class="header">
   <div>
@@ -977,7 +967,7 @@ input:checked+.slider::before{transform:translateX(20px);}
         </svg>
         <span style="font-weight:700; font-size:15px; color:#5f6368; letter-spacing:0.2px;">Google Play</span>
       </div>
-      <div style="font-size:11px; color:#5f6368; font-weight:600; background:#e8f0fe; color:#1a73e8; padding:3px 10px; border-radius:12px;">Sandbox Test Environment</div>
+      <div style="font-size:11px; color:#5f6368; font-weight:600; background:#e8f0fe; color:#1a73e8; padding:3px 10px; border-radius:12px;">Google Play Purchase</div>
     </div>
     
     <div style="display:flex; gap:12px; align-items:center; margin-bottom:18px;">
@@ -1377,26 +1367,10 @@ function updateGreeting(){
   document.getElementById('greeting').textContent=h<12?'Good Morning':h<18?'Good Afternoon':'Good Evening';
   document.getElementById('username').textContent=state.user.name||'Welcome';
   const active=state.visas.filter(function(v){return daysBetween(today(),v.endDate)>=0;}).length;
-  document.getElementById('header-sub').textContent=active+' active visa'+(active!==1?'s':'')+' · TEST VERSION - ' + (state.user.isPremium ? 'Premium' : 'Free');
+  document.getElementById('header-sub').textContent=active+' active visa'+(active!==1?'s':'')+' · ' + (state.user.isPremium ? 'Premium Plan' : 'Free Plan');
   const av=document.getElementById('header-avatar');
   if(state.user.photo){ av.innerHTML='<img src="'+state.user.photo+'" alt="">'; }
   else{ av.textContent=state.user.initials||'?'; av.style.fontSize='18px'; }
-  
-  // Dynamic status bar tier badge
-  const tierBadge=document.getElementById('statusbar-tier-badge');
-  if(tierBadge){
-    if(state.user.isPremium){
-      tierBadge.textContent='TEST PREMIUM';
-      tierBadge.style.color='var(--green)';
-      tierBadge.style.background='var(--green-l)';
-      tierBadge.style.borderColor='var(--green-b)';
-    }else{
-      tierBadge.textContent='TEST FREE';
-      tierBadge.style.color='var(--orange)';
-      tierBadge.style.background='var(--orange-l)';
-      tierBadge.style.borderColor='var(--orange-b)';
-    }
-  }
 
   // Dynamic Add Residency button styling
   const resBtn = document.getElementById('add-residency-btn');
@@ -1453,7 +1427,7 @@ function toggleProfilePremium(checked) {
   }, 80);
   showToast(state.user.isPremium ? 'Premium Mode Activated (Simulation) 💎' : 'Free Mode Activated (Simulation) 🆓');
 }
-function updateClock(){ document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function updateClock(){ const clk = document.getElementById('clock'); if(clk) clk.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
 
 // ============================================================
 // RENDER ALL
@@ -2726,7 +2700,7 @@ function renderProfile(){
     (!state.user.isPremium ?
     '<div style="background:var(--orange-l);border:1.5px solid var(--orange-b);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">'+
       '<div>'+
-        '<div style="font-size:12px;font-weight:800;color:var(--orange)">TEST VERSION - FREE</div>'+
+        '<div style="font-size:12px;font-weight:800;color:var(--orange)">FREE PLAN</div>'+
         '<div style="font-size:11px;color:var(--text2);margin-top:2px">Unlock unlimited visas & more.</div>'+
       '</div>'+
       '<button style="background:var(--orange);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer" onclick="openPaywall(\'info\')">Upgrade</button>'+
@@ -2834,7 +2808,7 @@ function renderProfile(){
 
     '<div style="height:20px"></div>'+
     '<div style="text-align:center;padding-bottom:8px">'+
-      '<button onclick="resetOnboarding()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline">Reset Onboarding (Testing)</button>'+
+      '<button onclick="resetOnboarding()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline">Reset Onboarding</button>'+
     '</div>'+
     '<div style="height:20px"></div>'+
 
