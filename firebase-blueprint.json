@@ -1,0 +1,17 @@
+{
+  "entities": {
+    "users": {
+      "title": "users",
+      "description": "User profiles and synced travel state",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "isPremium": { "type": "boolean" },
+        "updatedAt": { "type": "string" },
+        "appState": { "type": "object" }
+      },
+      "required": ["email"]
+    }
+  }
+}
