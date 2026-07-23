@@ -4343,6 +4343,8 @@ setTimeout(checkBorderOnStartup, 2000);
 // Register Service Worker for PWA with automatic update detection
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(function(reg) {
+    // Force check for sw.js updates on startup
+    reg.update();
     reg.addEventListener('updatefound', function() {
       const newWorker = reg.installing;
       if (newWorker) {
@@ -4351,12 +4353,20 @@ if('serviceWorker' in navigator){
             showToast('Yeni bir güncelleme yüklendi! Sayfa yenileniyor... 🔄');
             setTimeout(function() {
               window.location.reload();
-            }, 1500);
+            }, 1200);
           }
         });
       }
     });
   }).catch(function(){});
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
 }
 </script>
 
