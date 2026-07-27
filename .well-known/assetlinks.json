@@ -1,1 +1,8 @@
-
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.yamanozgur.twa",
+        "sha256_cert_fingerprints": ["19:9D:90:D0:82:65:AE:74:6C:E2:87:C8:53:7C:A4:94:BA:A8:40:44:EB:9A:23:C8:25:88:03:3C:3C:69:A0:E9"]
+      }
+    }]
