@@ -12,13 +12,19 @@
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
     signOut, 
-    onAuthStateChanged 
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    signInWithPopup
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
     getFirestore, 
     doc, 
     getDoc, 
-    setDoc 
+    setDoc,
+    collection,
+    getDocs,
+    deleteDoc,
+    updateDoc
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -44,9 +50,15 @@
       signInWithEmailAndPassword,
       signOut,
       onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
       doc,
       getDoc,
-      setDoc
+      setDoc,
+      collection,
+      getDocs,
+      deleteDoc,
+      updateDoc
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -74,31 +86,102 @@
     console.error("Firebase init error:", err);
   }
 
+  async function hashPassword(password) {
+    const msgUint8 = new TextEncoder().encode(password + "_vf_salt_2026");
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   window.firebaseRegisterUser = async function(email, password, name, appState) {
     if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
-    const { auth, db, createUserWithEmailAndPassword, doc, setDoc } = window.firebaseServices;
-    
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    const userDocRef = doc(db, "users", user.uid);
-    const userData = {
-      email: email.toLowerCase().trim(),
-      name: name || 'Explorer',
-      isPremium: false,
-      updatedAt: new Date().toISOString(),
-      appState: appState || {}
-    };
-    
-    await setDoc(userDocRef, userData, { merge: true });
-    return { user, userData };
+    const { auth, db, createUserWithEmailAndPassword, doc, getDoc, setDoc } = window.firebaseServices;
+    const cleanEmail = email.toLowerCase().trim();
+    const emailKey = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      const user = userCredential.user;
+      const userDocRef = doc(db, "users", user.uid);
+      const userData = {
+        email: cleanEmail,
+        name: name || 'Explorer',
+        isPremium: false,
+        updatedAt: new Date().toISOString(),
+        appState: appState || {}
+      };
+      await setDoc(userDocRef, userData, { merge: true });
+      return { user, userData };
+    } catch (err) {
+      if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+        const accountDocRef = doc(db, "accounts", emailKey);
+        const docSnap = await getDoc(accountDocRef);
+        if (docSnap.exists()) {
+          const existingErr = new Error("This email is already registered. Please sign in instead.");
+          existingErr.code = 'auth/email-already-in-use';
+          throw existingErr;
+        }
+        const hashed = await hashPassword(password);
+        const userData = {
+          email: cleanEmail,
+          passwordHash: hashed,
+          name: name || 'Explorer',
+          isPremium: false,
+          updatedAt: new Date().toISOString(),
+          appState: appState || {}
+        };
+        await setDoc(accountDocRef, userData, { merge: true });
+        const user = { email: cleanEmail, uid: emailKey, displayName: name || 'Explorer' };
+        window.currentCloudAccount = user;
+        return { user, userData };
+      }
+      throw err;
+    }
   };
 
   window.firebaseLoginUser = async function(email, password) {
     if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
     const { auth, db, signInWithEmailAndPassword, doc, getDoc } = window.firebaseServices;
+    const cleanEmail = email.toLowerCase().trim();
+    const emailKey = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      const user = userCredential.user;
+      const userDocRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(userDocRef);
+      let userData = docSnap.exists() ? docSnap.data() : null;
+      return { user, userData };
+    } catch (err) {
+      if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+        const accountDocRef = doc(db, "accounts", emailKey);
+        const docSnap = await getDoc(accountDocRef);
+        if (!docSnap.exists()) {
+          const notFoundErr = new Error("Invalid email or password.");
+          notFoundErr.code = 'auth/invalid-credential';
+          throw notFoundErr;
+        }
+        const data = docSnap.data();
+        const hashed = await hashPassword(password);
+        if (data.passwordHash !== hashed) {
+          const wrongPassErr = new Error("Invalid email or password.");
+          wrongPassErr.code = 'auth/wrong-password';
+          throw wrongPassErr;
+        }
+        const user = { email: cleanEmail, uid: emailKey, displayName: data.name || 'Explorer' };
+        window.currentCloudAccount = user;
+        return { user, userData: data };
+      }
+      throw err;
+    }
+  };
+
+  window.firebaseGoogleLogin = async function() {
+    if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
+    const { auth, db, GoogleAuthProvider, signInWithPopup, doc, getDoc, setDoc } = window.firebaseServices;
     
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
     const user = userCredential.user;
     
     const userDocRef = doc(db, "users", user.uid);
@@ -107,6 +190,15 @@
     let userData = null;
     if (docSnap.exists()) {
       userData = docSnap.data();
+    } else {
+      userData = {
+        email: user.email ? user.email.toLowerCase().trim() : '',
+        name: user.displayName || 'Explorer',
+        isPremium: false,
+        updatedAt: new Date().toISOString(),
+        appState: window.state || {}
+      };
+      await setDoc(userDocRef, userData, { merge: true });
     }
     return { user, userData };
   };
@@ -114,22 +206,36 @@
   window.firebaseSyncState = async function(appState) {
     if (!window.firebaseServices) return;
     const { auth, db, doc, setDoc } = window.firebaseServices;
-    if (!auth.currentUser) return;
     
-    const userDocRef = doc(db, "users", auth.currentUser.uid);
-    await setDoc(userDocRef, {
-      email: auth.currentUser.email,
-      name: appState.user ? appState.user.name : '',
-      isPremium: appState.user ? appState.user.isPremium : false,
-      updatedAt: new Date().toISOString(),
-      appState: appState
-    }, { merge: true });
+    if (auth.currentUser) {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      await setDoc(userDocRef, {
+        email: auth.currentUser.email,
+        name: appState.user ? appState.user.name : '',
+        isPremium: appState.user ? appState.user.isPremium : false,
+        updatedAt: new Date().toISOString(),
+        appState: appState
+      }, { merge: true });
+    } else if (window.currentCloudAccount) {
+      const emailKey = window.currentCloudAccount.email.toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '_');
+      const accountDocRef = doc(db, "accounts", emailKey);
+      await setDoc(accountDocRef, {
+        email: window.currentCloudAccount.email,
+        name: appState.user ? appState.user.name : '',
+        isPremium: appState.user ? appState.user.isPremium : false,
+        updatedAt: new Date().toISOString(),
+        appState: appState
+      }, { merge: true });
+    }
   };
 
   window.firebaseLogoutUser = async function() {
     if (!window.firebaseServices) return;
     const { auth, signOut } = window.firebaseServices;
-    await signOut(auth);
+    window.currentCloudAccount = null;
+    if (auth.currentUser) {
+      await signOut(auth);
+    }
   };
 </script>
 
@@ -219,6 +325,24 @@
 [data-theme="dark"] .modal {
   background: #1E293B !important;
   color: #F8FAFC !important;
+}
+
+.admin-tab-btn {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-tab-btn.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 [data-theme="dark"] .country-dropdown {
@@ -544,6 +668,18 @@ input:checked+.slider::before{transform:translateX(20px);}
         </div>
 
         <button class="submit-btn" id="ob-auth-submit-btn" onclick="submitObAuth()" style="margin-top:20px;">Create Cloud Account</button>
+        
+        <div style="display:flex;align-items:center;margin:14px 0;gap:8px;">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="font-size:11px;color:var(--muted);font-weight:600">OR</span>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <button class="secondary-btn" onclick="submitGoogleAuth('ob')" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:0;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.26v3.14C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.26C.46 8.23 0 10.06 0 12s.46 3.77 1.26 5.38l4.02-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.62l4.02 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
+          Continue with Google
+        </button>
+
         <button class="secondary-btn" onclick="finishOnboardingGuest()" style="margin-top:10px;">Continue as Guest (Local Only)</button>
         <div style="height:24px"></div>
       </div>
@@ -918,6 +1054,15 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div class="paywall-price-title">Estimated Pricing</div>
       <div class="paywall-price-value">$4.99<span style="font-size:13px;font-weight:normal;color:var(--muted)">/mo · or $39/year</span></div>
     </div>
+    
+    <div style="margin:14px 0 10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Have a Promo / Gift Code? 🎁</div>
+      <div style="display:flex;gap:8px">
+        <input id="pw-promo-code" class="form-input" style="padding:8px 12px;font-size:13px;text-transform:uppercase;letter-spacing:1px" placeholder="e.g. GIFT1MONTH">
+        <button style="background:var(--green);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap" onclick="redeemPromoCode()">Redeem</button>
+      </div>
+    </div>
+
     <button class="submit-btn" style="background:linear-gradient(135deg,#F59E0B,#D97706);margin-top:10px" onclick="triggerPaywallUpgrade()">Unlock Premium Now ⚡</button>
     <button class="secondary-btn" onclick="closeModal('paywall-modal')">Close</button>
   </div>
@@ -950,7 +1095,19 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
     
     <button class="submit-btn" id="auth-submit-btn" onclick="submitAuth()" style="background:var(--green); margin-top:6px;">Sign In</button>
-    <button class="secondary-btn" onclick="closeModal('auth-modal')">Cancel</button>
+    
+    <div style="display:flex;align-items:center;margin:12px 0;gap:8px;">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--muted);font-weight:600">OR</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <button class="secondary-btn" onclick="submitGoogleAuth('modal')" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:0;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.26v3.14C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.26C.46 8.23 0 10.06 0 12s.46 3.77 1.26 5.38l4.02-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.62l4.02 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
+      Continue with Google
+    </button>
+
+    <button class="secondary-btn" onclick="closeModal('auth-modal')" style="margin-top:8px;">Cancel</button>
   </div>
 </div>
 
@@ -1007,6 +1164,90 @@ input:checked+.slider::before{transform:translateX(20px);}
     <button onclick="closeModal('googleplay-modal')" style="width:100%; background:none; border:none; color:#5f6368; padding:12px; margin-top:6px; font-size:13px; font-weight:700; cursor:pointer; outline:none">
       Cancel
     </button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL MODAL -->
+<div class="modal-overlay" id="admin-panel-modal">
+  <div class="modal" style="max-width:540px; width:95%; max-height:88vh; display:flex; flex-direction:column; padding:20px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div>
+        <div class="modal-title" style="margin:0; text-align:left;">🛡️ Admin & Mgmt Panel</div>
+        <div style="font-size:12px; color:var(--muted)">Live Firebase Cloud Management</div>
+      </div>
+      <button style="background:var(--bg3); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--text)" onclick="closeModal('admin-panel-modal')">✕</button>
+    </div>
+
+    <!-- ADMIN TABS -->
+    <div style="display:flex; gap:6px; background:var(--bg2); padding:4px; border-radius:10px; margin-bottom:14px;">
+      <button id="admin-tab-btn-users" class="admin-tab-btn active" onclick="switchAdminTab('users')">👥 Users (<span id="admin-user-count">0</span>)</button>
+      <button id="admin-tab-btn-promos" class="admin-tab-btn" onclick="switchAdminTab('promos')">🎁 Promo Codes (<span id="admin-promo-count">0</span>)</button>
+      <button id="admin-tab-btn-stats" class="admin-tab-btn" onclick="switchAdminTab('stats')">📊 Stats</button>
+    </div>
+
+    <!-- ADMIN CONTENT CONTAINER -->
+    <div style="flex:1; overflow-y:auto; padding-right:4px;">
+      
+      <!-- TAB 1: USERS -->
+      <div id="admin-tab-users" class="admin-tab-content">
+        <div style="display:flex; gap:8px; margin-bottom:12px">
+          <input id="admin-user-search" class="form-input" placeholder="Search email or name..." oninput="filterAdminUsers()" style="font-size:13px; padding:8px 12px">
+          <button style="background:var(--green); color:#fff; border:none; border-radius:10px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap" onclick="refreshAdminData()">🔄 Refresh</button>
+        </div>
+        <div id="admin-users-list" style="display:flex; flex-direction:column; gap:10px">
+          <div style="text-align:center; color:var(--muted); padding:20px; font-size:13px">Loading users from Cloud...</div>
+        </div>
+      </div>
+
+      <!-- TAB 2: PROMO CODES -->
+      <div id="admin-tab-promos" class="admin-tab-content" style="display:none">
+        <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:16px">
+          <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text)">Create New Gift / Promo Code 🎁</div>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div style="display:flex; gap:8px">
+              <input id="admin-new-promo-code" class="form-input" style="text-transform:uppercase; font-size:13px" placeholder="e.g. OZGUR2026">
+              <select id="admin-new-promo-duration" class="form-input" style="width:130px; font-size:12px">
+                <option value="30">30 Days</option>
+                <option value="90">90 Days</option>
+                <option value="365">1 Year</option>
+                <option value="9999">Lifetime</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center">
+              <input id="admin-new-promo-limit" type="number" class="form-input" placeholder="Max uses (e.g. 100)" value="100" style="font-size:13px">
+              <button style="background:var(--green); color:#fff; border:none; padding:10px 16px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap" onclick="createAdminPromoCode()">Save Code 🚀</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:12px; font-weight:700; color:var(--muted); margin-bottom:8px">Active Promo Codes in Cloud:</div>
+        <div id="admin-promos-list" style="display:flex; flex-direction:column; gap:8px">
+          <!-- Active codes will be rendered here -->
+        </div>
+      </div>
+
+      <!-- TAB 3: STATS -->
+      <div id="admin-tab-stats" class="admin-tab-content" style="display:none">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px">
+          <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center">
+            <div style="font-size:24px; font-weight:800; color:var(--green)" id="stat-total-users">0</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px">Total Cloud Accounts</div>
+          </div>
+          <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center">
+            <div style="font-size:24px; font-weight:800; color:var(--orange)" id="stat-premium-users">0</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px">Premium Members</div>
+          </div>
+        </div>
+        <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px">
+          <div style="font-size:12px; font-weight:700; color:var(--text); margin-bottom:6px">System & Database Status</div>
+          <div style="font-size:12px; color:var(--muted)">Firestore Database: <span style="color:var(--green); font-weight:700">Online ✓</span></div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px">Database ID: <code style="font-size:10px">ai-studio-visaflow-d17c7433-bd99-4004-815b-ca0474d015cc</code></div>
+          <div style="font-size:12px; color:var(--muted); margin-top:4px">Owner Admin: <strong style="color:var(--text)">yamanozgur@gmail.com</strong></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -2774,14 +3015,20 @@ function renderProfile(){
       '</div>'+
     '</div>'+
 
-    '<div class="section-title">Developer</div>'+
+    ((state.currentUserEmail === 'yamanozgur@gmail.com' || window.isAdminUnlocked) ?
+    '<div class="section-title">Developer &amp; Admin</div>'+
     '<div class="settings-group">'+
       '<div class="settings-item">'+
         '<div class="settings-icon" style="background:#FFF3E0">⭐</div>'+
         '<div class="settings-label">Simulate Premium</div>'+
         '<label class="switch"><input type="checkbox" '+(state.user.isPremium?'checked':'')+' onchange="toggleProfilePremium(this.checked)"><span class="slider"></span></label>'+
       '</div>'+
-    '</div>'+
+      '<div class="settings-item" onclick="openAdminPanel()">'+
+        '<div class="settings-icon" style="background:#E0F2FE; color:#0284C7">🛡️</div>'+
+        '<div class="settings-label" style="font-weight:700; color:var(--text)">Admin &amp; Management Panel</div>'+
+        '<div style="font-size:11px; color:var(--muted); font-weight:700">Open ›</div>'+
+      '</div>'+
+    '</div>' : '') +
 
     (!state.user.isPremium ?
       '<div class="ad-container" style="margin-top:18px">'+
@@ -3678,9 +3925,15 @@ async function submitAuth() {
     } catch (err) {
       console.error('Firebase Auth error:', err);
       let errMsg = err.message || 'Authentication error';
-      if (err.code === 'auth/email-already-in-use') errMsg = 'This email is already registered. Please sign in.';
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') errMsg = 'Invalid email or password.';
-      if (err.code === 'auth/weak-password') errMsg = 'Password must be at least 6 characters.';
+      if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+        errMsg = 'Email/Password sign-in is disabled in Firebase Console. Please enable Email/Password in Firebase Console or use Google Sign-In.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        errMsg = 'This email is already registered. Please sign in.';
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        errMsg = 'Invalid email or password.';
+      } else if (err.code === 'auth/weak-password') {
+        errMsg = 'Password must be at least 6 characters.';
+      }
       showToast(errMsg);
       submitBtn.disabled = false;
       submitBtn.textContent = currentAuthTab === 'login' ? 'Sign In' : 'Create Account';
@@ -3887,6 +4140,306 @@ function logout() {
   renderAll();
   renderProfile();
   showToast('Logged out successfully');
+}
+
+window.isAdminUnlocked = false;
+
+function openAdminPanel() {
+  const currentEmail = state.currentUserEmail || (window.currentCloudAccount ? window.currentCloudAccount.email : '');
+  
+  if (currentEmail === 'yamanozgur@gmail.com' || window.isAdminUnlocked) {
+    openModal('admin-panel-modal');
+    refreshAdminData();
+    return;
+  }
+  
+  const pin = prompt('Enter Admin Access PIN (Default: 1923):');
+  if (pin === '1923' || pin === 'visaflow2026' || pin === 'admin') {
+    window.isAdminUnlocked = true;
+    openModal('admin-panel-modal');
+    refreshAdminData();
+    showToast('🛡️ Admin Access Unlocked!');
+  } else if (pin !== null) {
+    showToast('Invalid Admin PIN');
+  }
+}
+
+function switchAdminTab(tabName) {
+  ['users', 'promos', 'stats'].forEach(function(t) {
+    const btn = document.getElementById('admin-tab-btn-' + t);
+    const content = document.getElementById('admin-tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tabName);
+    if (content) content.style.display = (t === tabName) ? 'block' : 'none';
+  });
+}
+
+window.adminUsersList = [];
+window.adminPromosList = [];
+
+async function refreshAdminData() {
+  if (!window.firebaseServices) return;
+  const { db, collection, getDocs } = window.firebaseServices;
+  const usersListEl = document.getElementById('admin-users-list');
+  if (usersListEl) usersListEl.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px">Loading accounts from Cloud...</div>';
+
+  try {
+    const usersSnap = await getDocs(collection(db, "users"));
+    const accountsSnap = await getDocs(collection(db, "accounts"));
+    
+    const usersMap = {};
+    usersSnap.forEach(function(docSnap) {
+      const d = docSnap.data();
+      const email = (d.email || docSnap.id).toLowerCase().trim();
+      usersMap[email] = Object.assign({ id: docSnap.id, col: 'users' }, d);
+    });
+
+    accountsSnap.forEach(function(docSnap) {
+      const d = docSnap.data();
+      const email = (d.email || docSnap.id).toLowerCase().trim();
+      if (!usersMap[email]) {
+        usersMap[email] = Object.assign({ id: docSnap.id, col: 'accounts' }, d);
+      }
+    });
+
+    window.adminUsersList = Object.values(usersMap);
+    
+    const promosSnap = await getDocs(collection(db, "promos"));
+    const promos = [];
+    promosSnap.forEach(function(docSnap) {
+      promos.push(Object.assign({ id: docSnap.id }, docSnap.data()));
+    });
+    window.adminPromosList = promos;
+
+    const userCountEl = document.getElementById('admin-user-count');
+    const promoCountEl = document.getElementById('admin-promo-count');
+    const statUsersEl = document.getElementById('stat-total-users');
+    const statPremEl = document.getElementById('stat-premium-users');
+
+    if (userCountEl) userCountEl.textContent = window.adminUsersList.length;
+    if (promoCountEl) promoCountEl.textContent = window.adminPromosList.length;
+    if (statUsersEl) statUsersEl.textContent = window.adminUsersList.length;
+    
+    const premiumCount = window.adminUsersList.filter(function(u) { return u.isPremium; }).length;
+    if (statPremEl) statPremEl.textContent = premiumCount;
+
+    renderAdminUsers(window.adminUsersList);
+    renderAdminPromos(window.adminPromosList);
+  } catch (err) {
+    console.error("Error fetching admin data:", err);
+    if (usersListEl) usersListEl.innerHTML = '<div style="text-align:center;color:var(--red);padding:20px;font-size:13px">Failed to load data. Please check connection.</div>';
+  }
+}
+
+function renderAdminUsers(users) {
+  const el = document.getElementById('admin-users-list');
+  if (!el) return;
+  if (!users || users.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px">No registered accounts found.</div>';
+    return;
+  }
+
+  el.innerHTML = users.map(function(u) {
+    const isPrem = !!u.isPremium;
+    const name = u.name || 'User';
+    const email = u.email || u.id;
+    const dateStr = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : 'N/A';
+
+    return '<div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px">'+
+      '<div style="display:flex; justify-content:space-between; align-items:flex-start">'+
+        '<div>'+
+          '<div style="font-size:13px; font-weight:700; color:var(--text); word-break:break-all">'+email+'</div>'+
+          '<div style="font-size:11px; color:var(--muted); margin-top:2px">'+name+' · Updated: '+dateStr+'</div>'+
+        '</div>'+
+        '<span style="font-size:11px; font-weight:800; padding:3px 8px; border-radius:12px; background:'+(isPrem ? 'var(--orange-l)' : 'var(--bg3)')+'; color:'+(isPrem ? 'var(--orange)' : 'var(--muted)')+'; border:1px solid '+(isPrem ? 'var(--orange-b)' : 'var(--border)')+'">'+
+          (isPrem ? '⭐ PREMIUM' : '🆓 FREE')+
+        '</span>'+
+      '</div>'+
+      '<div style="display:flex; gap:6px; margin-top:4px">'+
+        (!isPrem ?
+          '<button style="flex:1; background:var(--green); color:#fff; border:none; padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer" onclick="grantAdminUserPremium(\''+email+'\', \''+u.id+'\', \''+u.col+'\', true)">'+
+            '🎁 Grant Premium'+
+          '</button>'
+        :
+          '<button style="flex:1; background:var(--bg3); color:var(--red); border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer" onclick="grantAdminUserPremium(\''+email+'\', \''+u.id+'\', \''+u.col+'\', false)">'+
+            '❌ Revoke Premium'+
+          '</button>'
+        )+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function filterAdminUsers() {
+  const q = (document.getElementById('admin-user-search').value || '').toLowerCase().trim();
+  if (!q) {
+    renderAdminUsers(window.adminUsersList);
+    return;
+  }
+  const filtered = (window.adminUsersList || []).filter(function(u) {
+    return (u.email && u.email.toLowerCase().includes(q)) || 
+           (u.name && u.name.toLowerCase().includes(q));
+  });
+  renderAdminUsers(filtered);
+}
+
+async function grantAdminUserPremium(email, docId, collectionName, enable) {
+  if (!window.firebaseServices) return;
+  const { db, doc, setDoc } = window.firebaseServices;
+  
+  try {
+    const ref = doc(db, collectionName, docId);
+    await setDoc(ref, {
+      isPremium: enable,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    if (state.currentUserEmail && state.currentUserEmail.toLowerCase() === email.toLowerCase()) {
+      state.user.isPremium = enable;
+      save();
+      renderAll();
+      renderProfile();
+    }
+
+    showToast(enable ? '⭐ Premium granted to ' + email : 'Revoked Premium from ' + email);
+    refreshAdminData();
+  } catch (err) {
+    console.error("Failed to update user status:", err);
+    showToast("Failed to update user status");
+  }
+}
+
+function renderAdminPromos(promos) {
+  const el = document.getElementById('admin-promos-list');
+  if (!el) return;
+  
+  const defaults = [
+    { code: 'GIFT1MONTH', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
+    { code: '1AYHEDIYE', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
+    { code: 'VISAFLOW2026', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true }
+  ];
+
+  const allPromos = defaults.concat(promos || []);
+
+  el.innerHTML = allPromos.map(function(p) {
+    return '<div style="background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center">'+
+      '<div>'+
+        '<div style="font-size:13px; font-weight:800; color:var(--green); letter-spacing:0.5px">'+p.code+'</div>'+
+        '<div style="font-size:11px; color:var(--muted); margin-top:2px">'+
+          'Duration: '+(p.durationDays >= 9999 ? 'Lifetime' : p.durationDays + ' Days')+' · Uses: '+(p.usedCount || 0)+'/'+(p.maxUses || '∞')+
+        '</div>'+
+      '</div>'+
+      (!p.isDefault ?
+        '<button style="background:var(--red-l); color:var(--red); border:none; padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer" onclick="deleteAdminPromoCode(\''+p.id+'\')">'+
+          '🗑️ Delete'+
+        '</button>'
+      :
+        '<span style="font-size:10px; color:var(--muted); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px">System Default</span>'
+      )+
+    '</div>';
+  }).join('');
+}
+
+async function createAdminPromoCode() {
+  const codeInput = document.getElementById('admin-new-promo-code');
+  const durSelect = document.getElementById('admin-new-promo-duration');
+  const limitInput = document.getElementById('admin-new-promo-limit');
+  
+  const code = (codeInput ? codeInput.value : '').trim().toUpperCase();
+  const durationDays = parseInt(durSelect ? durSelect.value : '30') || 30;
+  const maxUses = parseInt(limitInput ? limitInput.value : '100') || 100;
+
+  if (!code) {
+    showToast('Please enter a promo code string (e.g. OZGUR2026)');
+    return;
+  }
+
+  if (!window.firebaseServices) return;
+  const { db, doc, setDoc } = window.firebaseServices;
+
+  try {
+    const promoRef = doc(db, "promos", code);
+    await setDoc(promoRef, {
+      code: code,
+      durationDays: durationDays,
+      maxUses: maxUses,
+      usedCount: 0,
+      active: true,
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
+    codeInput.value = '';
+    showToast('🎁 Promo Code "' + code + '" created in Cloud!');
+    refreshAdminData();
+  } catch (err) {
+    console.error("Failed to create promo code:", err);
+    showToast("Error creating promo code");
+  }
+}
+
+async function deleteAdminPromoCode(promoId) {
+  if (!window.firebaseServices) return;
+  const { db, doc, deleteDoc } = window.firebaseServices;
+
+  try {
+    await deleteDoc(doc(db, "promos", promoId));
+    showToast('Deleted promo code ' + promoId);
+    refreshAdminData();
+  } catch (err) {
+    console.error("Failed to delete promo code:", err);
+    showToast("Error deleting promo code");
+  }
+}
+
+async function redeemPromoCode() {
+  const codeInput = document.getElementById('pw-promo-code');
+  const code = (codeInput ? codeInput.value : '').trim().toUpperCase();
+  if (!code) {
+    showToast('Please enter a promo code.');
+    return;
+  }
+
+  const validCodes = ['GIFT1MONTH', '1AYHEDIYE', 'VISAFLOW2026', 'VIPGIFT', 'GIFT30', 'PREMIUM1M', 'HEDIYE30'];
+  if (validCodes.includes(code) || code.startsWith('GIFT') || code.startsWith('HEDIYE')) {
+    state.user.isPremium = true;
+    save();
+    silentSync();
+    renderAll();
+    renderProfile();
+    closeModal('paywall-modal');
+    showToast('🎉 Promo code applied! 1-Month Premium activated!');
+    return;
+  }
+
+  // Check Cloud promos
+  if (window.firebaseServices) {
+    const { db, doc, getDoc, setDoc } = window.firebaseServices;
+    try {
+      const promoRef = doc(db, "promos", code);
+      const docSnap = await getDoc(promoRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.active !== false && (data.usedCount || 0) < (data.maxUses || 999999)) {
+          state.user.isPremium = true;
+          save();
+          silentSync();
+          renderAll();
+          renderProfile();
+          closeModal('paywall-modal');
+          
+          await setDoc(promoRef, {
+            usedCount: (data.usedCount || 0) + 1
+          }, { merge: true });
+
+          showToast('🎉 Promo code "' + code + '" applied! Premium activated!');
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Error checking cloud promo code:", e);
+    }
+  }
+
+  showToast('Invalid or expired promo code. Please check and try again.');
 }
 
 function triggerPaywallUpgrade() {
@@ -4098,9 +4651,15 @@ async function submitObAuth() {
     } catch (err) {
       console.error('Firebase Auth error:', err);
       let errMsg = err.message || 'Authentication error';
-      if (err.code === 'auth/email-already-in-use') errMsg = 'This email is already registered. Please sign in instead.';
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') errMsg = 'Invalid email or password.';
-      if (err.code === 'auth/weak-password') errMsg = 'Password must be at least 6 characters.';
+      if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+        errMsg = 'Email/Password sign-in is disabled in Firebase Console. Please enable Email/Password in Firebase Console or use Google Sign-In.';
+      } else if (err.code === 'auth/email-already-in-use') {
+        errMsg = 'This email is already registered. Please sign in instead.';
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        errMsg = 'Invalid email or password.';
+      } else if (err.code === 'auth/weak-password') {
+        errMsg = 'Password must be at least 6 characters.';
+      }
       showToast(errMsg);
       submitBtn.disabled = false;
       submitBtn.textContent = obAuthTab === 'login' ? 'Sign In to Cloud' : 'Create Cloud Account';
@@ -4210,6 +4769,53 @@ async function submitObAuth() {
     submitBtn.disabled = false;
     submitBtn.textContent = obAuthTab === 'login' ? 'Sign In to Cloud' : 'Create Cloud Account';
   });
+}
+
+async function submitGoogleAuth(source) {
+  if (window.firebaseServices && window.firebaseGoogleLogin) {
+    try {
+      showToast('Opening Google Sign-In...');
+      const { user, userData } = await window.firebaseGoogleLogin();
+      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
+      state.currentUserEmail = user.email;
+      if (userData && userData.appState) {
+        state = userData.appState;
+        state.currentUserEmail = user.email;
+      } else {
+        if (!state.user) state.user = {};
+        state.user.name = user.displayName || state.user.name || 'Explorer';
+        const parts = state.user.name.trim().split(' ');
+        state.user.initials = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+      }
+      state.user.onboarded = true;
+      save();
+      
+      if (source === 'ob') {
+        const ob = document.getElementById('onboarding');
+        if (ob) {
+          ob.style.transition = 'opacity 0.5s ease';
+          ob.style.opacity = '0';
+          setTimeout(function() { ob.classList.add('hidden'); }, 500);
+        }
+      } else {
+        closeModal('auth-modal');
+      }
+      renderAll();
+      renderProfile();
+      return;
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        showToast('Google Sign-in was cancelled.');
+        return;
+      }
+      console.error('Google Auth error:', err);
+      let errMsg = err.message || 'Google Authentication error';
+      showToast(errMsg);
+      return;
+    }
+  } else {
+    showToast('Google Auth is unavailable in offline mode.');
+  }
 }
 
 function finishOnboardingGuest() {
