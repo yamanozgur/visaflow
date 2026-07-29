@@ -894,9 +894,11 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="page active" id="page-home">
     <div id="alerts-container"></div>
     <div id="current-location-section"></div>
+    <div id="dashboard-footprint-section"></div>
     <div id="ad-dashboard"></div>
     <div id="active-visas-section"></div>
     <div id="schengen-tracker-section"></div>
+    <div id="ad-dashboard-2"></div>
     <div id="residency-section"></div>
     <div id="reminders-section"></div>
   </div>
@@ -1219,9 +1221,9 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="paywall-modal">
   <div class="modal" style="text-align:center">
     <div class="modal-handle"></div>
-    <div class="paywall-badge">Premium — Coming Soon</div>
+    <div class="paywall-badge" style="background:var(--green-l);color:var(--green);border:1px solid var(--green-b);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:10px">🎁 7-Day Free Trial Included</div>
     <div class="modal-title" id="pw-title">Unlock Full VisaFlow</div>
-    <div class="modal-sub" id="pw-subtitle">You're on the Free plan. Upgrade to manage unlimited visas, residencies, and more.</div>
+    <div class="modal-sub" id="pw-subtitle">Try all Premium features free for 7 days. Cancel anytime before trial ends.</div>
     <div class="paywall-features">
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Unlimited Visas &amp; Passports</strong></span></div>
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Residency Permit Tracker</strong> with annual day counter</span></div>
@@ -1229,9 +1231,24 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Ad-Free</strong> experience</span></div>
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Smart Notifications</strong> before limits</span></div>
     </div>
-    <div class="paywall-price-box">
-      <div class="paywall-price-title">Estimated Pricing</div>
-      <div class="paywall-price-value">$4.99<span style="font-size:13px;font-weight:normal;color:var(--muted)">/mo · or $39/year</span></div>
+    <div class="paywall-price-box" style="margin-bottom:12px">
+      <div class="paywall-price-title" style="margin-bottom:8px">Select Your Plan (7-Day Free Trial Included)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+        <div style="border:1.5px solid var(--border);border-radius:12px;padding:10px;text-align:center;background:var(--bg2)">
+          <div style="font-size:11px;font-weight:700;color:var(--muted)">MONTHLY</div>
+          <div style="font-size:16px;font-weight:800;color:var(--text);margin:2px 0">$4.99<span style="font-size:11px;font-weight:400;color:var(--muted)">/mo</span></div>
+          <div style="font-size:10px;color:var(--muted)">7 days free trial</div>
+        </div>
+        <div style="border:2px solid var(--green);border-radius:12px;padding:10px;text-align:center;background:var(--green-l);position:relative">
+          <div style="position:absolute;top:-8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px">SAVE 25%</div>
+          <div style="font-size:11px;font-weight:700;color:var(--green)">ANNUAL</div>
+          <div style="font-size:16px;font-weight:800;color:var(--green);margin:2px 0">$44.99<span style="font-size:11px;font-weight:400;color:var(--green)">/yr</span></div>
+          <div style="font-size:10px;color:var(--green);font-weight:600">~$3.75/month</div>
+        </div>
+      </div>
+      <div style="font-size:11.5px;font-weight:700;color:var(--green);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px">
+        <span>✨ 7 Days $0.00 · Cancel anytime in 1-click</span>
+      </div>
     </div>
     
     <div style="margin:14px 0 10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
@@ -1242,7 +1259,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       </div>
     </div>
 
-    <button class="submit-btn" style="background:linear-gradient(135deg,#F59E0B,#D97706);margin-top:10px" onclick="triggerPaywallUpgrade()">Unlock Premium Now ⚡</button>
+    <button class="submit-btn" style="background:linear-gradient(135deg,#00A884,#00875F);margin-top:10px;font-size:15px;padding:14px" onclick="triggerPaywallUpgrade()">Start 7-Day Free Trial 🎁</button>
     <button class="secondary-btn" onclick="closeModal('paywall-modal')">Close</button>
   </div>
 </div>
@@ -1355,18 +1372,18 @@ input:checked+.slider::before{transform:translateX(20px);}
       </div>
     </div>
 
-    <div style="background:#f8f9fa; border-radius:10px; padding:12px; margin-bottom:18px; text-align:left">
-      <div style="display:flex; justify-content:between; align-items:center; font-size:13px; color:#202124;">
-        <span>Subscription Fee</span>
-        <span style="font-weight:700;">$4.99/month</span>
-      </div>
-      <div style="display:flex; justify-content:between; align-items:center; font-size:12px; color:#5f6368; margin-top:4px;">
-        <span>Billing starts today (7-day free trial)</span>
+    <div style="background:#e6f4ea; border:1px solid #ceead6; border-radius:10px; padding:12px; margin-bottom:18px; text-align:left">
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#137333; font-weight:700;">
+        <span>7-Day Free Trial</span>
         <span>$0.00 today</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#3c4043; margin-top:4px;">
+        <span>Starting in 7 days</span>
+        <span style="font-weight:600;">$4.99/month</span>
       </div>
     </div>
 
-    <div style="display:flex; justify-content:between; align-items:center; border-top:1px solid #f1f3f4; border-bottom:1px solid #f1f3f4; padding:12px 0; font-size:13px; color:#5f6368; margin-bottom:18px; width:100%">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f3f4; border-bottom:1px solid #f1f3f4; padding:12px 0; font-size:13px; color:#5f6368; margin-bottom:18px; width:100%">
       <div style="display:flex; align-items:center; gap:8px;">
         <span style="font-size:18px;">💳</span>
         <span style="color:#202124; font-weight:500;">Visa •••• 5678 (Sandbox Card)</span>
@@ -1375,15 +1392,76 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
 
     <div style="font-size:10.5px; color:#5f6368; line-height:1.4; margin-bottom:18px; text-align:left">
-      By tapping "Subscribe", you agree to our Terms of Service. You can cancel at any time in Subscriptions on Google Play. You will be charged $4.99 automatically every month until cancelled.
+      By tapping "Start 7-Day Free Trial", you agree to our Terms of Service. Your 7-day free trial starts today. You can cancel anytime before trial ends on Google Play to avoid charges. $4.99/mo after 7 days.
     </div>
 
     <button id="gp-subscribe-btn" onclick="completeUpgrade()" style="width:100%; background:#00875F; color:#fff; border:none; padding:14px; border-radius:24px; font-size:14px; font-weight:700; cursor:pointer; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.15); transition:background 0.2s; outline:none">
-      Subscribe with 1-tap
+      Start 7-Day Free Trial 🎁
     </button>
     <button onclick="closeModal('googleplay-modal')" style="width:100%; background:none; border:none; color:#5f6368; padding:12px; margin-top:6px; font-size:13px; font-weight:700; cursor:pointer; outline:none">
       Cancel
     </button>
+  </div>
+</div>
+
+<!-- SHARE FOOTPRINT MODAL -->
+<div class="modal-overlay" id="share-footprint-modal">
+  <div class="modal" style="text-align:center; max-width:440px; width:95%;">
+    <div class="modal-handle"></div>
+    <div style="font-size:32px; margin-bottom:4px">🌍</div>
+    <div class="modal-title" style="margin-bottom:2px">Share Your Travel Footprint</div>
+    <div class="modal-sub" style="margin-bottom:16px">Show off your travel journey on Instagram, WhatsApp &amp; Twitter!</div>
+
+    <!-- PREVIEW CARD -->
+    <div id="footprint-card-preview" style="background:linear-gradient(135deg, #1E293B, #0F172A); border:1.5px solid rgba(255,255,255,0.15); border-radius:18px; padding:20px; color:#fff; text-align:left; box-shadow:0 10px 25px rgba(0,0,0,0.3); margin-bottom:16px; position:relative; overflow:hidden">
+      <div style="position:absolute; top:-15px; right:-15px; font-size:90px; opacity:0.06; pointer-events:none">✈️</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:10px">
+        <div style="display:flex; align-items:center; gap:10px">
+          <div id="fp-avatar" style="width:38px; height:38px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#fff; overflow:hidden">Y</div>
+          <div>
+            <div id="fp-name" style="font-size:15px; font-weight:800; color:#fff">Nomad's Footprint</div>
+            <div style="font-size:10.5px; color:rgba(255,255,255,0.6)">Globetrotter &amp; Nomad</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15); font-size:10px; font-weight:700; padding:4px 9px; border-radius:12px; backdrop-filter:blur(4px)">PASSPORT 🛂</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; background:rgba(255,255,255,0.06); padding:12px; border-radius:12px; text-align:center">
+        <div>
+          <div id="fp-countries" style="font-size:22px; font-weight:900; color:#34D399">0</div>
+          <div style="font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.6)">Countries</div>
+        </div>
+        <div>
+          <div id="fp-days" style="font-size:22px; font-weight:900; color:#60A5FA">0</div>
+          <div style="font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.6)">Days Abroad</div>
+        </div>
+        <div>
+          <div id="fp-trips" style="font-size:22px; font-weight:900; color:#FBBF24">0</div>
+          <div style="font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.6)">Trips</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; margin-bottom:6px">Stamped Countries</div>
+        <div id="fp-flags-grid" style="display:flex; flex-wrap:wrap; gap:6px; max-height:90px; overflow-y:auto"></div>
+      </div>
+
+      <div style="border-top:1px dashed rgba(255,255,255,0.15); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.5)">
+        <span>Tracked with <strong>VisaFlow</strong></span>
+        <span>visaflow.app ✈️</span>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div style="display:flex; gap:8px">
+      <button onclick="shareFootprintText()" style="flex:1; padding:12px; background:var(--green); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px">
+        <span>📲 Copy Share Text</span>
+      </button>
+      <button onclick="shareFootprintNative()" style="flex:1; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px">
+        <span>📤 Share / Post</span>
+      </button>
+    </div>
+    <button class="secondary-btn" onclick="closeModal('share-footprint-modal')" style="margin-top:8px">Close</button>
   </div>
 </div>
 
@@ -2203,6 +2281,18 @@ function renderSchengenTracker(){
     el.innerHTML=''; return;
   }
 
+  if(!state.user.isPremium){
+    el.innerHTML =
+      '<div class="section-title">🇪🇺 Schengen 90/180 Rule</div>'+
+      '<div class="card" style="cursor:pointer;border-style:dashed;padding:20px;text-align:center" onclick="openPaywall(\'schengen\')">'+
+        '<div style="font-size:32px;margin-bottom:8px">🇪🇺🔒</div>'+
+        '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Schengen 90/180 Tracker (Premium)</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Track remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.</div>'+
+        '<button class="btn btn-primary" style="background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">Unlock Schengen Tracker 💎</button>'+
+      '</div>';
+    return;
+  }
+
   var used = calcSchengenDays();
   var remaining = Math.max(0, 90 - used);
   var pct = Math.min(100, Math.round((used / 90) * 100));
@@ -2863,7 +2953,7 @@ function renderHistory(){
   if(summaryEl && filtered.length){
     const totalDays=filtered.reduce(function(s,t){return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start));},0);
     const uniqueCountries=new Set(filtered.map(function(t){return t.country;})).size;
-    summaryEl.innerHTML='<div style="display:flex;gap:8px;margin-bottom:4px">'+
+    summaryEl.innerHTML='<div style="display:flex;gap:8px;margin-bottom:8px">'+
       '<div style="flex:1;background:var(--green-l);border:1px solid var(--green-b);border-radius:10px;padding:8px 12px;text-align:center">'+
         '<div style="font-size:18px;font-weight:800;color:var(--green)">'+totalDays+'</div>'+
         '<div style="font-size:10px;color:var(--muted);margin-top:1px">Total Days</div>'+
@@ -2876,6 +2966,16 @@ function renderHistory(){
         '<div style="font-size:18px;font-weight:800;color:var(--text)">'+filtered.length+'</div>'+
         '<div style="font-size:10px;color:var(--muted);margin-top:1px">Trips</div>'+
       '</div>'+
+    '</div>'+
+    '<div style="background:linear-gradient(135deg,var(--green-l),var(--blue-l));border:1px solid var(--green-b);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:4px" onclick="openShareFootprintModal()">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:20px">🌍</span>'+
+        '<div style="text-align:left">'+
+          '<div style="font-size:12px;font-weight:800;color:var(--text)">Share Travel Footprint</div>'+
+          '<div style="font-size:10px;color:var(--muted);margin-top:1px">Show off your visited countries &amp; days abroad 📸</div>'+
+        '</div>'+
+      '</div>'+
+      '<button style="background:var(--green);color:#fff;border:none;padding:6px 14px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(0,168,132,0.3)">Share Card 📲</button>'+
     '</div>';
   } else if(summaryEl){ summaryEl.innerHTML=''; }
 
@@ -3255,10 +3355,20 @@ function renderProfile(){
       '<button style="background:var(--text);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap" onclick="openAuthModal()">Sign In</button>'+
     '</div>')+
 
-    '<div class="profile-stat-row">'+
+    '<div class="profile-stat-row" style="margin-bottom:8px">'+
       '<div class="profile-stat"><div class="profile-stat-val">'+totalCountries+'</div><div class="profile-stat-lbl">Countries</div></div>'+
       '<div class="profile-stat"><div class="profile-stat-val">'+totalDays+'</div><div class="profile-stat-lbl">Days Abroad</div></div>'+
       '<div class="profile-stat"><div class="profile-stat-val">'+state.visas.length+'</div><div class="profile-stat-lbl">Visas</div></div>'+
+    '</div>'+
+    '<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="openShareFootprintModal()">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:20px">🌍</span>'+
+        '<div style="text-align:left">'+
+          '<div style="font-size:12px;font-weight:800;color:var(--text)">Travel Footprint Card</div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-top:1px">Share your travel stats &amp; stamped country badges 📸</div>'+
+        '</div>'+
+      '</div>'+
+      '<button style="background:var(--green);color:#fff;border:none;padding:6px 14px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(0,168,132,0.3)">Share 📸</button>'+
     '</div>'+
 
     '<div class="section-title">Passports</div>'+
@@ -3944,8 +4054,8 @@ function renderVisaRequirement(){
 }
 
 function openPaywall(reason){
-  const titles={visa:'Visa Limit Reached',passport:'Multiple Passports',ads:'Remove Ads',info:'VisaFlow Premium',oturum:'Residency Tracking','visa-check':'Visa Check',export:'Export History',residency:'Residency Permit Tracker'};
-  const subs={visa:'Free plan allows up to 2 active visas. Upgrade to track unlimited visas.',passport:'Free plan supports 1 passport. Upgrade for dual citizenship (up to 2 passports).',ads:'Remove all sponsored content with Premium.',info:'Unlock the full VisaFlow experience.',oturum:'Track residency permits and annual day requirements with Premium.','visa-check':'See instant entry requirements for your passport — visa type, max stay, and more. Available with Premium.',export:'Export your travel history as CSV or PDF. Available with Premium.',residency:'Track residency permits and minimum annual stay requirements. Available with Premium.'};
+  const titles={visa:'Visa Limit Reached',passport:'Multiple Passports',ads:'Remove Ads',info:'VisaFlow Premium',oturum:'Residency Tracking','visa-check':'Visa Check',export:'Export History',residency:'Residency Permit Tracker',schengen:'Schengen 90/180 Tracker'};
+  const subs={visa:'Free plan allows up to 2 active visas. Upgrade to track unlimited visas.',passport:'Free plan supports 1 passport. Upgrade for dual citizenship (up to 2 passports).',ads:'Remove all sponsored content with Premium.',info:'Unlock the full VisaFlow experience.',oturum:'Track residency permits and annual day requirements with Premium.','visa-check':'See instant entry requirements for your passport — visa type, max stay, and more. Available with Premium.',export:'Export your travel history as CSV or PDF. Available with Premium.',residency:'Track residency permits and minimum annual stay requirements. Available with Premium.',schengen:'Calculate remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.'};
   document.getElementById('pw-title').textContent=titles[reason]||'VisaFlow Premium';
   document.getElementById('pw-subtitle').textContent=subs[reason]||'Upgrade to unlock all features.';
   openModal('paywall-modal');
@@ -4931,6 +5041,84 @@ function triggerPaywallUpgrade() {
   }, 400);
 }
 
+// SHARE FOOTPRINT HANDLERS
+function openShareFootprintModal(){
+  var filtered = state.travels || [];
+  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
+  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
+  
+  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+  document.getElementById('fp-name').textContent = name + "'s Footprint";
+  
+  var avatarEl = document.getElementById('fp-avatar');
+  if(state.user && state.user.photo){
+    avatarEl.innerHTML = '<img src="'+state.user.photo+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+  } else {
+    avatarEl.textContent = state.user && state.user.initials ? state.user.initials : name.charAt(0).toUpperCase();
+  }
+  
+  document.getElementById('fp-countries').textContent = uniqueCountries.length;
+  document.getElementById('fp-days').textContent = totalDays;
+  document.getElementById('fp-trips').textContent = filtered.length;
+  
+  var flagsGrid = document.getElementById('fp-flags-grid');
+  if(!uniqueCountries.length){
+    flagsGrid.innerHTML = '<span style="font-size:11px;color:rgba(255,255,255,0.4)">No countries logged yet</span>';
+  } else {
+    flagsGrid.innerHTML = uniqueCountries.map(function(c){
+      var cs = getCS(c);
+      return '<span style="background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:10px;font-size:11px;display:inline-flex;align-items:center;gap:4px;color:#fff">'+
+        flagImg(c, cs, 'sm') + ' ' + c +
+      '</span>';
+    }).join('');
+  }
+  
+  openModal('share-footprint-modal');
+}
+
+function shareFootprintText(){
+  var filtered = state.travels || [];
+  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
+  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
+  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+
+  var text = "🌍 My Travel Footprint (" + name + "):\n" +
+    "📍 " + uniqueCountries.length + " Countries Visited\n" +
+    "📅 " + totalDays + " Days Abroad\n" +
+    "✈️ " + filtered.length + " Trips Logged\n" +
+    (uniqueCountries.length ? "Visited: " + uniqueCountries.slice(0, 8).join(", ") + (uniqueCountries.length > 8 ? "..." : "") + "\n" : "") +
+    "Track your visa days & passport allowance automatically with VisaFlow 🛂✨\nhttps://visaflow.app";
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function(){
+      showToast("Share card text copied to clipboard! 🚀");
+    }).catch(function(){
+      showToast("Share text copied!");
+    });
+  } else {
+    showToast("Share text copied!");
+  }
+}
+
+function shareFootprintNative(){
+  var filtered = state.travels || [];
+  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
+  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
+  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+
+  var shareData = {
+    title: name + "'s Travel Footprint",
+    text: "🌍 " + name + " visited " + uniqueCountries.length + " countries and spent " + totalDays + " days abroad! Track your visas with VisaFlow ✈️",
+    url: "https://visaflow.app"
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch(function(){});
+  } else {
+    shareFootprintText();
+  }
+}
+
 function completeUpgrade() {
   const btn = document.getElementById('gp-subscribe-btn');
   btn.disabled = true;
@@ -4951,7 +5139,7 @@ function completeUpgrade() {
           saveMockUsers(users);
         }
       }
-      showToast('Success! Google Play payment validated. 💎');
+      showToast('7-Day Free Trial activated! Full Premium features unlocked 💎');
       state.user.isPremium = true;
       save();
       renderAll();
@@ -4959,7 +5147,7 @@ function completeUpgrade() {
       closeModal('googleplay-modal');
       btn.disabled = false;
       btn.style.background = '#00875F';
-      btn.textContent = 'Subscribe with 1-tap';
+      btn.textContent = 'Start 7-Day Free Trial 🎁';
     }, 1200);
     return;
   }
@@ -4974,7 +5162,7 @@ function completeUpgrade() {
     return res.json();
   })
   .then(function() {
-    showToast('Success! Google Play payment validated. 💎');
+    showToast('7-Day Free Trial activated! Full Premium features unlocked 💎');
     state.user.isPremium = true;
     save();
     renderAll();
