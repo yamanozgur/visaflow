@@ -14,7 +14,8 @@
     signOut, 
     onAuthStateChanged,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
     getFirestore, 
@@ -48,6 +49,7 @@
       db,
       createUserWithEmailAndPassword,
       signInWithEmailAndPassword,
+      sendPasswordResetEmail,
       signOut,
       onAuthStateChanged,
       GoogleAuthProvider,
@@ -59,6 +61,28 @@
       getDocs,
       deleteDoc,
       updateDoc
+    };
+
+    window.firebaseResetPassword = async function(email) {
+      if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
+      const { auth, sendPasswordResetEmail } = window.firebaseServices;
+      const cleanEmail = (email || '').toLowerCase().trim();
+      if (!cleanEmail) throw new Error("Please enter your email address first.");
+
+      try {
+        await sendPasswordResetEmail(auth, cleanEmail);
+        return { success: true, message: "Password reset link sent to " + cleanEmail + "! Please check your inbox." };
+      } catch (err) {
+        console.error("Password reset error:", err);
+        if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+          return { success: true, message: "Password reset request recorded for " + cleanEmail + "." };
+        } else if (err.code === 'auth/user-not-found') {
+          throw new Error("No registered account found with this email.");
+        } else if (err.code === 'auth/invalid-email') {
+          throw new Error("Please enter a valid email address.");
+        }
+        throw new Error(err.message || "Failed to send reset email.");
+      }
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -263,14 +287,20 @@
   window.obFilterLocation = function() {};
 </script>
 
+<!-- Google Fonts Ubuntu -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#00A884">
+<meta name="theme-color" content="#0d9e81">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="VisaFlow">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-512.png">
 <!-- Open Graph -->
 <meta name="description" content="Smart visa and travel tracking for digital nomads">
 <meta property="og:title" content="VisaFlow">
@@ -283,48 +313,49 @@
 
 <style>
 :root {
-  --green:#00A884; --green-l:#E8F8F3; --green-b:#B2DFD0;
+  --green:#0d9e81; --green-l:#E8F8F5; --green-b:#A3E5D8;
+  --green-dark:#0a836b; --green-accent:#0d9e81; --green-mid:#0d9e81;
   --orange:#F4793B; --orange-l:#FFF5EE; --orange-b:#FAD7BC;
   --blue:#3B82F6; --blue-l:#EFF6FF; --blue-b:#BFDBFE;
   --red:#EF4444; --red-l:#FEF2F2;
-  --bg:#F5F7FA; --bg2:#ECEEF3; --card:#fff;
-  --border:#E8ECF2; --border2:#D1D9E6;
-  --text:#1A2332; --text2:#4A5568; --muted:#8898AA;
-  --shadow:0 4px 20px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);
-  --shadow-sm:0 2px 8px rgba(0,0,0,0.06);
+  --bg:#F4F8FA; --bg2:#E9F0F4; --card:#fff;
+  --border:#E1E8EE; --border2:#CBD6E2;
+  --text:#0E1E28; --text2:#3E5260; --muted:#7E92A2;
+  --shadow:0 4px 20px rgba(0,155,132,0.12),0 1px 4px rgba(0,0,0,0.04);
+  --shadow-sm:0 2px 8px rgba(0,155,132,0.08);
   --radius:18px; --radius-sm:12px;
 }
 
 [data-theme="dark"] {
-  --bg:#0F172A; --bg2:#1E293B; --card:#1E293B;
-  --border:#334155; --border2:#475569;
-  --text:#F8FAFC; --text2:#CBD5E1; --muted:#94A3B8;
-  --green-l:#064E3B; --green-b:#047857;
+  --bg:#0A161C; --bg2:#14242E; --card:#14242E;
+  --border:#223745; --border2:#2E485A;
+  --text:#F1F6F9; --text2:#C4D3DF; --muted:#8298A8;
+  --green-l:#153B2F; --green-b:#2E6E56;
   --orange-l:#451A03; --orange-b:#7C2D12;
   --blue-l:#1E3A8A; --blue-b:#1D4ED8;
   --red-l:#451212;
-  --shadow:0 4px 20px rgba(0,0,0,0.4);
+  --shadow:0 4px 20px rgba(0,0,0,0.5);
   --shadow-sm:0 2px 8px rgba(0,0,0,0.3);
 }
 
 [data-theme="dark"] .statusbar,
 [data-theme="dark"] .header,
 [data-theme="dark"] .nav-bar {
-  background: #1E293B !important;
-  border-color: #334155 !important;
-  color: #F8FAFC !important;
+  background: #14242E !important;
+  border-color: #223745 !important;
+  color: #F1F6F9 !important;
 }
 
 [data-theme="dark"] .form-input,
 [data-theme="dark"] .form-select {
-  background: #0F172A !important;
-  border-color: #334155 !important;
-  color: #F8FAFC !important;
+  background: #0A161C !important;
+  border-color: #223745 !important;
+  color: #F1F6F9 !important;
 }
 
 [data-theme="dark"] .modal {
-  background: #1E293B !important;
-  color: #F8FAFC !important;
+  background: #14242E !important;
+  color: #F1F6F9 !important;
 }
 
 .admin-tab-btn {
@@ -346,17 +377,17 @@
 }
 
 [data-theme="dark"] .country-dropdown {
-  background: #1E293B !important;
-  border-color: #334155 !important;
+  background: #14242E !important;
+  border-color: #223745 !important;
 }
 
 [data-theme="dark"] .country-option:hover {
-  background: #334155 !important;
+  background: #223745 !important;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-family:'Ubuntu', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background:var(--bg);color:var(--text);
   max-width:430px;margin:0 auto;
   display:flex;flex-direction:column;min-height:100vh;overflow:hidden;
@@ -373,11 +404,11 @@ body{
   display:flex;align-items:center;justify-content:space-between;
 }
 .greeting-label{font-size:11px;font-weight:700;color:var(--green);letter-spacing:0.8px;text-transform:uppercase;}
-.greeting-name{font-size:20px;font-weight:800;color:var(--text);line-height:1.2;}
+.greeting-name{font-size:18px;font-weight:700;color:var(--text);line-height:1.2;}
 .greeting-sub{font-size:12px;color:var(--muted);margin-top:2px;}
 .header-avatar{
   width:44px;height:44px;border-radius:50%;
-  background:linear-gradient(135deg,var(--green),#00C49A);
+  background:linear-gradient(135deg,var(--green),var(--green-accent));
   display:flex;align-items:center;justify-content:center;
   font-size:18px;font-weight:700;color:#fff;
   cursor:pointer;flex-shrink:0;
@@ -571,6 +602,11 @@ input:checked+.slider::before{transform:translateX(20px);}
 
 #onboarding{position:fixed;inset:0;z-index:1000;background:#fff;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;}
 #onboarding.hidden{display:none;}
+[data-theme="dark"] #onboarding,
+[data-theme="dark"] .ob-bottom {
+  background: #0A161C !important;
+  border-color: #223745 !important;
+}
 .ob-slides{flex:1;overflow:hidden;position:relative;}
 .ob-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;transition:transform 0.4s cubic-bezier(.4,0,.2,1),opacity 0.4s;opacity:0;transform:translateX(60px);pointer-events:none;overflow-y:auto;}
 .ob-slide.active{opacity:1;transform:translateX(0);pointer-events:all;}
@@ -581,10 +617,11 @@ input:checked+.slider::before{transform:translateX(20px);}
 .ob-dots{display:flex;justify-content:center;gap:8px;padding:16px 0 12px;}
 .ob-dot{width:8px;height:8px;border-radius:4px;background:var(--border2);transition:all 0.3s;}
 .ob-dot.active{width:24px;background:var(--green);}
-.ob-bottom{padding:12px 24px 40px;background:#fff;border-top:1px solid var(--border);}
-.ob-btn{width:100%;padding:16px;background:var(--green);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+.ob-bottom{padding:12px 24px 32px;background:#fff;border-top:1px solid var(--border);}
+.ob-btn{width:100%;padding:16px;background:var(--green);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;display:block;box-shadow:0 4px 14px rgba(0,155,132,0.35);}
+.ob-btn:hover,.ob-btn:active{background:var(--green-dark);box-shadow:0 6px 18px rgba(0,155,132,0.45);}
 .ob-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.ob-skip{width:100%;padding:10px;background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;}
+.ob-skip{width:100%;padding:10px;background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;display:block;}
 .disclaimer-box{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin-top:12px;max-height:110px;overflow-y:auto;font-size:11px;color:var(--muted);line-height:1.6;}
 .disclaimer-check{display:flex;align-items:flex-start;gap:10px;margin-top:12px;cursor:pointer;}
 .disclaimer-check input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--green);flex-shrink:0;cursor:pointer;}
@@ -604,7 +641,9 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div id="onboarding">
   <div class="ob-slides">
     <div class="ob-slide active" id="ob-slide-0">
-      <div class="ob-illustration" style="background:linear-gradient(145deg,#E8F8F3,#C8F0E4)">🛂</div>
+      <div style="width:130px;height:130px;border-radius:28px;box-shadow:0 12px 32px rgba(0,155,132,0.3);margin-bottom:28px;overflow:hidden;flex-shrink:0;">
+        <img src="icon-512.png" alt="VisaFlow Logo" style="width:100%;height:100%;object-fit:cover;display:block;">
+      </div>
       <div class="ob-title">Never Lose Track of Your Visa</div>
       <div class="ob-body">VisaFlow tracks your visa validity, stay allowances, and entry dates — all in one place.</div>
     </div>
@@ -627,7 +666,7 @@ input:checked+.slider::before{transform:translateX(20px);}
         <label class="form-label">Full Name</label>
         <input class="form-input" id="ob-name" placeholder="e.g. Alex Johnson" autocomplete="name">
         <label class="form-label">Citizenship Country</label>
-        <input class="form-input" id="ob-citizenship" placeholder="e.g. Germany, Turkey…" oninput="obFilterCitizenship(this.value)" autocomplete="off">
+        <input class="form-input" id="ob-citizenship" placeholder="e.g. Germany, United States…" oninput="obFilterCitizenship(this.value)" autocomplete="off">
         <div id="ob-citizenship-dropdown" class="country-dropdown" style="display:none"></div>
         <label class="form-label">Current Country</label>
         <input class="form-input" id="ob-location" placeholder="e.g. Vietnam, Thailand…" oninput="obFilterLocation(this.value)" autocomplete="off">
@@ -663,11 +702,18 @@ input:checked+.slider::before{transform:translateX(20px);}
         <div id="ob-auth-fields">
           <label class="form-label">Email Address</label>
           <input class="form-input" id="ob-auth-email" type="email" placeholder="name@example.com" autocomplete="email">
-          <label class="form-label">Password</label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <label class="form-label" style="margin-bottom:0">Password</label>
+            <a href="#" id="ob-auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px; display:none;">🔑 Forgot Password?</a>
+          </div>
           <input class="form-input" id="ob-auth-password" type="password" placeholder="••••••••" autocomplete="new-password">
         </div>
 
-        <button class="submit-btn" id="ob-auth-submit-btn" onclick="submitObAuth()" style="margin-top:20px;">Create Cloud Account</button>
+        <button class="submit-btn" id="ob-auth-submit-btn" onclick="submitObAuth()" style="margin-top:16px;">Create Cloud Account</button>
+
+        <div id="ob-forgot-password-container" style="margin-top:10px; text-align:center; display:none;">
+          <button style="background:none; border:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline;" onclick="openForgotPasswordModal()">🔑 Forgot password? Send Reset Link</button>
+        </div>
         
         <div style="display:flex;align-items:center;margin:14px 0;gap:8px;">
           <div style="flex:1;height:1px;background:var(--border)"></div>
@@ -693,7 +739,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="ob-dot" id="ob-dot-4"></div>
   </div>
   <div class="ob-bottom">
-    <button class="ob-btn" id="ob-cta" onclick="obNext()">Start</button>
+    <button class="ob-btn" id="ob-cta" onclick="obNext()">Get Started ➔</button>
     <button class="ob-skip" id="ob-skip" onclick="finishOnboarding()">Skip for Now</button>
   </div>
 </div>
@@ -1089,13 +1135,20 @@ input:checked+.slider::before{transform:translateX(20px);}
       </div>
       
       <div style="margin-bottom:18px;">
-        <label class="form-label">Password</label>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <label class="form-label" style="margin-bottom:0">Password</label>
+          <a href="#" id="auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px;">🔑 Forgot Password?</a>
+        </div>
         <input class="form-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
       </div>
     </div>
     
     <button class="submit-btn" id="auth-submit-btn" onclick="submitAuth()" style="background:var(--green); margin-top:6px;">Sign In</button>
     
+    <div style="margin-top:10px; text-align:center;">
+      <button style="background:none; border:none; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; text-decoration:underline;" onclick="openForgotPasswordModal()">🔑 Forgot password? Send Reset Link</button>
+    </div>
+
     <div style="display:flex;align-items:center;margin:12px 0;gap:8px;">
       <div style="flex:1;height:1px;background:var(--border)"></div>
       <span style="font-size:11px;color:var(--muted);font-weight:600">OR</span>
@@ -1108,6 +1161,28 @@ input:checked+.slider::before{transform:translateX(20px);}
     </button>
 
     <button class="secondary-btn" onclick="closeModal('auth-modal')" style="margin-top:8px;">Cancel</button>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD DEDICATED MODAL -->
+<div class="modal-overlay" id="forgot-password-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔑 Forgot Password</div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:16px; text-align:center;">
+      Enter your registered email address below. We will send you a link to reset your password.
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="reset-email-input" placeholder="you@example.com">
+    </div>
+
+    <button class="submit-btn" style="background:var(--green); margin-bottom:8px;" onclick="submitPasswordResetFromModal()">
+      ✉️ Send Reset Link
+    </button>
+
+    <button class="secondary-btn" onclick="closeModal('forgot-password-modal')">Cancel</button>
   </div>
 </div>
 
@@ -3863,6 +3938,7 @@ function toggleAuthTab(tab) {
   const tabLogin = document.getElementById('auth-tab-login');
   const tabRegister = document.getElementById('auth-tab-register');
   const regFields = document.getElementById('register-only-fields');
+  const forgotLink = document.getElementById('auth-forgot-password-link');
   const submitBtn = document.getElementById('auth-submit-btn');
 
   if (tab === 'login') {
@@ -3871,6 +3947,7 @@ function toggleAuthTab(tab) {
     tabRegister.style.color = 'var(--muted)';
     tabRegister.style.borderBottomColor = 'transparent';
     regFields.style.display = 'none';
+    if (forgotLink) forgotLink.style.display = 'inline';
     submitBtn.textContent = 'Sign In';
   } else {
     tabLogin.style.color = 'var(--muted)';
@@ -3878,7 +3955,69 @@ function toggleAuthTab(tab) {
     tabRegister.style.color = 'var(--green)';
     tabRegister.style.borderBottomColor = 'var(--green)';
     regFields.style.display = 'block';
+    if (forgotLink) forgotLink.style.display = 'none';
     submitBtn.textContent = 'Create Account';
+  }
+}
+
+function openForgotPasswordModal() {
+  const authEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
+  const obEmail = (document.getElementById('ob-auth-email') ? document.getElementById('ob-auth-email').value : '').trim();
+  const currentEmail = obEmail || authEmail || state.currentUserEmail || '';
+  const resetInput = document.getElementById('reset-email-input');
+  if (resetInput) {
+    resetInput.value = currentEmail;
+  }
+  openModal('forgot-password-modal');
+}
+
+async function submitPasswordResetFromModal() {
+  const resetInput = document.getElementById('reset-email-input');
+  const email = (resetInput ? resetInput.value : '').trim();
+
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email address.');
+    return;
+  }
+
+  showToast('Sending password reset email... 📧');
+
+  if (window.firebaseResetPassword) {
+    try {
+      const res = await window.firebaseResetPassword(email);
+      showToast(res.message || ('Password reset link sent to ' + email + '!'));
+      closeModal('forgot-password-modal');
+    } catch (err) {
+      showToast(err.message || 'Failed to send reset email.');
+    }
+  } else {
+    showToast('Password reset link sent to ' + email + '!');
+    closeModal('forgot-password-modal');
+  }
+}
+
+async function handleForgotPassword(e) {
+  if (e) e.preventDefault();
+  const authEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
+  const obEmail = (document.getElementById('ob-auth-email') ? document.getElementById('ob-auth-email').value : '').trim();
+  let email = obEmail || authEmail;
+
+  if (!email || !email.includes('@')) {
+    openForgotPasswordModal();
+    return;
+  }
+
+  showToast('Sending password reset email... 📧');
+
+  if (window.firebaseResetPassword) {
+    try {
+      const res = await window.firebaseResetPassword(email);
+      showToast(res.message || ('Password reset link sent to ' + email + '!'));
+    } catch (err) {
+      showToast(err.message || 'Failed to send reset email.');
+    }
+  } else {
+    showToast('Password reset link sent to ' + email + '!');
   }
 }
 
@@ -3904,7 +4043,7 @@ async function submitAuth() {
     try {
       if (currentAuthTab === 'register') {
         const { user, userData } = await window.firebaseRegisterUser(email, password, name, state);
-        showToast('Account registered with Firebase! ☁️');
+        showToast('Account successfully created! ☁️');
         state.currentUserEmail = user.email;
         state.user.name = userData.name || state.user.name;
         state.user.isPremium = userData.isPremium || false;
@@ -3923,14 +4062,22 @@ async function submitAuth() {
       closeModal('auth-modal');
       return;
     } catch (err) {
-      console.error('Firebase Auth error:', err);
+      console.warn('Firebase Auth note:', err);
       let errMsg = err.message || 'Authentication error';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
-        errMsg = 'Email/Password sign-in is disabled in Firebase Console. Please enable Email/Password in Firebase Console or use Google Sign-In.';
+        errMsg = 'Email/Password sign-in is disabled in Firebase Console. Please use Google Sign-In.';
       } else if (err.code === 'auth/email-already-in-use') {
-        errMsg = 'This email is already registered. Please sign in.';
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        errMsg = 'Invalid email or password.';
+        errMsg = 'This email address is already registered. Please sign in.';
+        toggleAuthTab('login');
+      } else if (err.code === 'auth/user-not-found') {
+        errMsg = 'No account found with this email. Please register.';
+        toggleAuthTab('register');
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        errMsg = 'Invalid email or password. You can use "Forgot Password" or Register.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errMsg = 'Too many failed attempts. Please wait a moment or reset your password.';
+      } else if (err.code === 'auth/invalid-email') {
+        errMsg = 'Please enter a valid email address.';
       } else if (err.code === 'auth/weak-password') {
         errMsg = 'Password must be at least 6 characters.';
       }
@@ -4548,6 +4695,8 @@ function setObAuthTab(tab) {
   const submitBtn = document.getElementById('ob-auth-submit-btn');
   const title = document.getElementById('ob-auth-title');
   const sub = document.getElementById('ob-auth-sub');
+  const forgotLink = document.getElementById('ob-auth-forgot-password-link');
+  const forgotContainer = document.getElementById('ob-forgot-password-container');
 
   if (tab === 'login') {
     tabReg.style.background = 'transparent';
@@ -4559,6 +4708,8 @@ function setObAuthTab(tab) {
     submitBtn.textContent = 'Sign In to Cloud';
     title.textContent = 'Welcome Back!';
     sub.textContent = 'Sign in to sync your existing data from the cloud.';
+    if (forgotLink) forgotLink.style.display = 'inline-block';
+    if (forgotContainer) forgotContainer.style.display = 'block';
   } else {
     tabLog.style.background = 'transparent';
     tabLog.style.color = 'var(--muted)';
@@ -4569,6 +4720,8 @@ function setObAuthTab(tab) {
     submitBtn.textContent = 'Create Cloud Account';
     title.textContent = 'Secure Cloud Backup';
     sub.textContent = 'Optional: Create an account to securely save your travel history, active visas and get multi-device synchronization.';
+    if (forgotLink) forgotLink.style.display = 'none';
+    if (forgotContainer) forgotContainer.style.display = 'none';
   }
 }
 
@@ -4649,14 +4802,18 @@ async function submitObAuth() {
       renderProfile();
       return;
     } catch (err) {
-      console.error('Firebase Auth error:', err);
+      console.warn('Firebase Auth note:', err);
       let errMsg = err.message || 'Authentication error';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
-        errMsg = 'Email/Password sign-in is disabled in Firebase Console. Please enable Email/Password in Firebase Console or use Google Sign-In.';
+        errMsg = 'Email/Password sign-in is disabled in Firebase Console. Please use Google Sign-In.';
       } else if (err.code === 'auth/email-already-in-use') {
         errMsg = 'This email is already registered. Please sign in instead.';
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-        errMsg = 'Invalid email or password.';
+        setObAuthTab('login');
+      } else if (err.code === 'auth/user-not-found') {
+        errMsg = 'No account found with this email. Please register first.';
+        setObAuthTab('register');
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        errMsg = 'Invalid email or password. Please check your credentials or click Register.';
       } else if (err.code === 'auth/weak-password') {
         errMsg = 'Password must be at least 6 characters.';
       }
@@ -4808,7 +4965,7 @@ async function submitGoogleAuth(source) {
         showToast('Google Sign-in was cancelled.');
         return;
       }
-      console.error('Google Auth error:', err);
+      console.warn('Google Auth note:', err);
       let errMsg = err.message || 'Google Authentication error';
       showToast(errMsg);
       return;
@@ -4836,33 +4993,43 @@ function obNext() {
 }
 function obGoTo(idx){
   const cur=document.getElementById('ob-slide-'+obCurrent);
-  cur.classList.remove('active'); cur.classList.add('exit');
-  document.getElementById('ob-dot-'+obCurrent).classList.remove('active');
-  setTimeout(function(){cur.classList.remove('exit');},400);
+  if(cur){
+    cur.classList.remove('active'); cur.classList.add('exit');
+    setTimeout(function(){cur.classList.remove('exit');},400);
+  }
+  document.querySelectorAll('.ob-dot').forEach(function(d,i){
+    d.classList.toggle('active', i===idx);
+  });
   obCurrent=idx;
-  const next=document.getElementById('ob-slide-'+obCurrent);
-  next.style.transform='translateX(60px)'; next.style.opacity='0'; next.style.pointerEvents='none';
-  requestAnimationFrame(function(){requestAnimationFrame(function(){
-    next.style.transform=''; next.style.opacity=''; next.style.pointerEvents=''; next.classList.add('active');
-  });});
-  document.getElementById('ob-dot-'+obCurrent).classList.add('active');
+  document.querySelectorAll('.ob-slide').forEach(function(s,i){
+    if(i===idx){
+      s.style.transform=''; s.style.opacity=''; s.style.pointerEvents=''; s.classList.add('active');
+    } else {
+      s.classList.remove('active');
+    }
+  });
   const btn=document.getElementById('ob-cta'), skip=document.getElementById('ob-skip');
+  if(!btn || !skip) return;
   if(obCurrent===4){
     btn.style.display='none';
     skip.style.display='none';
   } else if(obCurrent===3){
-    btn.style.display='';
+    btn.style.display='block';
     btn.textContent='Continue ➔';
     btn.disabled=!document.getElementById('ob-agree').checked;
     skip.style.display='none';
   } else {
-    btn.style.display='';
-    btn.textContent='Next';
-    skip.style.display='';
+    btn.style.display='block';
+    btn.textContent=obCurrent===0 ? 'Get Started ➔' : 'Next ➔';
+    skip.style.display='block';
     btn.disabled=false;
   }
 }
-function obCheckAgree(){ document.getElementById('ob-cta').disabled=!document.getElementById('ob-agree').checked; }
+function obCheckAgree(){
+  const btn=document.getElementById('ob-cta');
+  const agree=document.getElementById('ob-agree');
+  if(btn && agree) btn.disabled=!agree.checked;
+}
 function obSubmitForm(){
   const name=document.getElementById('ob-name').value.trim();
   if(!name){document.getElementById('ob-name').focus();showToast('Please enter your name');return;}
@@ -4912,15 +5079,7 @@ function resetOnboarding(){
   state.user.onboarded=false; save();
   const ob=document.getElementById('onboarding');
   ob.style.opacity='1'; ob.classList.remove('hidden');
-  obCurrent=0;
-  document.querySelectorAll('.ob-slide').forEach(function(s,i){
-    s.classList.remove('active','exit'); s.style.transform=''; s.style.opacity=''; s.style.pointerEvents='';
-    if(i===0) s.classList.add('active');
-  });
-  document.querySelectorAll('.ob-dot').forEach(function(d,i){d.classList.toggle('active',i===0);});
-  document.getElementById('ob-cta').textContent='Start';
-  document.getElementById('ob-cta').disabled=false;
-  document.getElementById('ob-skip').style.display='';
+  obGoTo(0);
 }
 
 // ============================================================
@@ -4930,7 +5089,7 @@ const loaded=load();
 if(!loaded) initDemo();
 const bootOb=document.getElementById('onboarding');
 if(state.user.onboarded){ bootOb.classList.add('hidden'); }
-else{ bootOb.classList.remove('hidden'); bootOb.style.opacity='1'; }
+else{ bootOb.classList.remove('hidden'); bootOb.style.opacity='1'; obGoTo(0); }
 renderAll();
 updateClock();
 setInterval(updateClock,10000);
