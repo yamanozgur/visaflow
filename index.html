@@ -4579,6 +4579,9 @@ function renderAdminUsers(users) {
             '❌ Revoke Premium'+
           '</button>'
         )+
+        '<button style="background:rgba(239, 68, 68, 0.15); color:var(--red); border:1px solid rgba(239, 68, 68, 0.3); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px" onclick="deleteAdminUser(\''+email+'\', \''+u.id+'\', \''+u.col+'\')">'+
+          '🗑️ Delete'+
+        '</button>'+
       '</div>'+
     '</div>';
   }).join('');
@@ -4595,6 +4598,57 @@ function filterAdminUsers() {
            (u.name && u.name.toLowerCase().includes(q));
   });
   renderAdminUsers(filtered);
+}
+
+async function deleteAdminUser(email, docId, collectionName) {
+  const cleanEmail = (email || '').toLowerCase().trim();
+  if (!confirm('Are you sure you want to delete account "' + cleanEmail + '" from Cloud database?')) return;
+
+  if (!window.firebaseServices) return;
+  const { db, doc, deleteDoc, collection, getDocs } = window.firebaseServices;
+
+  try {
+    const emailKey = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
+
+    // Delete primary doc
+    try {
+      await deleteDoc(doc(db, collectionName, docId));
+    } catch(e) {
+      console.warn("Primary doc delete warning:", e);
+    }
+
+    // Delete matching email keys or accounts doc
+    try {
+      await deleteDoc(doc(db, "accounts", emailKey));
+    } catch(e) {}
+    try {
+      await deleteDoc(doc(db, "users", emailKey));
+    } catch(e) {}
+
+    // Clean up any remaining records with matching email address in Firestore
+    try {
+      const uSnap = await getDocs(collection(db, "users"));
+      uSnap.forEach(function(dSnap) {
+        const d = dSnap.data();
+        if ((d.email && d.email.toLowerCase().trim() === cleanEmail) || dSnap.id === emailKey) {
+          deleteDoc(doc(db, "users", dSnap.id)).catch(function(){});
+        }
+      });
+      const aSnap = await getDocs(collection(db, "accounts"));
+      aSnap.forEach(function(dSnap) {
+        const d = dSnap.data();
+        if ((d.email && d.email.toLowerCase().trim() === cleanEmail) || dSnap.id === emailKey) {
+          deleteDoc(doc(db, "accounts", dSnap.id)).catch(function(){});
+        }
+      });
+    } catch(e) {}
+
+    showToast('🗑️ Account ' + cleanEmail + ' deleted from Cloud!');
+    await refreshAdminData();
+  } catch (err) {
+    console.error("Failed to delete user:", err);
+    showToast("Error deleting user from database");
+  }
 }
 
 async function grantAdminUserPremium(email, docId, collectionName, enable) {
