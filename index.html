@@ -2692,7 +2692,11 @@ function renderAllVisas(){
   renderPassportTabs();
   const el=document.getElementById('all-visas-container');
   let filtered=state.visas;
-  if(state.activePassportId) filtered=filtered.filter(function(v){return v.passportId===state.activePassportId;});
+  if(state.activePassportId) {
+    filtered=filtered.filter(function(v){
+      return !v.passportId || v.passportId===state.activePassportId;
+    });
+  }
   const active=filtered.filter(function(v){return daysBetween(today(),v.endDate)>=0;});
   const expired=filtered.filter(function(v){return daysBetween(today(),v.endDate)<0;});
   let html='';
@@ -2976,12 +2980,26 @@ function setToggle(type){ selectedType=type; ['multi','single','free'].forEach(f
 function populatePassportSelect(){
   const sel=document.getElementById('add-passport');
   if(!sel) return;
-  sel.innerHTML=state.passports.map(function(pp){return '<option value="'+pp.id+'">'+pp.country+' Passport</option>';}).join('');
+  if(!state.passports || !state.passports.length){
+    sel.innerHTML='<option value="">No passport registered</option>';
+    return;
+  }
+  sel.innerHTML=state.passports.map(function(pp){
+    const selected=(pp.id===state.activePassportId)?' selected':'';
+    return '<option value="'+pp.id+'"'+selected+'>'+pp.country+' Passport</option>';
+  }).join('');
+  if(state.activePassportId && sel.querySelector('option[value="'+state.activePassportId+'"]')) {
+    sel.value = state.activePassportId;
+  }
 }
 function addVisa(){
   if(!state.user.isPremium && state.visas.length>=2){openPaywall('visa');return;}
   let country=document.getElementById('add-country').value.trim();
-  const passportId=document.getElementById('add-passport').value, start=document.getElementById('add-start').value;
+  let passportId=document.getElementById('add-passport').value;
+  if(!passportId && state.passports.length){
+    passportId = state.activePassportId || state.passports[0].id;
+  }
+  const start=document.getElementById('add-start').value;
   const end=document.getElementById('add-end').value, stay=parseInt(document.getElementById('add-stay').value)||30;
   const usedDays=parseInt(document.getElementById('add-used').value)||0;
   const entry=document.getElementById('add-entry').value, reminder=document.getElementById('add-reminder').value;
