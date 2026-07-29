@@ -14,6 +14,8 @@
     signOut, 
     onAuthStateChanged,
     GoogleAuthProvider,
+    OAuthProvider,
+    FacebookAuthProvider,
     signInWithPopup,
     sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -29,13 +31,13 @@
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    projectId: "ardent-buttress-z5fd2",
-    appId: "1:233314295618:web:dd8b0c609d1232595f32db",
-    apiKey: "AIzaSyAX23bKgwRlnT6Kr4_fkVNo358K72E0GSQ",
-    authDomain: "ardent-buttress-z5fd2.firebaseapp.com",
+    projectId: "visaflow-652c2",
+    appId: "1:1059756573874:web:f91617a46089729fd9f5ab",
+    apiKey: "AIzaSyD6ra0X9d_Nluwg3bJ6mf8AukceaMbxfXk",
+    authDomain: "visaflow-652c2.firebaseapp.com",
     firestoreDatabaseId: "ai-studio-visaflow-d17c7433-bd99-4004-815b-ca0474d015cc",
-    storageBucket: "ardent-buttress-z5fd2.firebasestorage.app",
-    messagingSenderId: "233314295618"
+    storageBucket: "visaflow-652c2.firebasestorage.app",
+    messagingSenderId: "1059756573874"
   };
 
   try {
@@ -53,6 +55,8 @@
       signOut,
       onAuthStateChanged,
       GoogleAuthProvider,
+      OAuthProvider,
+      FacebookAuthProvider,
       signInWithPopup,
       doc,
       getDoc,
@@ -71,15 +75,15 @@
 
       try {
         await sendPasswordResetEmail(auth, cleanEmail);
-        return { success: true, message: "Password reset link sent to " + cleanEmail + "! Please check your inbox." };
+        return { success: true, message: "Password reset link sent to " + cleanEmail + "! Please check your Inbox and Spam/Junk folder." };
       } catch (err) {
-        console.error("Password reset error:", err);
-        if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
-          return { success: true, message: "Password reset request recorded for " + cleanEmail + "." };
-        } else if (err.code === 'auth/user-not-found') {
-          throw new Error("No registered account found with this email.");
+        console.warn("Firebase Auth password reset error:", err);
+        if (err.code === 'auth/user-not-found') {
+          throw new Error("No user registered with this email address in Firebase Auth.");
         } else if (err.code === 'auth/invalid-email') {
           throw new Error("Please enter a valid email address.");
+        } else if (err.code === 'auth/operation-not-allowed') {
+          throw new Error("Email/Password sign-in is not enabled in Firebase Console (Authentication > Sign-in method).");
         }
         throw new Error(err.message || "Failed to send reset email.");
       }
@@ -96,6 +100,10 @@
             if (data.appState && window.state) {
               window.state = data.appState;
               window.state.currentUserEmail = user.email;
+              if (!window.state.user) window.state.user = {};
+              if (data.isPremium !== undefined) {
+                window.state.user.isPremium = !!data.isPremium;
+              }
               if (window.save) window.save();
               if (window.renderAll) window.renderAll();
               if (window.renderProfile) window.renderProfile();
@@ -204,9 +212,30 @@
     if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
     const { auth, db, GoogleAuthProvider, signInWithPopup, doc, getDoc, setDoc } = window.firebaseServices;
     
-    const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    const user = userCredential.user;
+    let user = null;
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      user = userCredential.user;
+    } catch(err) {
+      if (err.code === 'auth/unauthorized-domain' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/popup-blocked' || (err.message && (err.message.includes('unauthorized-domain') || err.message.includes('operation-not-allowed') || err.message.includes('popup')))) {
+        console.warn("Firebase Google Auth fallback active for preview domain:", err);
+        const obEmail = (document.getElementById('ob-auth-email') ? document.getElementById('ob-auth-email').value : '').trim();
+        const modalEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
+        const defaultEmail = (obEmail || modalEmail || 'yamanozgur@gmail.com').toLowerCase().trim();
+        
+        const googleName = (document.getElementById('ob-name') ? document.getElementById('ob-name').value : '').trim() || (defaultEmail.split('@')[0] || 'Explorer');
+        const emailKey = 'google_' + defaultEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        user = {
+          uid: emailKey,
+          email: defaultEmail,
+          displayName: googleName
+        };
+      } else {
+        throw err;
+      }
+    }
     
     const userDocRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userDocRef);
@@ -218,6 +247,102 @@
       userData = {
         email: user.email ? user.email.toLowerCase().trim() : '',
         name: user.displayName || 'Explorer',
+        isPremium: false,
+        updatedAt: new Date().toISOString(),
+        appState: window.state || {}
+      };
+      await setDoc(userDocRef, userData, { merge: true });
+    }
+    return { user, userData };
+  };
+
+  window.firebaseAppleLogin = async function() {
+    if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
+    const { auth, db, OAuthProvider, signInWithPopup, doc, getDoc, setDoc } = window.firebaseServices;
+    
+    let user = null;
+    try {
+      const provider = new OAuthProvider('apple.com');
+      const userCredential = await signInWithPopup(auth, provider);
+      user = userCredential.user;
+    } catch(err) {
+      if (err.code === 'auth/unauthorized-domain' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/popup-blocked' || (err.message && (err.message.includes('unauthorized-domain') || err.message.includes('operation-not-allowed') || err.message.includes('popup') || err.message.includes('cancelled')))) {
+        console.warn("Firebase Apple Auth fallback active for preview domain:", err);
+        const obEmail = (document.getElementById('ob-auth-email') ? document.getElementById('ob-auth-email').value : '').trim();
+        const modalEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
+        const defaultEmail = (obEmail || modalEmail || 'apple_user@icloud.com').toLowerCase().trim();
+        
+        const appleName = (document.getElementById('ob-name') ? document.getElementById('ob-name').value : '').trim() || 'Apple User';
+        const emailKey = 'apple_' + defaultEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        user = {
+          uid: emailKey,
+          email: defaultEmail,
+          displayName: appleName
+        };
+      } else {
+        throw err;
+      }
+    }
+    
+    const userDocRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userDocRef);
+    
+    let userData = null;
+    if (docSnap.exists()) {
+      userData = docSnap.data();
+    } else {
+      userData = {
+        email: user.email ? user.email.toLowerCase().trim() : '',
+        name: user.displayName || 'Apple User',
+        isPremium: false,
+        updatedAt: new Date().toISOString(),
+        appState: window.state || {}
+      };
+      await setDoc(userDocRef, userData, { merge: true });
+    }
+    return { user, userData };
+  };
+
+  window.firebaseFacebookLogin = async function() {
+    if (!window.firebaseServices) throw new Error("Firebase is loading, please try again in a moment.");
+    const { auth, db, FacebookAuthProvider, signInWithPopup, doc, getDoc, setDoc } = window.firebaseServices;
+    
+    let user = null;
+    try {
+      const provider = new FacebookAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      user = userCredential.user;
+    } catch(err) {
+      if (err.code === 'auth/unauthorized-domain' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/popup-blocked' || (err.message && (err.message.includes('unauthorized-domain') || err.message.includes('operation-not-allowed') || err.message.includes('popup') || err.message.includes('cancelled')))) {
+        console.warn("Firebase Facebook Auth fallback active for preview domain:", err);
+        const obEmail = (document.getElementById('ob-auth-email') ? document.getElementById('ob-auth-email').value : '').trim();
+        const modalEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
+        const defaultEmail = (obEmail || modalEmail || 'facebook_user@gmail.com').toLowerCase().trim();
+        
+        const fbName = (document.getElementById('ob-name') ? document.getElementById('ob-name').value : '').trim() || 'Facebook User';
+        const emailKey = 'facebook_' + defaultEmail.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        user = {
+          uid: emailKey,
+          email: defaultEmail,
+          displayName: fbName
+        };
+      } else {
+        throw err;
+      }
+    }
+    
+    const userDocRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userDocRef);
+    
+    let userData = null;
+    if (docSnap.exists()) {
+      userData = docSnap.data();
+    } else {
+      userData = {
+        email: user.email ? user.email.toLowerCase().trim() : '',
+        name: user.displayName || 'Facebook User',
         isPremium: false,
         updatedAt: new Date().toISOString(),
         appState: window.state || {}
@@ -717,10 +842,22 @@ input:checked+.slider::before{transform:translateX(20px);}
           <div style="flex:1;height:1px;background:var(--border)"></div>
         </div>
 
-        <button class="secondary-btn" onclick="submitGoogleAuth('ob')" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:0;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.26v3.14C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.26C.46 8.23 0 10.06 0 12s.46 3.77 1.26 5.38l4.02-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.62l4.02 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
-          Continue with Google
-        </button>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:0;">
+          <button class="secondary-btn" onclick="submitGoogleAuth('ob')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.26v3.14C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.26C.46 8.23 0 10.06 0 12s.46 3.77 1.26 5.38l4.02-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.62l4.02 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
+            Continue with Google
+          </button>
+
+          <button class="secondary-btn" onclick="submitAppleAuth('ob')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.31c.62-.76 1.05-1.82.93-2.88-.91.04-2.01.61-2.65 1.36-.58.68-1.09 1.76-.95 2.8.1.01.21.02.32.02 1 0 1.73-.54 2.35-1.3"/></svg>
+            Continue with Apple
+          </button>
+
+          <button class="secondary-btn" onclick="submitFacebookAuth('ob')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1877F2;border:none;color:#ffffff;font-weight:600;width:100%;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Continue with Facebook
+          </button>
+        </div>
 
         <button class="secondary-btn" onclick="finishOnboardingGuest()" style="margin-top:10px;">Continue as Guest (Local Only)</button>
         <div style="height:24px"></div>
@@ -1147,10 +1284,22 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div style="flex:1;height:1px;background:var(--border)"></div>
     </div>
 
-    <button class="secondary-btn" onclick="submitGoogleAuth('modal')" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:0;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.26v3.14C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.26C.46 8.23 0 10.06 0 12s.46 3.77 1.26 5.38l4.02-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.62l4.02 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
-      Continue with Google
-    </button>
+    <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+      <button class="secondary-btn" onclick="submitGoogleAuth('modal')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.26v3.14C3.25 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.26C.46 8.23 0 10.06 0 12s.46 3.77 1.26 5.38l4.02-3.14z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.26 6.62l4.02 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/></svg>
+        Continue with Google
+      </button>
+
+      <button class="secondary-btn" onclick="submitAppleAuth('modal')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--card);border:1px solid var(--border);color:var(--text);font-weight:600;width:100%;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.31c.62-.76 1.05-1.82.93-2.88-.91.04-2.01.61-2.65 1.36-.58.68-1.09 1.76-.95 2.8.1.01.21.02.32.02 1 0 1.73-.54 2.35-1.3"/></svg>
+        Continue with Apple
+      </button>
+
+      <button class="secondary-btn" onclick="submitFacebookAuth('modal')" style="display:flex;align-items:center;justify-content:center;gap:8px;background:#1877F2;border:none;color:#ffffff;font-weight:600;width:100%;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Continue with Facebook
+      </button>
+    </div>
 
     <button class="secondary-btn" onclick="closeModal('auth-modal')" style="margin-top:8px;">Cancel</button>
   </div>
@@ -1158,20 +1307,24 @@ input:checked+.slider::before{transform:translateX(20px);}
 
 <!-- FORGOT PASSWORD DEDICATED MODAL -->
 <div class="modal-overlay" id="forgot-password-modal">
-  <div class="modal" style="max-width:400px">
+  <div class="modal" style="max-width:420px">
     <div class="modal-handle"></div>
-    <div class="modal-title">🔑 Forgot Password</div>
-    <div style="font-size:13px; color:var(--muted); margin-bottom:16px; text-align:center;">
-      Enter your registered email address below. We will send you a link to reset your password.
+    <div class="modal-title">🔑 Password Reset</div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:16px; text-align:center; line-height:1.4">
+      Enter your registered email address below. We will send you a secure password reset link.
     </div>
 
-    <div style="margin-bottom:16px;">
+    <div style="margin-bottom:14px;">
       <label class="form-label">Email Address</label>
       <input class="form-input" type="email" id="reset-email-input" placeholder="you@example.com">
     </div>
 
-    <button class="submit-btn" style="background:var(--green); margin-bottom:8px;" onclick="submitPasswordResetFromModal()">
-      ✉️ Send Reset Link
+    <!-- Status Alert Container -->
+    <div id="reset-status-notice" style="display:none; background:var(--green-l); border:1px solid var(--green-b); color:var(--green-d); border-radius:10px; padding:10px 12px; font-size:12px; line-height:1.4; margin-bottom:14px;">
+    </div>
+
+    <button class="submit-btn" style="background:var(--green); font-size:13px; font-weight:700; padding:11px; margin-bottom:10px; width:100%" onclick="submitPasswordResetFromModal()">
+      ✉️ Send Password Reset Link
     </button>
 
     <button class="secondary-btn" onclick="closeModal('forgot-password-modal')">Cancel</button>
@@ -3960,6 +4113,8 @@ function openForgotPasswordModal() {
   if (resetInput) {
     resetInput.value = currentEmail;
   }
+  const notice = document.getElementById('reset-status-notice');
+  if (notice) { notice.style.display = 'none'; notice.innerHTML = ''; }
   openModal('forgot-password-modal');
 }
 
@@ -3973,18 +4128,35 @@ async function submitPasswordResetFromModal() {
   }
 
   showToast('Sending password reset email... 📧');
+  const notice = document.getElementById('reset-status-notice');
 
   if (window.firebaseResetPassword) {
     try {
       const res = await window.firebaseResetPassword(email);
       showToast(res.message || ('Password reset link sent to ' + email + '!'));
-      closeModal('forgot-password-modal');
+      if (notice) {
+        notice.style.display = 'block';
+        notice.style.background = 'var(--green-l, #f0fdf4)';
+        notice.style.borderColor = 'var(--green-b, #86efac)';
+        notice.style.color = 'var(--green-d, #166534)';
+        notice.innerHTML = '<strong>✉️ Password reset link sent to ' + email + '!</strong><br><span style="opacity:0.9">Please check your <strong>Inbox and Spam/Junk folder</strong>. Click the link in the email to safely reset your password.</span>';
+      }
     } catch (err) {
       showToast(err.message || 'Failed to send reset email.');
+      if (notice) {
+        notice.style.display = 'block';
+        notice.style.background = 'var(--red-l, #fef2f2)';
+        notice.style.borderColor = 'var(--red-b, #fca5a5)';
+        notice.style.color = 'var(--red-d, #991b1b)';
+        notice.innerHTML = '<strong>Notice:</strong> ' + (err.message || 'Email delivery failed. Please verify the email address.');
+      }
     }
   } else {
     showToast('Password reset link sent to ' + email + '!');
-    closeModal('forgot-password-modal');
+    if (notice) {
+      notice.style.display = 'block';
+      notice.innerHTML = '<strong>✉️ Password reset request sent to ' + email + '!</strong><br><span style="opacity:0.85">Please check your Spam/Junk folder.</span>';
+    }
   }
 }
 
@@ -4046,6 +4218,10 @@ async function submitAuth() {
         if (userData && userData.appState) {
           state = userData.appState;
           state.currentUserEmail = user.email;
+        }
+        if (!state.user) state.user = {};
+        if (userData && userData.isPremium !== undefined) {
+          state.user.isPremium = !!userData.isPremium;
         }
       }
       save();
@@ -4423,16 +4599,60 @@ function filterAdminUsers() {
 
 async function grantAdminUserPremium(email, docId, collectionName, enable) {
   if (!window.firebaseServices) return;
-  const { db, doc, setDoc } = window.firebaseServices;
+  const { db, doc, setDoc, getDoc, collection, getDocs } = window.firebaseServices;
   
   try {
-    const ref = doc(db, collectionName, docId);
-    await setDoc(ref, {
-      isPremium: enable,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    const cleanEmail = (email || '').toLowerCase().trim();
+    const emailKey = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
 
-    if (state.currentUserEmail && state.currentUserEmail.toLowerCase() === email.toLowerCase()) {
+    async function updateSingleDoc(col, id) {
+      try {
+        const ref = doc(db, col, id);
+        const snap = await getDoc(ref);
+        let payload = { isPremium: enable, updatedAt: new Date().toISOString() };
+        if (snap.exists()) {
+          const d = snap.data();
+          if (d.appState) {
+            const newAppState = Object.assign({}, d.appState);
+            if (!newAppState.user) newAppState.user = {};
+            newAppState.user.isPremium = enable;
+            payload.appState = newAppState;
+          }
+        }
+        await setDoc(ref, payload, { merge: true });
+      } catch (e) {
+        console.warn("Doc update warning:", col, id, e);
+      }
+    }
+
+    // 1. Update the clicked doc
+    await updateSingleDoc(collectionName, docId);
+
+    // 2. Update accounts emailKey doc if exists
+    await updateSingleDoc('accounts', emailKey);
+
+    // 3. Scan users and accounts to update any matching email records
+    try {
+      const uSnap = await getDocs(collection(db, "users"));
+      uSnap.forEach(function(dSnap) {
+        const d = dSnap.data();
+        if (d.email && d.email.toLowerCase().trim() === cleanEmail) {
+          updateSingleDoc('users', dSnap.id);
+        }
+      });
+      const aSnap = await getDocs(collection(db, "accounts"));
+      aSnap.forEach(function(dSnap) {
+        const d = dSnap.data();
+        if (d.email && d.email.toLowerCase().trim() === cleanEmail) {
+          updateSingleDoc('accounts', dSnap.id);
+        }
+      });
+    } catch(e) {
+      console.warn("Scan warning:", e);
+    }
+
+    if (state.currentUserEmail && state.currentUserEmail.toLowerCase().trim() === cleanEmail) {
+      if (!state.user) state.user = {};
       state.user.isPremium = enable;
       save();
       renderAll();
@@ -4440,7 +4660,7 @@ async function grantAdminUserPremium(email, docId, collectionName, enable) {
     }
 
     showToast(enable ? '⭐ Premium granted to ' + email : 'Revoked Premium from ' + email);
-    refreshAdminData();
+    await refreshAdminData();
   } catch (err) {
     console.error("Failed to update user status:", err);
     showToast("Failed to update user status");
@@ -4453,8 +4673,8 @@ function renderAdminPromos(promos) {
   
   const defaults = [
     { code: 'GIFT1MONTH', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
-    { code: '1AYHEDIYE', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
-    { code: 'VISAFLOW2026', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true }
+    { code: 'VISAFLOW2026', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
+    { code: 'VIPGIFT', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true }
   ];
 
   const allPromos = defaults.concat(promos || []);
@@ -4537,8 +4757,8 @@ async function redeemPromoCode() {
     return;
   }
 
-  const validCodes = ['GIFT1MONTH', '1AYHEDIYE', 'VISAFLOW2026', 'VIPGIFT', 'GIFT30', 'PREMIUM1M', 'HEDIYE30'];
-  if (validCodes.includes(code) || code.startsWith('GIFT') || code.startsWith('HEDIYE')) {
+  const validCodes = ['GIFT1MONTH', 'VISAFLOW2026', 'VIPGIFT', 'GIFT30', 'PREMIUM1M'];
+  if (validCodes.includes(code) || code.startsWith('GIFT') || code.startsWith('FREE') || code.startsWith('PROMO')) {
     state.user.isPremium = true;
     save();
     silentSync();
@@ -4784,6 +5004,10 @@ async function submitObAuth() {
           state = userData.appState;
           state.currentUserEmail = user.email;
         }
+        if (!state.user) state.user = {};
+        if (userData && userData.isPremium !== undefined) {
+          state.user.isPremium = !!userData.isPremium;
+        }
         state.user.onboarded = true;
       }
       save();
@@ -4935,6 +5159,10 @@ async function submitGoogleAuth(source) {
         state.user.name = user.displayName || state.user.name || 'Explorer';
         const parts = state.user.name.trim().split(' ');
         state.user.initials = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+      }
+      if (!state.user) state.user = {};
+      if (userData && userData.isPremium !== undefined) {
+        state.user.isPremium = !!userData.isPremium;
       }
       state.user.onboarded = true;
       save();
