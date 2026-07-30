@@ -128,6 +128,71 @@
     console.error("Firebase init error:", err);
   }
 
+  window.safeCloneState = function(s) {
+    if (!s || typeof s !== 'object') return {};
+    try {
+      return {
+        user: {
+          name: String((s.user && s.user.name) || ''),
+          initials: String((s.user && s.user.initials) || ''),
+          photo: (s.user && typeof s.user.photo === 'string') ? s.user.photo : null,
+          notifVisa: !(s.user && s.user.notifVisa === false),
+          notifReminder: !(s.user && s.user.notifReminder === false),
+          onboarded: !!(s.user && s.user.onboarded),
+          isPremium: !!(s.user && s.user.isPremium),
+          darkMode: !!(s.user && s.user.darkMode)
+        },
+        passports: Array.isArray(s.passports) ? s.passports.map(function(p){
+          return {
+            id: String(p.id || ''),
+            country: String(p.country || ''),
+            code: String(p.code || ''),
+            expiryDate: p.expiryDate ? String(p.expiryDate) : null
+          };
+        }) : [],
+        activePassportId: s.activePassportId ? String(s.activePassportId) : null,
+        visas: Array.isArray(s.visas) ? s.visas.map(function(v){
+          return {
+            id: String(v.id || ''),
+            country: String(v.country || ''),
+            type: String(v.type || ''),
+            startDate: String(v.startDate || ''),
+            endDate: String(v.endDate || ''),
+            notes: String(v.notes || ''),
+            durationDays: v.durationDays != null ? Number(v.durationDays) : null,
+            maxStayDays: v.maxStayDays != null ? Number(v.maxStayDays) : null,
+            passportId: v.passportId ? String(v.passportId) : null
+          };
+        }) : [],
+        residencies: Array.isArray(s.residencies) ? s.residencies.map(function(r){
+          return {
+            id: String(r.id || ''),
+            country: String(r.country || ''),
+            startDate: String(r.startDate || ''),
+            endDate: String(r.endDate || ''),
+            notes: String(r.notes || '')
+          };
+        }) : [],
+        travels: Array.isArray(s.travels) ? s.travels.map(function(t){
+          return {
+            id: t.id ? String(t.id) : undefined,
+            country: String(t.country || ''),
+            code: String(t.code || ''),
+            start: String(t.start || ''),
+            end: t.end ? String(t.end) : null,
+            notes: t.notes ? String(t.notes) : undefined
+          };
+        }) : [],
+        currentCountry: s.currentCountry ? String(s.currentCountry) : null,
+        currentEntry: s.currentEntry ? String(s.currentEntry) : null,
+        currentUserEmail: s.currentUserEmail ? String(s.currentUserEmail) : null,
+        vcSelectedPassportId: s.vcSelectedPassportId ? String(s.vcSelectedPassportId) : null
+      };
+    } catch(e) {
+      return {};
+    }
+  };
+
   async function hashPassword(password) {
     const msgUint8 = new TextEncoder().encode(password + "_vf_salt_2026");
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -365,25 +430,26 @@
   window.firebaseSyncState = async function(appState) {
     if (!window.firebaseServices) return;
     const { auth, db, doc, setDoc } = window.firebaseServices;
+    const cleanState = window.safeCloneState(appState || window.state);
     
     if (auth.currentUser) {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
       await setDoc(userDocRef, {
         email: auth.currentUser.email,
-        name: appState.user ? appState.user.name : '',
-        isPremium: appState.user ? appState.user.isPremium : false,
+        name: cleanState.user ? cleanState.user.name : '',
+        isPremium: cleanState.user ? cleanState.user.isPremium : false,
         updatedAt: new Date().toISOString(),
-        appState: appState
+        appState: cleanState
       }, { merge: true });
     } else if (window.currentCloudAccount) {
       const emailKey = window.currentCloudAccount.email.toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '_');
       const accountDocRef = doc(db, "accounts", emailKey);
       await setDoc(accountDocRef, {
         email: window.currentCloudAccount.email,
-        name: appState.user ? appState.user.name : '',
-        isPremium: appState.user ? appState.user.isPremium : false,
+        name: cleanState.user ? cleanState.user.name : '',
+        isPremium: cleanState.user ? cleanState.user.isPremium : false,
         updatedAt: new Date().toISOString(),
-        appState: appState
+        appState: cleanState
       }, { merge: true });
     }
   };
@@ -1337,6 +1403,58 @@ input:checked+.slider::before{transform:translateX(20px);}
   </div>
 </div>
 
+<!-- FAQ & HELP MODAL -->
+<div class="modal-overlay" id="faq-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Help &amp; Frequently Asked Questions</div>
+    <div class="modal-sub">Everything you need to know about VisaFlow</div>
+    
+    <div style="max-height:380px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
+      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">❓ How does the 90/180 Schengen Rule calculator work?</div>
+        <div style="color:var(--muted);font-size:12px">VisaFlow uses standard European Union rolling 180-day window algorithm. It automatically scans your past entry/exit dates to calculate your exact remaining days and tells you when your allowance resets.</div>
+      </div>
+
+      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">🛂 What is the 6-Month Passport Validity warning?</div>
+        <div style="color:var(--muted);font-size:12px">Most international destinations (Schengen Area, USA, UK, Asia) require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when your passport expires in under 6 months.</div>
+      </div>
+
+      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">🔒 Is my data safe &amp; private?</div>
+        <div style="color:var(--muted);font-size:12px">Yes! VisaFlow is Local-First. All your travel logs, passports, and visas are saved locally on your device by default. If you choose Cloud Sync, data is encrypted via SSL.</div>
+      </div>
+
+      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">🏛️ Does VisaFlow issue official visas or legal advice?</div>
+        <div style="color:var(--muted);font-size:12px">No. VisaFlow is a personal tracker and calculator assistant. Official visa applications and legal requirements must be verified with embassies or consulates.</div>
+      </div>
+
+      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">💎 How do I manage or cancel my Premium subscription?</div>
+        <div style="color:var(--muted);font-size:12px">Subscriptions are managed directly by Google Play Store. You can cancel anytime with 1-tap under Google Play &gt; Subscriptions.</div>
+      </div>
+    </div>
+    
+    <button class="submit-btn" style="margin-top:16px" onclick="closeModal('faq-modal')">Close</button>
+  </div>
+</div>
+
+<!-- PHOTOGRAPHY CREDITS MODAL -->
+<div class="modal-overlay" id="credits-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📷 Photography Credits</div>
+    <div class="modal-sub">Attribution &amp; photo licensing information</div>
+    <div style="margin-top:16px;text-align:left;line-height:1.7;font-size:13px;color:var(--text2);background:var(--bg2);padding:14px;border-radius:12px;border:1px solid var(--border)">
+      Country imagery and visual assets used in VisaFlow are sourced from <strong style="color:var(--text)">Adobe Stock</strong>, <strong style="color:var(--text)">Unsplash</strong>, <strong style="color:var(--text)">Pexels</strong>, <strong style="color:var(--text)">Pixabay</strong>, and licensed stock providers. All photographs are used in accordance with their respective free and commercial licenses.<br><br>
+      We are immensely grateful to the talented photographers and visual contributors whose work enhances the user experience of VisaFlow. If you believe your photograph has been used without proper attribution or against license terms, please reach out via Contact Us.
+    </div>
+    <button class="submit-btn" style="margin-top:20px" onclick="closeModal('credits-modal')">Close</button>
+  </div>
+</div>
+
 <!-- PAYWALL -->
 <div class="modal-overlay" id="paywall-modal">
   <div class="modal" style="text-align:center">
@@ -1963,7 +2081,8 @@ const STORAGE_KEY = 'np_v6';
 ['np_v1','np_v2','np_v3','np_v4','np_v4_free','visaflow','np_v5'].forEach(function(k){ localStorage.removeItem(k); });
 function save(){ 
   try{ 
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); 
+    const cleanState = window.safeCloneState ? window.safeCloneState(state) : state;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(cleanState)); 
     if(state.currentUserEmail) {
       silentSync();
     }
@@ -2085,49 +2204,55 @@ function renderDashboardFootprint(){
 
   var flagsHtml = '';
   if(uniqueCountries.length > 0){
-    flagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">';
-    uniqueCountries.slice(0, 10).forEach(function(c){
+    flagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center">';
+    uniqueCountries.slice(0, 18).forEach(function(c){
       var cs = getCS(c);
-      flagsHtml += '<span style="background:rgba(255,255,255,0.22);color:#ffffff;border:1px solid rgba(255,255,255,0.35);padding:4px 9px;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:5px;font-weight:700;backdrop-filter:blur(4px)">'+
-        flagImg(c, cs, 'sm') + ' ' + c +
-      '</span>';
+      var flagInner = cs.code ?
+        '<div style="width:24px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center"><img src="https://flagcdn.com/w80/' + cs.code + '.png" onerror="this.parentElement.innerHTML=\'🌍\'" alt="' + c + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>' :
+        '<div style="width:24px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.3);font-size:12px;display:flex;align-items:center;justify-content:center">🌍</div>';
+
+      flagsHtml += '<div title="' + c + '" style="cursor:pointer;display:inline-flex;transition:transform 0.15s" onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'">'+
+        flagInner +
+      '</div>';
     });
-    if(uniqueCountries.length > 10){
-      flagsHtml += '<span style="font-size:11px;color:rgba(255,255,255,0.9);align-self:center;font-weight:700;background:rgba(255,255,255,0.22);padding:3px 8px;border-radius:8px">+ ' + (uniqueCountries.length - 10) + ' more</span>';
+    if(uniqueCountries.length > 18){
+      flagsHtml += '<span style="font-size:11px;color:#ffffff;font-weight:700;background:rgba(255,255,255,0.22);padding:3px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)">+ ' + (uniqueCountries.length - 18) + ' more</span>';
     }
     flagsHtml += '</div>';
   } else {
-    flagsHtml = '<div style="font-size:11px;color:rgba(255,255,255,0.9);margin-top:8px;background:rgba(255,255,255,0.22);padding:6px 10px;border-radius:8px;display:inline-block">No countries logged yet. Set your location or add travel history to build your footprint!</div>';
+    flagsHtml = '<div style="font-size:11px;color:rgba(255,255,255,0.9);margin-top:8px;background:rgba(255,255,255,0.18);padding:8px 12px;border-radius:10px;display:inline-block;border:1px solid rgba(255,255,255,0.25);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)">No countries logged yet. Set your location or add travel history to build your footprint!</div>';
   }
 
   el.innerHTML =
-    '<div class="card" style="position:relative; overflow:hidden; border:1.5px solid rgba(255,255,255,0.25); padding:16px; margin-bottom:16px; border-radius:18px; background:linear-gradient(135deg, #0A4D3C, #00A884); color:#ffffff; box-shadow:0 10px 25px rgba(0,168,132,0.25)">'+
-      '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/footprint.webp\') center/cover no-repeat; opacity:0.45; pointer-events:none; z-index:0"></div>'+
+    '<div class="card" style="position:relative; overflow:hidden; border:1.5px solid rgba(255,255,255,0.25); padding:16px; margin-bottom:16px; border-radius:18px; background:linear-gradient(135deg, rgba(16,185,129,0.85) 0%, rgba(5,150,105,0.9) 100%); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#ffffff; box-shadow:0 8px 24px rgba(5,150,105,0.2)">'+
+      '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp\') center/cover no-repeat; opacity:0.25; filter:brightness(0) invert(1); pointer-events:none; z-index:0"></div>'+
       '<div style="position:relative; z-index:1">'+
         '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">'+
           '<div style="display:flex; align-items:center; gap:8px">'+
-            '<span style="font-size:22px">🌍</span>'+
+            '<div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.35); display:flex; align-items:center; justify-content:center; flex-shrink:0">'+
+              '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>'+
+            '</div>'+
             '<div>'+
-              '<div style="font-size:14px; font-weight:800; color:#ffffff">Travel Footprint &amp; Country Counter</div>'+
-              '<div style="font-size:11px; color:rgba(255,255,255,0.85)">Your nomad stats &amp; stamped destinations</div>'+
+              '<div style="font-size:14px; font-weight:800; color:#ffffff; letter-spacing:-0.2px">Travel Footprint</div>'+
+              '<div style="font-size:11px; color:rgba(255,255,255,0.85); font-weight:500">Your nomad stats &amp; stamped destinations</div>'+
             '</div>'+
           '</div>'+
-          '<button onclick="openShareFootprintModal()" style="background:rgba(255,255,255,0.22); color:#ffffff; border:1px solid rgba(255,255,255,0.4); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:800; cursor:pointer; backdrop-filter:blur(4px); white-space:nowrap; display:flex; align-items:center; gap:4px">'+
+          '<button onclick="openShareFootprintModal()" style="background:rgba(255,255,255,0.2); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#ffffff; border:1.5px solid rgba(255,255,255,0.35); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.1); white-space:nowrap; display:flex; align-items:center; gap:4px">'+
             '<span>Share Card 📸</span>'+
           '</button>'+
         '</div>'+
-        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,0.22); backdrop-filter:blur(6px); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.35); text-align:center">'+
+        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,0.2); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); padding:10px 12px; border-radius:12px; border:1.5px solid rgba(255,255,255,0.35); text-align:center">'+
           '<div>'+
-            '<div style="font-size:18px; font-weight:900; color:#6EE7B7">' + uniqueCountries.length + '</div>'+
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.95); text-transform:uppercase">Countries</div>'+
+            '<div style="font-size:18px; font-weight:900; color:#A7F3D0">' + uniqueCountries.length + '</div>'+
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase">Countries</div>'+
           '</div>'+
           '<div>'+
-            '<div style="font-size:18px; font-weight:900; color:#93C5FD">' + totalDays + '</div>'+
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.95); text-transform:uppercase">Days Abroad</div>'+
+            '<div style="font-size:18px; font-weight:900; color:#7DD3FC">' + totalDays + '</div>'+
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase">Days Abroad</div>'+
           '</div>'+
           '<div>'+
             '<div style="font-size:18px; font-weight:900; color:#FDE047">' + filtered.length + '</div>'+
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.95); text-transform:uppercase">Trips</div>'+
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase">Trips</div>'+
           '</div>'+
         '</div>'+
         flagsHtml +
@@ -2515,7 +2640,7 @@ function renderSchengenTracker(){
         '<div style="font-size:32px;margin-bottom:8px">🇪🇺🔒</div>'+
         '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Schengen 90/180 Tracker (Premium)</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Track remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.</div>'+
-        '<button class="btn btn-primary" style="background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">Unlock Schengen Tracker 💎</button>'+
+        '<button style="background:var(--green);color:#fff;border:none;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;display:inline-block">Unlock Schengen Tracker 💎</button>'+
       '</div>';
     return;
   }
@@ -3732,21 +3857,6 @@ function renderProfile(){
       '<button style="background:var(--text);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap" onclick="openAuthModal()">Sign In</button>'+
     '</div>')+
 
-    '<div class="profile-stat-row" style="margin-bottom:8px">'+
-      '<div class="profile-stat"><div class="profile-stat-val">'+totalCountries+'</div><div class="profile-stat-lbl">Countries</div></div>'+
-      '<div class="profile-stat"><div class="profile-stat-val">'+totalDays+'</div><div class="profile-stat-lbl">Days Abroad</div></div>'+
-      '<div class="profile-stat"><div class="profile-stat-val">'+state.visas.length+'</div><div class="profile-stat-lbl">Visas</div></div>'+
-    '</div>'+
-    '<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="openShareFootprintModal()">'+
-      '<div style="display:flex;align-items:center;gap:10px">'+
-        '<span style="font-size:20px">🌍</span>'+
-        '<div style="text-align:left">'+
-          '<div style="font-size:12px;font-weight:800;color:var(--text)">Travel Footprint Card</div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-top:1px">Share your travel stats &amp; stamped country badges 📸</div>'+
-        '</div>'+
-      '</div>'+
-      '<button style="background:var(--green);color:#fff;border:none;padding:6px 14px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(0,168,132,0.3)">Share 📸</button>'+
-    '</div>'+
 
     '<div class="section-title">Passports</div>'+
     '<div class="settings-group">'+
@@ -3842,17 +3952,25 @@ function renderProfile(){
     '</div>'+
     '<div style="height:20px"></div>'+
 
-    '<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">'+
-      '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:0.3px">📷 Photography Credits</div>'+
-      '<div style="font-size:12px;color:var(--muted);line-height:1.7">'+
-        'Country imagery used in VisaFlow is sourced from <strong style="color:var(--text2)">Pexels</strong>, <strong style="color:var(--text2)">Unsplash</strong>, <strong style="color:var(--text2)">Pixabay</strong>, and licensed stock providers. All photographs are used in accordance with their respective licenses.<br><br>'+
-        'We are grateful to the talented photographers and contributors whose work makes this app more beautiful. If you believe your work has been used incorrectly, please contact us.'+
-      '</div>'+
-    '</div>'+
-
+    '<div class="section-title">Support &amp; Legal</div>'+
     '<div class="settings-group">'+
+      '<div class="settings-item" onclick="openModal(\'faq-modal\')">'+
+        '<div class="settings-icon" style="background:var(--blue-l)">❓</div>'+
+        '<div class="settings-label">Help &amp; FAQ</div>'+
+        '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
+      '<div class="settings-item" onclick="openModal(\'credits-modal\')">'+
+        '<div class="settings-icon" style="background:var(--purple-l)">📷</div>'+
+        '<div class="settings-label">Photography Credits</div>'+
+        '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
+      '<div class="settings-item" onclick="openModal(\'privacy-modal\')">'+
+        '<div class="settings-icon" style="background:var(--green-l)">🔒</div>'+
+        '<div class="settings-label">Privacy Policy &amp; Terms</div>'+
+        '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
       '<div class="settings-item" onclick="openModal(\'contact-modal\')">'+
-        '<div class="settings-icon" style="background:var(--blue-l)">✉️</div>'+
+        '<div class="settings-icon" style="background:var(--orange-l)">✉️</div>'+
         '<div class="settings-label">Contact Us</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
