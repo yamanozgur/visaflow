@@ -21,6 +21,7 @@
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
     getFirestore, 
+    enableIndexedDbPersistence,
     doc, 
     getDoc, 
     setDoc,
@@ -44,6 +45,15 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+    // Enable offline persistence so local state operates even if connection to backend delays
+    try {
+      enableIndexedDbPersistence(db).catch(err => {
+        console.warn("Firestore offline persistence fallback:", err.code);
+      });
+    } catch (pe) {
+      console.warn("IndexedDb persistence init note:", pe);
+    }
 
     window.firebaseServices = {
       app,
@@ -110,7 +120,7 @@
             }
           }
         } catch (e) {
-          console.error("Error fetching Firestore user data:", e);
+          console.warn("Firestore user sync status:", e.message || e);
         }
       }
     });
@@ -725,15 +735,62 @@ input:checked+.slider::before{transform:translateX(20px);}
 .add-section-body{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5;}
 .add-section-btn{width:100%;padding:10px;background:var(--blue);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
 
-#onboarding{position:fixed;inset:0;z-index:1000;background:#fff;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;}
+#onboarding{position:fixed;inset:0;z-index:1000;background:#fff;max-width:430px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;transition:background 0.3s ease;}
+#onboarding.ob-full-bg{
+  background: url('https://raw.githubusercontent.com/yamanozgur/visaflow/main/onboarding_back.webp') center/cover no-repeat !important;
+}
 #onboarding.hidden{display:none;}
-[data-theme="dark"] #onboarding,
-[data-theme="dark"] .ob-bottom {
+[data-theme="dark"] #onboarding:not(.ob-full-bg),
+[data-theme="dark"] #onboarding:not(.ob-full-bg) .ob-bottom {
   background: #0A161C !important;
   border-color: #223745 !important;
 }
 .ob-slides{flex:1;overflow:hidden;position:relative;}
 .ob-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;transition:transform 0.4s cubic-bezier(.4,0,.2,1),opacity 0.4s;opacity:0;transform:translateX(60px);pointer-events:none;overflow-y:auto;}
+.ob-full-bg .ob-slide {
+  background: transparent !important;
+}
+.ob-full-bg .ob-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.ob-full-bg .ob-body {
+  color: rgba(255,255,255,0.92) !important;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+.ob-full-bg .ob-bottom {
+  background: transparent !important;
+  border-top: none !important;
+}
+.ob-full-bg .ob-dot {
+  background: rgba(255,255,255,0.4) !important;
+}
+.ob-full-bg .ob-dot.active {
+  background: #ffffff !important;
+  width: 24px;
+}
+.ob-full-bg .ob-btn {
+  background: rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+.ob-full-bg .ob-btn:hover, .ob-full-bg .ob-btn:active {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+.ob-full-bg .ob-skip {
+  color: rgba(255,255,255,0.92) !important;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.ob-version{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:center;margin-top:6px;opacity:0.75;}
+.ob-full-bg .ob-version{color:rgba(255,255,255,0.85) !important;text-shadow:0 1px 4px rgba(0,0,0,0.4);}
 .ob-slide.active{opacity:1;transform:translateX(0);pointer-events:all;}
 .ob-slide.exit{opacity:0;transform:translateX(-60px);}
 .ob-illustration{width:180px;height:180px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:28px;flex-shrink:0;}
@@ -759,64 +816,48 @@ input:checked+.slider::before{transform:translateX(20px);}
 .issued-pill{margin-top:4px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,0.75);border:1px solid currentColor;border-radius:20px;font-size:10px;font-weight:700;opacity:0.85;}
 .issued-pill img{width:12px;height:12px;border-radius:50%;object-fit:cover;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
 <!-- ONBOARDING -->
-<div id="onboarding">
+<div id="onboarding" class="ob-full-bg">
   <div class="ob-slides">
     <div class="ob-slide active" id="ob-slide-0">
-      <div style="width:130px;height:130px;border-radius:28px;box-shadow:0 12px 32px rgba(0,155,132,0.3);margin-bottom:28px;overflow:hidden;flex-shrink:0;">
-        <img src="icon-512.png" alt="VisaFlow Logo" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <div style="width:220px;height:220px;margin:0 auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/vf_logo.png" alt="VisaFlow Logo" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <span style="display:none;font-size:72px;">🌍</span>
+      </div>
+    </div>
+    <div class="ob-slide" id="ob-slide-1">
+      <div style="width:140px;height:140px;margin-bottom:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob2_icon.png" alt="VisaFlow Icon 1" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <span style="display:none;font-size:56px;">🛂</span>
       </div>
       <div class="ob-title">Never Lose Track of Your Visa</div>
       <div class="ob-body">VisaFlow tracks your visa validity, stay allowances, and entry dates — all in one place.</div>
     </div>
-    <div class="ob-slide" id="ob-slide-1">
-      <div class="ob-illustration" style="background:linear-gradient(145deg,#EFF6FF,#DBEAFE)">📍</div>
+    <div class="ob-slide" id="ob-slide-2">
+      <div style="width:140px;height:140px;margin-bottom:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob3_icon.png" alt="VisaFlow Icon 2" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <span style="display:none;font-size:56px;">📍</span>
+      </div>
       <div class="ob-title">Know Exactly Where You Stand</div>
       <div class="ob-body">See how many days you've spent in each country. Get alerts before you reach your limits.</div>
     </div>
-    <div class="ob-slide" id="ob-slide-2">
-      <div class="ob-illustration" style="background:linear-gradient(145deg,#FFF5EE,#FFE4CC)">✈️</div>
+    <div class="ob-slide" id="ob-slide-3">
+      <div style="width:140px;height:140px;margin-bottom:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob4_icon.png" alt="VisaFlow Icon 3" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <span style="display:none;font-size:56px;">✈️</span>
+      </div>
       <div class="ob-title">Your Full Travel History</div>
       <div class="ob-body">Log every entry and exit. Always stay on the right side of immigration policies.</div>
-    </div>
-    <div class="ob-slide" id="ob-slide-3" style="justify-content:flex-start;padding-top:32px;overflow-y:auto;">
-      <div style="width:100%;max-width:360px;margin:0 auto;">
-        <div style="margin-bottom:20px">
-          <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Create Your Profile</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.5">A few details to personalise your experience.</div>
-        </div>
-        <label class="form-label">Full Name</label>
-        <input class="form-input" id="ob-name" placeholder="e.g. Alex Johnson" autocomplete="name">
-        <label class="form-label">Citizenship Country</label>
-        <input class="form-input" id="ob-citizenship" placeholder="e.g. Germany, United States…" oninput="obFilterCitizenship(this.value)" autocomplete="off">
-        <div id="ob-citizenship-dropdown" class="country-dropdown" style="display:none"></div>
-        <label class="form-label">Current Country</label>
-        <input class="form-input" id="ob-location" placeholder="e.g. Vietnam, Thailand…" oninput="obFilterLocation(this.value)" autocomplete="off">
-        <div id="ob-location-dropdown" class="country-dropdown" style="display:none"></div>
-        <label class="form-label">Arrival Date</label>
-        <input class="form-input" id="ob-arrival" type="date">
-        <div class="disclaimer-box">
-          <strong>Disclaimer &amp; Terms of Use</strong><br><br>
-          VisaFlow is a personal travel tracking tool for informational purposes only. Nothing in this app constitutes legal, tax, or immigration advice.<br><br>
-          Visa regulations and entry policies change frequently. Always verify your status with the relevant embassy or immigration authority before making travel decisions.<br><br>
-          VisaFlow is not liable for any fines, deportation, or legal consequences arising from reliance on this application. By using VisaFlow you accept full responsibility for complying with all applicable immigration laws.<br><br>
-          Your data is stored locally on your device and is not shared with third parties.
-        </div>
-        <label class="disclaimer-check" style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;color:var(--text2)">
-          <input type="checkbox" id="ob-agree" onchange="obCheckAgree()" style="margin-top:2px">
-          <span>I understand and agree to the <a href="#" onclick="event.preventDefault();openModal('privacy-modal')" style="color:var(--green);font-weight:700;text-decoration:underline">Terms of Use &amp; Privacy Policy</a>, fully releasing VisaFlow from any liability.</span>
-        </label>
-        <div style="height:16px"></div>
-      </div>
     </div>
     <div class="ob-slide" id="ob-slide-4" style="justify-content:flex-start;padding-top:32px;overflow-y:auto;">
       <div style="width:100%;max-width:360px;margin:0 auto;">
         <div style="margin-bottom:20px">
           <div id="ob-auth-title" style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Secure Cloud Backup</div>
-          <div id="ob-auth-sub" style="font-size:13px;color:var(--muted);line-height:1.5">Optional: Create an account to securely save your travel history, active visas and get multi-device synchronization.</div>
+          <div id="ob-auth-sub" style="font-size:13px;color:var(--muted);line-height:1.5">Optional: Sign in to restore your existing data, or create an account for cloud sync.</div>
         </div>
 
         <div style="display:flex;background:var(--bg2);padding:3px;border-radius:12px;margin-bottom:16px;">
@@ -863,6 +904,36 @@ input:checked+.slider::before{transform:translateX(20px);}
         <div style="height:24px"></div>
       </div>
     </div>
+    <div class="ob-slide" id="ob-slide-5" style="justify-content:flex-start;padding-top:32px;overflow-y:auto;">
+      <div style="width:100%;max-width:360px;margin:0 auto;">
+        <div style="margin-bottom:20px">
+          <div style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Create Your Profile</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.5">A few details to personalise your experience.</div>
+        </div>
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="ob-name" placeholder="e.g. Alex Johnson" autocomplete="name">
+        <label class="form-label">Citizenship Country</label>
+        <input class="form-input" id="ob-citizenship" placeholder="e.g. Germany, United States…" oninput="obFilterCitizenship(this.value)" autocomplete="off">
+        <div id="ob-citizenship-dropdown" class="country-dropdown" style="display:none"></div>
+        <label class="form-label">Current Country</label>
+        <input class="form-input" id="ob-location" placeholder="e.g. Vietnam, Thailand…" oninput="obFilterLocation(this.value)" autocomplete="off">
+        <div id="ob-location-dropdown" class="country-dropdown" style="display:none"></div>
+        <label class="form-label">Arrival Date</label>
+        <input class="form-input" id="ob-arrival" type="date">
+        <div class="disclaimer-box">
+          <strong>Disclaimer &amp; Terms of Use</strong><br><br>
+          VisaFlow is a personal travel tracking tool for informational purposes only. Nothing in this app constitutes legal, tax, or immigration advice.<br><br>
+          Visa regulations and entry policies change frequently. Always verify your status with the relevant embassy or immigration authority before making travel decisions.<br><br>
+          VisaFlow is not liable for any fines, deportation, or legal consequences arising from reliance on this application. By using VisaFlow you accept full responsibility for complying with all applicable immigration laws.<br><br>
+          Your data is stored locally on your device and is not shared with third parties.
+        </div>
+        <label class="disclaimer-check" style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;color:var(--text2)">
+          <input type="checkbox" id="ob-agree" onchange="obCheckAgree()" style="margin-top:2px">
+          <span>I understand and agree to the <a href="#" onclick="event.preventDefault();openModal('privacy-modal')" style="color:var(--green);font-weight:700;text-decoration:underline">Terms of Use &amp; Privacy Policy</a>, fully releasing VisaFlow from any liability.</span>
+        </label>
+        <div style="height:16px"></div>
+      </div>
+    </div>
   </div>
   <div class="ob-dots">
     <div class="ob-dot active" id="ob-dot-0"></div>
@@ -870,10 +941,12 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="ob-dot" id="ob-dot-2"></div>
     <div class="ob-dot" id="ob-dot-3"></div>
     <div class="ob-dot" id="ob-dot-4"></div>
+    <div class="ob-dot" id="ob-dot-5"></div>
   </div>
   <div class="ob-bottom">
     <button class="ob-btn" id="ob-cta" onclick="obNext()">Get Started ➔</button>
     <button class="ob-skip" id="ob-skip" onclick="finishOnboarding()">Skip for Now</button>
+    <div class="ob-version">VISAFLOW 1.0</div>
   </div>
 </div>
 
@@ -894,13 +967,13 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="page active" id="page-home">
     <div id="alerts-container"></div>
     <div id="current-location-section"></div>
-    <div id="dashboard-footprint-section"></div>
     <div id="ad-dashboard"></div>
     <div id="active-visas-section"></div>
     <div id="schengen-tracker-section"></div>
     <div id="ad-dashboard-2"></div>
     <div id="residency-section"></div>
     <div id="reminders-section"></div>
+    <div id="dashboard-footprint-section"></div>
   </div>
 
   <!-- VISAS -->
@@ -1068,6 +1141,9 @@ input:checked+.slider::before{transform:translateX(20px);}
     <label class="form-label">Country Name</label>
     <input class="form-input" id="pp-country" placeholder="e.g. Turkey, Germany…" oninput="onPPCountryInput(this.value)" autocomplete="off">
     <div id="pp-country-dropdown" class="country-dropdown" style="display:none"></div>
+    <label class="form-label" style="margin-top:14px">Passport Expiry Date (Optional)</label>
+    <input class="form-input" id="pp-expiry" type="date">
+    <div style="font-size:11px; color:var(--muted); margin-top:4px">Used to calculate the 6-month validity rule for international travel.</div>
     <button class="submit-btn" onclick="addPassport()" style="margin-top:20px">Save Passport</button>
     <button class="secondary-btn" onclick="closeModal('passport-modal')">Cancel</button>
   </div>
@@ -1077,9 +1153,53 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Manage Passports</div>
-    <div class="modal-sub">View or remove your registered passports</div>
+    <div class="modal-sub">View, edit expiry dates, or remove registered passports</div>
     <div id="manage-passports-list" style="margin-top:16px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px;"></div>
     <button class="secondary-btn" onclick="closeModal('manage-passports-modal')">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="edit-passport-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Passport Expiry Date</div>
+    <div class="modal-sub" id="edit-pp-country-title">Set or update your passport expiry date</div>
+    <input type="hidden" id="edit-pp-id">
+    
+    <label class="form-label" style="margin-top:14px">Passport Expiry Date</label>
+    <input class="form-input" id="edit-pp-expiry" type="date">
+    <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5; background:var(--bg2); padding:10px; border-radius:8px; border:1px solid var(--border)">
+      ⚠️ <strong>6-Month Rule Warning:</strong> Most countries require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when validity falls below 6 months.
+    </div>
+
+    <button class="submit-btn" onclick="savePassportExpiry()" style="margin-top:20px">Save Changes</button>
+    <button class="secondary-btn" onclick="closeModal('edit-passport-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="calendar-export-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="text-align:center; margin-bottom:16px">
+      <div style="font-size:36px; margin-bottom:8px">📅</div>
+      <div class="modal-title" id="cal-modal-title">Add to Calendar</div>
+      <div class="modal-sub">Sync visa and passport reminders with your device calendar</div>
+    </div>
+    
+    <div style="background:var(--bg2); border:1.5px solid var(--border); border-radius:12px; padding:14px; margin-bottom:20px">
+      <div style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px">REMINDER EVENT</div>
+      <div id="cal-event-name" style="font-size:15px; font-weight:800; color:var(--text); margin-bottom:2px"></div>
+      <div id="cal-event-date" style="font-size:13px; font-weight:700; color:var(--green); margin-bottom:8px"></div>
+      <div id="cal-event-desc" style="font-size:12px; color:var(--muted); line-height:1.5"></div>
+    </div>
+
+    <button class="submit-btn" id="cal-btn-google" style="background:#4285F4; color:#ffffff; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px">
+      <span>🗓️</span> Add to Google Calendar
+    </button>
+    <button class="submit-btn" id="cal-btn-ics" style="background:var(--green); color:#ffffff; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:8px">
+      <span>📥</span> Download .ics File (Apple / Outlook / Phone)
+    </button>
+    <button class="secondary-btn" onclick="closeModal('calendar-export-modal')">Cancel</button>
   </div>
 </div>
 
@@ -1406,62 +1526,49 @@ input:checked+.slider::before{transform:translateX(20px);}
 
 <!-- SHARE FOOTPRINT MODAL -->
 <div class="modal-overlay" id="share-footprint-modal">
-  <div class="modal" style="text-align:center; max-width:440px; width:95%;">
+  <div class="modal" style="text-align:center; max-width:440px; width:95%; max-height:90vh; overflow-y:auto; padding:20px 16px;">
     <div class="modal-handle"></div>
     <div style="font-size:32px; margin-bottom:4px">🌍</div>
     <div class="modal-title" style="margin-bottom:2px">Share Your Travel Footprint</div>
-    <div class="modal-sub" style="margin-bottom:16px">Show off your travel journey on Instagram, WhatsApp &amp; Twitter!</div>
+    <div class="modal-sub" style="margin-bottom:14px">Show off your travel journey &amp; Yearly Wrapped on Instagram Story &amp; Socials!</div>
 
-    <!-- PREVIEW CARD -->
-    <div id="footprint-card-preview" style="background:linear-gradient(135deg, #1E293B, #0F172A); border:1.5px solid rgba(255,255,255,0.15); border-radius:18px; padding:20px; color:#fff; text-align:left; box-shadow:0 10px 25px rgba(0,0,0,0.3); margin-bottom:16px; position:relative; overflow:hidden">
-      <div style="position:absolute; top:-15px; right:-15px; font-size:90px; opacity:0.06; pointer-events:none">✈️</div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.12); padding-bottom:10px">
-        <div style="display:flex; align-items:center; gap:10px">
-          <div id="fp-avatar" style="width:38px; height:38px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#fff; overflow:hidden">Y</div>
-          <div>
-            <div id="fp-name" style="font-size:15px; font-weight:800; color:#fff">Nomad's Footprint</div>
-            <div style="font-size:10.5px; color:rgba(255,255,255,0.6)">Globetrotter &amp; Nomad</div>
-          </div>
-        </div>
-        <div style="background:rgba(255,255,255,0.15); font-size:10px; font-weight:700; padding:4px 9px; border-radius:12px; backdrop-filter:blur(4px)">PASSPORT 🛂</div>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; background:rgba(255,255,255,0.06); padding:12px; border-radius:12px; text-align:center">
-        <div>
-          <div id="fp-countries" style="font-size:22px; font-weight:900; color:#34D399">0</div>
-          <div style="font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.6)">Countries</div>
-        </div>
-        <div>
-          <div id="fp-days" style="font-size:22px; font-weight:900; color:#60A5FA">0</div>
-          <div style="font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.6)">Days Abroad</div>
-        </div>
-        <div>
-          <div id="fp-trips" style="font-size:22px; font-weight:900; color:#FBBF24">0</div>
-          <div style="font-size:9px; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.6)">Trips</div>
+    <!-- CONTROLS: PERIOD & FORMAT -->
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px; background:var(--bg2); border:1.5px solid var(--border); padding:10px 12px; border-radius:14px">
+      <!-- Period Selector -->
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap">
+        <span style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px">Period:</span>
+        <div id="fp-period-buttons" style="display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end">
+          <!-- Populated dynamically: All Time, 2026 Wrapped, 2025 Wrapped... -->
         </div>
       </div>
-
-      <div style="margin-bottom:12px">
-        <div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.5); text-transform:uppercase; margin-bottom:6px">Stamped Countries</div>
-        <div id="fp-flags-grid" style="display:flex; flex-wrap:wrap; gap:6px; max-height:90px; overflow-y:auto"></div>
+      <!-- Format Switcher -->
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; border-top:1px dashed var(--border); padding-top:8px">
+        <span style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px">Format:</span>
+        <div style="display:flex; gap:6px">
+          <button id="fp-fmt-card" onclick="setFootprintFormat('card')" style="padding:5px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--green); background:var(--green); color:#fff transition:all 0.15s">💳 Card</button>
+          <button id="fp-fmt-story" onclick="setFootprintFormat('story')" style="padding:5px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:var(--bg); color:var(--text); transition:all 0.15s">📸 9:16 Story Wrapped</button>
+        </div>
       </div>
+    </div>
 
-      <div style="border-top:1px dashed rgba(255,255,255,0.15); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.5)">
-        <span>Tracked with <strong>VisaFlow</strong></span>
-        <span>visaflow.app ✈️</span>
-      </div>
+    <!-- PREVIEW CARD RENDER AREA -->
+    <div id="footprint-card-wrapper" style="display:flex; justify-content:center; margin-bottom:16px; min-height:220px">
+      <!-- Standard Card or 9:16 Story Rendered via JS -->
     </div>
 
     <!-- ACTION BUTTONS -->
-    <div style="display:flex; gap:8px">
-      <button onclick="shareFootprintText()" style="flex:1; padding:12px; background:var(--green); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px">
-        <span>📲 Copy Share Text</span>
+    <div style="display:flex; gap:8px; flex-wrap:wrap">
+      <button onclick="shareFootprintText()" style="flex:1; min-width:120px; padding:11px; background:var(--green); color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px">
+        <span>📲 Copy Text</span>
       </button>
-      <button onclick="shareFootprintNative()" style="flex:1; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px">
-        <span>📤 Share / Post</span>
+      <button onclick="downloadFootprintImage()" style="flex:1; min-width:120px; padding:11px; background:#10B981; color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow:0 2px 8px rgba(16,185,129,0.3)">
+        <span>🖼️ Save Image</span>
+      </button>
+      <button onclick="shareFootprintNative()" style="flex:1; min-width:120px; padding:11px; background:var(--blue); color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px">
+        <span>📤 Share</span>
       </button>
     </div>
-    <button class="secondary-btn" onclick="closeModal('share-footprint-modal')" style="margin-top:8px">Close</button>
+    <button class="secondary-btn" onclick="closeModal('share-footprint-modal')" style="margin-top:10px">Close</button>
   </div>
 </div>
 
@@ -1967,57 +2074,177 @@ function renderAll(){ applyTheme(); updateGreeting(); renderDashboard(); renderA
 // ============================================================
 // DASHBOARD
 // ============================================================
-function renderDashboard(){ renderAlerts(); renderCurrentLocation(); renderAds(); renderActiveVisas(); renderSchengenTracker(); renderResidencies(); renderReminders(); }
+function renderDashboard(){ renderAlerts(); renderCurrentLocation(); renderAds(); renderActiveVisas(); renderSchengenTracker(); renderResidencies(); renderReminders(); renderDashboardFootprint(); }
+
+function renderDashboardFootprint(){
+  var el = document.getElementById('dashboard-footprint-section');
+  if(!el) return;
+  var filtered = state.travels || [];
+  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
+  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
+
+  var flagsHtml = '';
+  if(uniqueCountries.length > 0){
+    flagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">';
+    uniqueCountries.slice(0, 10).forEach(function(c){
+      var cs = getCS(c);
+      flagsHtml += '<span style="background:rgba(255,255,255,0.22);color:#ffffff;border:1px solid rgba(255,255,255,0.35);padding:4px 9px;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:5px;font-weight:700;backdrop-filter:blur(4px)">'+
+        flagImg(c, cs, 'sm') + ' ' + c +
+      '</span>';
+    });
+    if(uniqueCountries.length > 10){
+      flagsHtml += '<span style="font-size:11px;color:rgba(255,255,255,0.9);align-self:center;font-weight:700;background:rgba(255,255,255,0.22);padding:3px 8px;border-radius:8px">+ ' + (uniqueCountries.length - 10) + ' more</span>';
+    }
+    flagsHtml += '</div>';
+  } else {
+    flagsHtml = '<div style="font-size:11px;color:rgba(255,255,255,0.9);margin-top:8px;background:rgba(255,255,255,0.22);padding:6px 10px;border-radius:8px;display:inline-block">No countries logged yet. Set your location or add travel history to build your footprint!</div>';
+  }
+
+  el.innerHTML =
+    '<div class="card" style="position:relative; overflow:hidden; border:1.5px solid rgba(255,255,255,0.25); padding:16px; margin-bottom:16px; border-radius:18px; background:linear-gradient(135deg, #0A4D3C, #00A884); color:#ffffff; box-shadow:0 10px 25px rgba(0,168,132,0.25)">'+
+      '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/footprint.webp\') center/cover no-repeat; opacity:0.45; pointer-events:none; z-index:0"></div>'+
+      '<div style="position:relative; z-index:1">'+
+        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">'+
+          '<div style="display:flex; align-items:center; gap:8px">'+
+            '<span style="font-size:22px">🌍</span>'+
+            '<div>'+
+              '<div style="font-size:14px; font-weight:800; color:#ffffff">Travel Footprint &amp; Country Counter</div>'+
+              '<div style="font-size:11px; color:rgba(255,255,255,0.85)">Your nomad stats &amp; stamped destinations</div>'+
+            '</div>'+
+          '</div>'+
+          '<button onclick="openShareFootprintModal()" style="background:rgba(255,255,255,0.22); color:#ffffff; border:1px solid rgba(255,255,255,0.4); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:800; cursor:pointer; backdrop-filter:blur(4px); white-space:nowrap; display:flex; align-items:center; gap:4px">'+
+            '<span>Share Card 📸</span>'+
+          '</button>'+
+        '</div>'+
+        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,0.22); backdrop-filter:blur(6px); padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.35); text-align:center">'+
+          '<div>'+
+            '<div style="font-size:18px; font-weight:900; color:#6EE7B7">' + uniqueCountries.length + '</div>'+
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.95); text-transform:uppercase">Countries</div>'+
+          '</div>'+
+          '<div>'+
+            '<div style="font-size:18px; font-weight:900; color:#93C5FD">' + totalDays + '</div>'+
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.95); text-transform:uppercase">Days Abroad</div>'+
+          '</div>'+
+          '<div>'+
+            '<div style="font-size:18px; font-weight:900; color:#FDE047">' + filtered.length + '</div>'+
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.95); text-transform:uppercase">Trips</div>'+
+          '</div>'+
+        '</div>'+
+        flagsHtml +
+      '</div>'+
+    '</div>';
+}
 
 function renderAds(){
-  var el = document.getElementById('ad-dashboard');
-  if(!el) return;
-  if(state.user.isPremium){ el.innerHTML=''; return; }
-  el.innerHTML=
-    '<div class="ad-container">'+
-      '<div class="ad-badge">Sponsored</div>'+
-      '<div class="ad-title">Travel Insurance</div>'+
-      '<div class="ad-content">'+
-        '<div class="ad-image">🛡️</div>'+
-        '<div class="ad-text">'+
-          '<div class="ad-headline">Stay covered with SafetyWing</div>'+
-          '<div class="ad-subline">Worldwide medical coverage from $45/month.</div>'+
+  var el1 = document.getElementById('ad-dashboard');
+  var el2 = document.getElementById('ad-dashboard-2');
+  if(state.user.isPremium){
+    if(el1) el1.innerHTML='';
+    if(el2) el2.innerHTML='';
+    return;
+  }
+  
+  if(el1){
+    el1.innerHTML=
+      '<div class="ad-container">'+
+        '<div class="ad-badge">Sponsored</div>'+
+        '<div class="ad-title">Nomad Travel Insurance</div>'+
+        '<div class="ad-content">'+
+          '<div class="ad-image">🛡️</div>'+
+          '<div class="ad-text">'+
+            '<div class="ad-headline">Stay covered with SafetyWing</div>'+
+            '<div class="ad-subline">Worldwide medical coverage from $45/month.</div>'+
+          '</div>'+
+          '<button class="ad-action-btn" onclick="window.open(\'https://safetywing.com\',\'_blank\')">Explore</button>'+
         '</div>'+
-        '<button class="ad-action-btn" onclick="window.open(\'https://safetywing.com\',\'_blank\')">Explore</button>'+
-      '</div>'+
-      '<span class="ad-remove-link" onclick="openPaywall(\'ads\')">Remove ads with Premium</span>'+
-    '</div>';
+        '<span class="ad-remove-link" onclick="openPaywall(\'ads\')">Remove ads with Premium</span>'+
+      '</div>';
+  }
+
+  if(el2){
+    el2.innerHTML=
+      '<div class="ad-container" style="margin-top:16px; margin-bottom:16px">'+
+        '<div class="ad-badge">Sponsored</div>'+
+        '<div class="ad-title">Global Connectivity</div>'+
+        '<div class="ad-content">'+
+          '<div class="ad-image">📶</div>'+
+          '<div class="ad-text">'+
+            '<div class="ad-headline">Instant Travel eSIM by Airalo</div>'+
+            '<div class="ad-subline">Stay connected in 200+ countries from $4.50 without roaming fees.</div>'+
+          '</div>'+
+          '<button class="ad-action-btn" onclick="window.open(\'https://www.airalo.com\',\'_blank\')">Get eSIM</button>'+
+        '</div>'+
+        '<span class="ad-remove-link" onclick="openPaywall(\'ads\')">Remove ads with Premium</span>'+
+      '</div>';
+  }
 }
 
 function renderAlerts(){
   let html='';
+
+  // 1. Passport 6-Month Validity & Expiry Warnings
+  if (state.passports && state.passports.length) {
+    state.passports.forEach(function(pp){
+      if (pp.expiryDate) {
+        const dl = daysBetween(today(), pp.expiryDate);
+        if (dl <= 0) {
+          html += '<div class="banner" style="background:#FEE2E2; border:1.5px solid #FCA5A5; margin-bottom:12px">'+
+            '<div class="banner-title" style="color:#DC2626">🚨 ' + pp.country + ' Passport Expired</div>'+
+            '<div class="banner-body" style="color:#991B1B">Your passport expired on <strong>' + fmtDate(pp.expiryDate) + '</strong>. You cannot travel internationally until renewed.</div>'+
+            '<div style="display:flex; gap:8px; margin-top:10px">'+
+              '<button onclick="exportPassportCalendar(\'' + pp.id + '\')" style="background:#DC2626; color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">📅 Add Renewal to Calendar</button>'+
+              '<button onclick="openEditPassportModal(\'' + pp.id + '\')" style="background:#ffffff; color:#DC2626; border:1px solid #FCA5A5; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">✏️ Update Expiry Date</button>'+
+            '</div>'+
+          '</div>';
+        } else if (dl <= 183) {
+          html += '<div class="banner warn" style="margin-bottom:12px">'+
+            '<div class="banner-title">⚠️ 6-Month Passport Validity Warning (' + pp.country + ')</div>'+
+            '<div class="banner-body">Your passport expires in <strong>' + dl + ' days</strong> (' + fmtDate(pp.expiryDate) + '). <strong>Many countries enforce the 6-month validity rule</strong> upon arrival and will deny entry or visa issuance if your passport has less than 6 months of validity remaining.</div>'+
+            '<div style="display:flex; gap:8px; margin-top:10px">'+
+              '<button onclick="exportPassportCalendar(\'' + pp.id + '\')" style="background:var(--orange); color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">📅 Add Expiry to Calendar</button>'+
+              '<button onclick="openEditPassportModal(\'' + pp.id + '\')" style="background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">✏️ Update Date</button>'+
+            '</div>'+
+          '</div>';
+        }
+      }
+    });
+  }
+
+  // 2. Visa Expiry Warnings
   state.visas.forEach(function(v){
     const dl=daysBetween(today(),v.endDate), tot=daysBetween(v.startDate,v.endDate);
-    if(dl>=0&&dl<=tot*0.1)
-      html+='<div class="banner warn"><div class="banner-title">⚠️ '+v.country+' visa expiring soon</div><div class="banner-body">Only <strong>'+dl+' day'+(dl!==1?'s':'')+'</strong> remaining. Expires '+fmtDate(v.endDate)+'.</div></div>';
+    if(dl>=0&&dl<=tot*0.1) {
+      html+='<div class="banner warn" style="margin-bottom:12px">'+
+        '<div class="banner-title">⚠️ '+v.country+' visa expiring soon</div>'+
+        '<div class="banner-body">Only <strong>'+dl+' day'+(dl!==1?'s':'')+'</strong> remaining. Expires '+fmtDate(v.endDate)+'.</div>'+
+        '<div style="margin-top:8px">'+
+          '<button onclick="exportVisaCalendar(\''+v.id+'\')" style="background:var(--orange); color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">📅 Add Expiry to Calendar</button>'+
+        '</div>'+
+      '</div>';
+    }
     if(v.reminderDate){
       const rd=daysBetween(today(),v.reminderDate);
-      if(rd>=0&&rd<=7) html+='<div class="banner info"><div class="banner-title">📋 Application Reminder</div><div class="banner-body">'+v.country+' application target: <strong>'+fmtDate(v.reminderDate)+'</strong> ('+rd+' day'+(rd!==1?'s':'')+' left)</div></div>';
+      if(rd>=0&&rd<=7) html+='<div class="banner info" style="margin-bottom:12px"><div class="banner-title">📋 Application Reminder</div><div class="banner-body">'+v.country+' application target: <strong>'+fmtDate(v.reminderDate)+'</strong> ('+rd+' day'+(rd!==1?'s':'')+' left)</div></div>';
     }
   });
 
-  // Schengen 90/180 reminder
+  // 3. Schengen 90/180 reminder
   var hasSchengenVisa = state.visas.find(function(v){return v.country==='Schengen';});
   if(hasSchengenVisa){
     var used = calcSchengenDays();
     var remaining = 90 - used;
     if(remaining <= 0){
-      html+='<div class="banner" style="background:var(--red-l);border:1.5px solid #FECACA">'+
+      html+='<div class="banner" style="background:var(--red-l);border:1.5px solid #FECACA; margin-bottom:12px">'+
         '<div class="banner-title" style="color:var(--red)">🚨 Schengen Limit Reached</div>'+
         '<div class="banner-body" style="margin-bottom:0">You have used all <strong>90 days</strong> in the last 180-day window. You must leave the Schengen Area immediately.</div>'+
       '</div>';
     } else if(remaining <= 10){
-      html+='<div class="banner warn">'+
+      html+='<div class="banner warn" style="margin-bottom:12px">'+
         '<div class="banner-title">⚠️ Schengen Limit Critical</div>'+
         '<div class="banner-body" style="margin-bottom:0">Only <strong>'+remaining+' day'+(remaining!==1?'s':'')+' left</strong> in your 90/180 Schengen allowance. Plan your departure.</div>'+
       '</div>';
     } else if(remaining <= 30){
-      html+='<div class="banner info">'+
+      html+='<div class="banner info" style="margin-bottom:12px">'+
         '<div class="banner-title">📋 Schengen Reminder</div>'+
         '<div class="banner-body" style="margin-bottom:0"><strong>'+remaining+' days remaining</strong> in your 90/180 Schengen allowance.</div>'+
       '</div>';
@@ -2475,7 +2702,7 @@ function buildVisaCard(v){
   if (v.passportId) {
     const linkedPp = state.passports.find(function(p){ return p.id === v.passportId; });
     if (linkedPp) {
-      passportBadge = '<span style="font-size:11px; color:var(--muted); font-weight:600; margin-top:2px; display:inline-block">🛂 '+linkedPp.country+' Passport</span>';
+      passportBadge = '<span style="font-size:11px; color:var(--muted); font-weight:600; margin-top:2px; display:inline-block">Passport: '+linkedPp.country+'</span>';
     }
   }
   const issuedPill=v.issuedBy?('<div class="issued-pill" style="color:'+cs.accent+';border-color:'+cs.border+'"><img src="https://flagcdn.com/w20/'+(getCS(v.issuedBy).code||'un')+'.png" onerror="this.style.display=\'none\'">Issued by '+v.issuedBy+'</div>'):'';
@@ -2488,7 +2715,10 @@ function buildVisaCard(v){
         passportBadge+
         issuedPill+
       '</div></div>'+
-      '<span class="badge '+badgeCls+'">'+badgeTxt+'</span>'+
+      '<div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px">'+
+        '<span class="badge '+badgeCls+'">'+badgeTxt+'</span>'+
+        '<button onclick="event.stopPropagation();exportVisaCalendar(\''+v.id+'\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:3px 8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px" title="Add to Calendar">📅 Calendar</button>'+
+      '</div>'+
     '</div>'+
     '<div class="progress-row">'+
       '<div class="progress-labels"><span class="progress-lbl">Visa validity</span><span class="progress-val">'+Math.max(0,elapsed)+' / '+tot+' days</span></div>'+
@@ -2554,15 +2784,41 @@ function openManagePassportsModal() {
       const cs = getCS(pp.country);
       const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','style="width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0"');
       
+      let expInfoHtml = '';
+      if (pp.expiryDate) {
+        const dLeft = daysBetween(today(), pp.expiryDate);
+        if (dLeft <= 0) {
+          expInfoHtml = '<div style="font-size:11px; font-weight:700; color:var(--red); margin-top:2px">🚨 Expired on ' + fmtDate(pp.expiryDate) + '</div>';
+        } else if (dLeft <= 183) {
+          expInfoHtml = '<div style="font-size:11px; font-weight:700; color:var(--orange); margin-top:2px">⚠️ Expires in ' + dLeft + ' days (< 6 months)</div>';
+        } else {
+          expInfoHtml = '<div style="font-size:11px; font-weight:600; color:var(--green); margin-top:2px">✅ Valid until ' + fmtDate(pp.expiryDate) + '</div>';
+        }
+      } else {
+        expInfoHtml = '<div style="font-size:11px; color:var(--muted); margin-top:2px">No expiry date set</div>';
+      }
+
       html += 
-        '<div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg2); border:1.5px solid var(--border2); padding:12px 14px; border-radius:12px">'+
-          '<div style="display:flex; align-items:center; gap:10px">'+
-            flagHtml+
-            '<div>'+
-              '<div style="font-size:14px; font-weight:700; color:var(--text)">'+pp.country+'</div>'+
+        '<div style="background:var(--bg2); border:1.5px solid var(--border2); padding:12px 14px; border-radius:12px; margin-bottom:10px">'+
+          '<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">'+
+            '<div style="display:flex; align-items:center; gap:10px">'+
+              flagHtml+
+              '<div>'+
+                '<div style="font-size:14px; font-weight:700; color:var(--text)">'+pp.country+' Passport</div>'+
+                expInfoHtml+
+              '</div>'+
             '</div>'+
+            '<button onclick="deletePassport(\''+pp.id+'\')" style="background:var(--red-l); color:var(--red); border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer">🗑️ Delete</button>'+
           '</div>'+
-          '<button onclick="deletePassport(\''+pp.id+'\')" style="background:var(--red-l); color:var(--red); border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; transition:all 0.2s">🗑️ Delete</button>'+
+          '<div style="display:flex; gap:8px; border-top:1px solid var(--border); padding-top:10px">'+
+            '<button onclick="openEditPassportModal(\''+pp.id+'\')" style="flex:1; background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px">'+
+              '✏️ ' + (pp.expiryDate ? 'Edit Expiry' : 'Set Expiry Date') +
+            '</button>'+
+            (pp.expiryDate ?
+            '<button onclick="exportPassportCalendar(\''+pp.id+'\')" style="flex:1; background:var(--blue-l); color:#1E5EA8; border:1px solid var(--blue-b); border-radius:8px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px">'+
+              '📅 Add to Calendar'+
+            '</button>' : '')+
+          '</div>'+
         '</div>';
     });
   }
@@ -3094,6 +3350,9 @@ function showVisaDetail(id){
     '</div>'+
     (v.reminderDate?('<div style="padding:12px 14px;background:var(--blue-l);border:1.5px solid var(--blue-b);border-radius:12px;font-size:13px;color:#1E5EA8;margin-bottom:12px">📋 Reminder: <strong>'+fmtDate(v.reminderDate)+'</strong></div>'):'')+
     (v.notes?('<div style="padding:12px 14px;background:var(--bg2);border-radius:12px;font-size:13px;color:var(--muted);margin-bottom:12px">📝 '+v.notes+'</div>'):'')+
+    '<button onclick="exportVisaCalendar(\''+v.id+'\')" style="width:100%; padding:12px; background:var(--blue-l); color:#1E5EA8; border:1.5px solid var(--blue-b); border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px">'+
+      '📅 Export Expiry to Calendar (Google / Apple)'+
+    '</button>'+
     '<button class="delete-btn" onclick="deleteVisa(\''+v.id+'\')">Delete Visa</button>'+
     '<button class="secondary-btn" onclick="closeModal(\'visa-detail-modal\')">Close</button>';
   openModal('visa-detail-modal');
@@ -3206,10 +3465,12 @@ function addPassport(){
   const country=document.getElementById('pp-country').value.trim();
   if(!country){showToast('Country name required');return;}
 
+  const expiryDate = document.getElementById('pp-expiry') ? document.getElementById('pp-expiry').value : '';
+
   const cs=getCS(country);
   const code=(cs&&cs.code)?cs.code.toLowerCase():'';
 
-  const pp={id:'pp'+Date.now(),country:country,code:code};
+  const pp={id:'pp'+Date.now(),country:country,code:code,expiryDate:expiryDate||null};
   state.passports.push(pp);
   if(!state.activePassportId) state.activePassportId=pp.id;
 
@@ -3219,8 +3480,124 @@ function addPassport(){
   showToast('Passport added ✓');
 
   document.getElementById('pp-country').value='';
+  if(document.getElementById('pp-expiry')) document.getElementById('pp-expiry').value='';
   const dd=document.getElementById('pp-country-dropdown');
   if(dd) dd.style.display='none';
+}
+
+// ============================================================
+// CALENDAR INTEGRATION & EXPORT (.ics / Google Calendar)
+// ============================================================
+function openCalendarExportModal(title, dateStr, details) {
+  var nameEl = document.getElementById('cal-event-name');
+  var dateEl = document.getElementById('cal-event-date');
+  var descEl = document.getElementById('cal-event-desc');
+  if(nameEl) nameEl.textContent = title;
+  if(dateEl) dateEl.textContent = '📅 Date: ' + fmtDate(dateStr) + ' (' + dateStr + ')';
+  if(descEl) descEl.textContent = details;
+  
+  var googleBtn = document.getElementById('cal-btn-google');
+  if(googleBtn) {
+    googleBtn.onclick = function() {
+      openGoogleCalendar(title, dateStr, details);
+    };
+  }
+
+  var icsBtn = document.getElementById('cal-btn-ics');
+  if(icsBtn) {
+    icsBtn.onclick = function() {
+      downloadIcsCalendar(title, dateStr, details);
+    };
+  }
+
+  openModal('calendar-export-modal');
+}
+
+function openGoogleCalendar(title, dateStr, details) {
+  var cleanDate = dateStr.replace(/-/g, '');
+  var dates = cleanDate + '/' + cleanDate;
+  var url = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+            '&text=' + encodeURIComponent(title) +
+            '&dates=' + dates +
+            '&details=' + encodeURIComponent(details + '\n\nManaged with VisaFlow: https://visaflow.app');
+  window.open(url, '_blank');
+  showToast('Opening Google Calendar 📅');
+}
+
+function downloadIcsCalendar(title, dateStr, details) {
+  var cleanDate = dateStr.replace(/-/g, '');
+  var now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  var icsContent = 
+    'BEGIN:VCALENDAR\r\n' +
+    'VERSION:2.0\r\n' +
+    'PRODID:-//VisaFlow//Calendar Export v1.0//EN\r\n' +
+    'CALSCALE:GREGORIAN\r\n' +
+    'METHOD:PUBLISH\r\n' +
+    'BEGIN:VEVENT\r\n' +
+    'UID:visaflow-' + Date.now() + '@visaflow.app\r\n' +
+    'DTSTAMP:' + now + '\r\n' +
+    'DTSTART;VALUE=DATE:' + cleanDate + '\r\n' +
+    'DTEND;VALUE=DATE:' + cleanDate + '\r\n' +
+    'SUMMARY:' + title + '\r\n' +
+    'DESCRIPTION:' + details.replace(/\n/g, '\\n') + '\\n\\nManaged with VisaFlow\r\n' +
+    'STATUS:CONFIRMED\r\n' +
+    'END:VEVENT\r\n' +
+    'END:VCALENDAR';
+  
+  var blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', (title.replace(/[^a-zA-Z0-9]/g, '_')) + '.ics');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('Downloaded .ics calendar file 📅');
+}
+
+function exportVisaCalendar(visaId) {
+  var v = state.visas.find(function(x){ return x.id === visaId; });
+  if (!v) return;
+  var title = '[VisaFlow] Visa Expiry: ' + v.country;
+  var details = v.country + ' Visa expires on ' + fmtDate(v.endDate) + ' (' + v.endDate + '). Make sure to renew, extend, or exit before this date to avoid overstaying.\n\nVisa Type: ' + (v.type === 'multi' ? 'Multiple Entry' : 'Single Entry') + '\nAllowed Stay: ' + v.stayDays + ' days';
+  openCalendarExportModal(title, v.endDate, details);
+}
+
+function exportPassportCalendar(ppId) {
+  var pp = state.passports.find(function(p){ return p.id === ppId; });
+  if (!pp || !pp.expiryDate) {
+    showToast('Please set passport expiry date first');
+    return;
+  }
+  var title = '[VisaFlow] Passport Expiry: ' + pp.country;
+  var details = pp.country + ' Passport expires on ' + fmtDate(pp.expiryDate) + ' (' + pp.expiryDate + '). Note: Most countries enforce the 6-Month Validity Rule upon entry!';
+  openCalendarExportModal(title, pp.expiryDate, details);
+}
+
+function openEditPassportModal(id) {
+  var pp = state.passports.find(function(p){ return p.id === id; });
+  if (!pp) return;
+  document.getElementById('edit-pp-id').value = pp.id;
+  var titleEl = document.getElementById('edit-pp-country-title');
+  if (titleEl) titleEl.textContent = pp.country + ' Passport — Expiry & 6-Month Rule';
+  document.getElementById('edit-pp-expiry').value = pp.expiryDate || '';
+  openModal('edit-passport-modal');
+}
+
+function savePassportExpiry() {
+  var id = document.getElementById('edit-pp-id').value;
+  var exp = document.getElementById('edit-pp-expiry').value;
+  var pp = state.passports.find(function(p){ return p.id === id; });
+  if (pp) {
+    pp.expiryDate = exp || null;
+    save();
+    closeModal('edit-passport-modal');
+    renderAll();
+    var modalEl = document.getElementById('manage-passports-modal');
+    if (modalEl && modalEl.classList.contains('active')) {
+      openManagePassportsModal();
+    }
+    showToast('Passport expiry date saved ✓');
+  }
 }
 
 // ============================================================
@@ -3375,14 +3752,30 @@ function renderProfile(){
     '<div class="settings-group">'+
       state.passports.map(function(pp){
         const cs=getCS(pp.country);
-        return '<div class="settings-item" style="display:flex;align-items:center;justify-content:space-between">'+
+        let statusBadge = '';
+        if (pp.expiryDate) {
+          const dLeft = daysBetween(today(), pp.expiryDate);
+          if (dLeft <= 0) {
+            statusBadge = '<span style="font-size:10px; font-weight:800; background:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:10px; border:1px solid #FCA5A5">EXPIRED</span>';
+          } else if (dLeft <= 183) {
+            statusBadge = '<span style="font-size:10px; font-weight:800; background:#FFEDD5; color:#C2410C; padding:2px 6px; border-radius:10px; border:1px solid #FDBA74">⚠️ <6 MO</span>';
+          } else {
+            statusBadge = '<span style="font-size:10px; font-weight:700; background:#D1FAE5; color:#047857; padding:2px 6px; border-radius:10px; border:1px solid #6EE7B7">VALID</span>';
+          }
+        }
+        return '<div class="settings-item" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="openEditPassportModal(\''+pp.id+'\')">'+
           '<div style="display:flex;align-items:center;gap:12px">'+
             flagImg(pp.country,cs,'sm')+
-            '<div class="settings-label">'+pp.country+'</div>'+
+            '<div>'+
+              '<div class="settings-label" style="display:flex;align-items:center;gap:6px">'+pp.country+' Passport '+statusBadge+'</div>'+
+              '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(pp.expiryDate ? ('Expires: ' + fmtDate(pp.expiryDate)) : 'Tap to set expiry date ✏️')+'</div>'+
+            '</div>'+
           '</div>'+
-          '<button onclick="event.stopPropagation();deletePassport(\''+pp.id+'\')" style="background:var(--red-l);color:var(--red);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all 0.2s" title="Delete Passport">'+
-            '🗑️ Delete'+
-          '</button>'+
+          '<div style="display:flex;align-items:center;gap:6px">'+
+            (pp.expiryDate ?
+            '<button onclick="event.stopPropagation();exportPassportCalendar(\''+pp.id+'\')" style="background:var(--blue-l);color:#1E5EA8;border:1px solid var(--blue-b);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer" title="Add to Calendar">📅</button>' : '')+
+            '<button onclick="event.stopPropagation();deletePassport(\''+pp.id+'\')" style="background:var(--red-l);color:var(--red);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer" title="Delete Passport">🗑️</button>'+
+          '</div>'+
         '</div>';
       }).join('')+
       '<div class="settings-item" onclick="triggerPassportAdd()">'+
@@ -5042,57 +5435,319 @@ function triggerPaywallUpgrade() {
 }
 
 // SHARE FOOTPRINT HANDLERS
-function openShareFootprintModal(){
-  var filtered = state.travels || [];
-  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
-  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
-  
-  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
-  document.getElementById('fp-name').textContent = name + "'s Footprint";
-  
-  var avatarEl = document.getElementById('fp-avatar');
-  if(state.user && state.user.photo){
-    avatarEl.innerHTML = '<img src="'+state.user.photo+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
-  } else {
-    avatarEl.textContent = state.user && state.user.initials ? state.user.initials : name.charAt(0).toUpperCase();
+var fpSelectedYear = 'all';
+var fpSelectedFormat = 'card';
+
+function setFootprintYear(yr) {
+  fpSelectedYear = yr;
+  renderFootprintCard();
+}
+
+function setFootprintFormat(fmt) {
+  fpSelectedFormat = fmt;
+  renderFootprintCard();
+}
+
+function getTripDaysInYear(trip, yearStr) {
+  if (yearStr === 'all') {
+    return trip.end ? daysBetween(trip.start, trip.end) + 1 : daysFromEntry(trip.start);
   }
+  var yearInt = parseInt(yearStr, 10);
+  var yearStart = yearInt + '-01-01';
+  var yearEnd = yearInt + '-12-31';
+  var tStart = trip.start;
+  var tEnd = trip.end || today();
+
+  if (tStart > yearEnd || tEnd < yearStart) return 0; // No overlap
+
+  var calcStart = tStart < yearStart ? yearStart : tStart;
+  var calcEnd = tEnd > yearEnd ? yearEnd : tEnd;
+
+  return Math.max(0, daysBetween(calcStart, calcEnd) + 1);
+}
+
+function getFootprintStats(yearStr) {
+  var travels = state.travels || [];
+  var filteredTrips = [];
+  var countryDaysMap = {};
+  var totalDays = 0;
+
+  travels.forEach(function(t) {
+    var daysInYear = getTripDaysInYear(t, yearStr);
+    if (daysInYear > 0) {
+      filteredTrips.push(t);
+      totalDays += daysInYear;
+      if (!countryDaysMap[t.country]) {
+        countryDaysMap[t.country] = 0;
+      }
+      countryDaysMap[t.country] += daysInYear;
+    }
+  });
+
+  var uniqueCountries = Object.keys(countryDaysMap);
   
-  document.getElementById('fp-countries').textContent = uniqueCountries.length;
-  document.getElementById('fp-days').textContent = totalDays;
-  document.getElementById('fp-trips').textContent = filtered.length;
+  var topCountry = null;
+  var maxDays = 0;
+  uniqueCountries.forEach(function(c) {
+    if (countryDaysMap[c] > maxDays) {
+      maxDays = countryDaysMap[c];
+      topCountry = c;
+    }
+  });
+
+  return {
+    trips: filteredTrips,
+    totalDays: totalDays,
+    uniqueCountries: uniqueCountries,
+    topCountry: topCountry,
+    topCountryDays: maxDays,
+    countryDaysMap: countryDaysMap
+  };
+}
+
+function renderPeriodButtons() {
+  var travels = state.travels || [];
+  var yearsSet = new Set();
+  var currentYear = new Date().getFullYear();
+  yearsSet.add(currentYear);
+  yearsSet.add(currentYear - 1);
+
+  travels.forEach(function(t) {
+    if (t.start) {
+      var y = parseInt(t.start.split('-')[0], 10);
+      if (y && !isNaN(y)) yearsSet.add(y);
+    }
+  });
+
+  var years = Array.from(yearsSet).sort(function(a, b) { return b - a; });
   
-  var flagsGrid = document.getElementById('fp-flags-grid');
-  if(!uniqueCountries.length){
-    flagsGrid.innerHTML = '<span style="font-size:11px;color:rgba(255,255,255,0.4)">No countries logged yet</span>';
+  var btnContainer = document.getElementById('fp-period-buttons');
+  if (!btnContainer) return;
+
+  var html = '<button onclick="setFootprintYear(\'all\')" style="padding:4px 9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; ' +
+    (fpSelectedYear === 'all' ? 'border:1px solid var(--green); background:var(--green); color:#fff' : 'border:1px solid var(--border); background:var(--bg); color:var(--text)') +
+    '">All Time</button>';
+
+  years.forEach(function(y) {
+    var yStr = y.toString();
+    html += '<button onclick="setFootprintYear(\'' + yStr + '\')" style="padding:4px 9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; ' +
+      (fpSelectedYear === yStr ? 'border:1px solid var(--green); background:var(--green); color:#fff' : 'border:1px solid var(--border); background:var(--bg); color:var(--text)') +
+      '">' + yStr + ' Wrapped</button>';
+  });
+
+  btnContainer.innerHTML = html;
+}
+
+function renderFootprintCard() {
+  renderPeriodButtons();
+
+  var btnCard = document.getElementById('fp-fmt-card');
+  var btnStory = document.getElementById('fp-fmt-story');
+  if (btnCard && btnStory) {
+    if (fpSelectedFormat === 'card') {
+      btnCard.style.background = 'var(--green)';
+      btnCard.style.color = '#fff';
+      btnCard.style.border = '1px solid var(--green)';
+      btnStory.style.background = 'var(--bg)';
+      btnStory.style.color = 'var(--text)';
+      btnStory.style.border = '1px solid var(--border)';
+    } else {
+      btnStory.style.background = 'var(--green)';
+      btnStory.style.color = '#fff';
+      btnStory.style.border = '1px solid var(--green)';
+      btnCard.style.background = 'var(--bg)';
+      btnCard.style.color = 'var(--text)';
+      btnCard.style.border = '1px solid var(--border)';
+    }
+  }
+
+  var stats = getFootprintStats(fpSelectedYear);
+  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+  var initials = state.user && state.user.initials ? state.user.initials : name.charAt(0).toUpperCase();
+  var photo = state.user ? state.user.photo : null;
+
+  var avatarHtml = photo ? 
+    '<img src="' + photo + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">' : 
+    initials;
+
+  var yearTitle = fpSelectedYear === 'all' ? 'All-Time Journey' : fpSelectedYear + ' Wrapped';
+
+  var flagsHtml = '';
+  if (!stats.uniqueCountries.length) {
+    flagsHtml = '<span style="font-size:11px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.18);padding:4px 8px;border-radius:8px">No countries logged in this period</span>';
   } else {
-    flagsGrid.innerHTML = uniqueCountries.map(function(c){
+    flagsHtml = stats.uniqueCountries.map(function(c) {
       var cs = getCS(c);
-      return '<span style="background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:10px;font-size:11px;display:inline-flex;align-items:center;gap:4px;color:#fff">'+
+      return '<span style="background:rgba(255,255,255,0.22);padding:4px 9px;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:5px;color:#ffffff;font-weight:700;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(4px)">' +
         flagImg(c, cs, 'sm') + ' ' + c +
       '</span>';
     }).join('');
   }
-  
+
+  var topCountryHtml = '';
+  if (stats.topCountry) {
+    var topCs = getCS(stats.topCountry);
+    topCountryHtml = 
+      '<div style="background:rgba(255,255,255,0.22); border:1px solid rgba(255,255,255,0.35); backdrop-filter:blur(6px); padding:8px 12px; border-radius:14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between">' +
+        '<div style="display:flex; align-items:center; gap:8px">' +
+          flagImg(stats.topCountry, topCs, 'md') +
+          '<div style="text-align:left">' +
+            '<div style="font-size:9px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#FDE047">🏆 Top Destination</div>' +
+            '<div style="font-size:13px; font-weight:800; color:#ffffff">' + stats.topCountry + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="background:rgba(255,255,255,0.25); color:#ffffff; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px">' +
+          stats.topCountryDays + ' Days' +
+        '</div>' +
+      '</div>';
+  }
+
+  var wrapper = document.getElementById('footprint-card-wrapper');
+  if (!wrapper) return;
+
+  if (fpSelectedFormat === 'card') {
+    // Standard Horizontal Card Format
+    wrapper.innerHTML = 
+      '<div id="footprint-card-render" style="width:100%; max-width:390px; background:linear-gradient(135deg, #0A4D3C, #00A884); border:1.5px solid rgba(255,255,255,0.2); border-radius:18px; padding:20px; color:#ffffff; text-align:left; box-shadow:0 10px 25px rgba(0,168,132,0.25); position:relative; overflow:hidden">' +
+        '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/footprint.webp\') center/cover no-repeat; opacity:0.5; pointer-events:none; z-index:0"></div>' +
+        '<div style="position:relative; z-index:1">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:10px">' +
+            '<div style="display:flex; align-items:center; gap:10px">' +
+              '<div style="width:38px; height:38px; border-radius:50%; background:var(--green); border:1.5px solid rgba(255,255,255,0.4); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#ffffff; overflow:hidden">' + avatarHtml + '</div>' +
+              '<div>' +
+                '<div style="font-size:15px; font-weight:800; color:#ffffff">' + name + '\'s Footprint</div>' +
+                '<div style="font-size:10.5px; color:rgba(255,255,255,0.85)">' + yearTitle + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="background:rgba(255,255,255,0.22); color:#ffffff; font-size:10px; font-weight:800; padding:4px 9px; border-radius:12px; border:1px solid rgba(255,255,255,0.35); backdrop-filter:blur(4px)">PASSPORT 🛂</div>' +
+          '</div>' +
+
+          (stats.topCountry ? topCountryHtml : '') +
+
+          '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; background:rgba(255,255,255,0.18); backdrop-filter:blur(6px); padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.25); text-align:center">' +
+            '<div>' +
+              '<div style="font-size:22px; font-weight:900; color:#6EE7B7">' + stats.uniqueCountries.length + '</div>' +
+              '<div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.85)">Countries</div>' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:22px; font-weight:900; color:#93C5FD">' + stats.totalDays + '</div>' +
+              '<div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.85)">Days Abroad</div>' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:22px; font-weight:900; color:#FDE047">' + stats.trips.length + '</div>' +
+              '<div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.85)">Trips</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<div style="margin-bottom:12px">' +
+            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.85); text-transform:uppercase; margin-bottom:6px">Stamped Countries</div>' +
+            '<div style="display:flex; flex-wrap:wrap; gap:6px; max-height:100px; overflow-y:auto">' + flagsHtml + '</div>' +
+          '</div>' +
+
+          '<div style="border-top:1px dashed rgba(255,255,255,0.25); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.85); font-weight:600">' +
+            '<span>Tracked with <strong style="color:#ffffff">VisaFlow</strong></span>' +
+            '<span style="color:#ffffff">visaflow.app ✈️</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  } else {
+    // 9:16 Instagram Story Wrapped Format (Vertical ~ 285px x 500px)
+    wrapper.innerHTML = 
+      '<div id="footprint-card-render" style="width:285px; height:500px; background:linear-gradient(165deg, #06382B 0%, #0A4D3C 40%, #00A884 100%); border:2px solid rgba(255,255,255,0.25); border-radius:22px; padding:20px 16px; color:#ffffff; text-align:left; box-shadow:0 15px 35px rgba(0,0,0,0.4); position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between">' +
+        '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/footprint.webp\') center/cover no-repeat; opacity:0.5; pointer-events:none; z-index:0"></div>' +
+        '<div style="position:relative; z-index:1; height:100%; display:flex; flex-direction:column; justify-content:space-between">' +
+          
+          '<div>' +
+            '<!-- Header Badge -->' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">' +
+              '<div style="background:#FDE047; color:#06382B; font-size:10px; font-weight:900; letter-spacing:0.8px; padding:4px 10px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.2)">✨ ' + yearTitle.toUpperCase() + '</div>' +
+              '<div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.9)">PASSPORT 🛂</div>' +
+            '</div>' +
+
+            '<!-- User Profile Header -->' +
+            '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; background:rgba(255,255,255,0.15); backdrop-filter:blur(6px); padding:8px 10px; border-radius:14px; border:1px solid rgba(255,255,255,0.25)">' +
+              '<div style="width:40px; height:40px; border-radius:50%; background:var(--green); border:2px solid #ffffff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#ffffff; overflow:hidden; flex-shrink:0">' + avatarHtml + '</div>' +
+              '<div style="overflow:hidden">' +
+                '<div style="font-size:14px; font-weight:900; color:#ffffff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">' + name + '\'s Travels</div>' +
+                '<div style="font-size:10px; color:rgba(255,255,255,0.85); font-weight:600">Travel Footprint Wrapped</div>' +
+              '</div>' +
+            '</div>' +
+
+            (stats.topCountry ? topCountryHtml : '') +
+
+            '<!-- Big Stats Grid -->' +
+            '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px">' +
+              '<div style="background:rgba(255,255,255,0.18); backdrop-filter:blur(6px); padding:10px 8px; border-radius:14px; border:1px solid rgba(255,255,255,0.25); text-align:center">' +
+                '<div style="font-size:24px; font-weight:900; color:#6EE7B7; line-height:1">' + stats.uniqueCountries.length + '</div>' +
+                '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.9); margin-top:4px">Countries</div>' +
+              '</div>' +
+              '<div style="background:rgba(255,255,255,0.18); backdrop-filter:blur(6px); padding:10px 8px; border-radius:14px; border:1px solid rgba(255,255,255,0.25); text-align:center">' +
+                '<div style="font-size:24px; font-weight:900; color:#93C5FD; line-height:1">' + stats.totalDays + '</div>' +
+                '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.9); margin-top:4px">Days Abroad</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<!-- Stamped Countries -->' +
+            '<div>' +
+              '<div style="font-size:9px; font-weight:800; color:rgba(255,255,255,0.85); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px">Stamped Destinations</div>' +
+              '<div style="display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto">' + flagsHtml + '</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<!-- Story Footer -->' +
+          '<div style="border-top:1px dashed rgba(255,255,255,0.3); padding-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.9); font-weight:700">' +
+            '<div style="display:flex; align-items:center; gap:5px"><span>✈️ Tracked with</span><strong style="color:#ffffff; font-weight:900">VisaFlow</strong></div>' +
+            '<div style="background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:10px; font-size:10px; color:#ffffff; font-weight:800">visaflow.app</div>' +
+          '</div>' +
+
+        '</div>' +
+      '</div>';
+  }
+}
+
+function openShareFootprintModal() {
+  renderFootprintCard();
   openModal('share-footprint-modal');
 }
 
-function shareFootprintText(){
-  var filtered = state.travels || [];
-  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
-  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
-  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+function downloadFootprintImage() {
+  var card = document.getElementById('footprint-card-render');
+  if (!card) return;
+  if (typeof html2canvas !== 'undefined') {
+    showToast("Generating card image... 📸");
+    html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
+      var link = document.createElement('a');
+      var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+      link.download = name.replace(/\s+/g, '_') + '_Travel_Wrapped_' + fpSelectedYear + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast("Card image downloaded! 🚀");
+    }).catch(function(e) {
+      console.error(e);
+      showToast("Could not render image. Take a screenshot to share! 📸");
+    });
+  } else {
+    showToast("Take a screenshot to share your story! 📸");
+  }
+}
 
-  var text = "🌍 My Travel Footprint (" + name + "):\n" +
-    "📍 " + uniqueCountries.length + " Countries Visited\n" +
-    "📅 " + totalDays + " Days Abroad\n" +
-    "✈️ " + filtered.length + " Trips Logged\n" +
-    (uniqueCountries.length ? "Visited: " + uniqueCountries.slice(0, 8).join(", ") + (uniqueCountries.length > 8 ? "..." : "") + "\n" : "") +
-    "Track your visa days & passport allowance automatically with VisaFlow 🛂✨\nhttps://visaflow.app";
+function shareFootprintText() {
+  var stats = getFootprintStats(fpSelectedYear);
+  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+  var yearTitle = fpSelectedYear === 'all' ? 'Travel Journey' : fpSelectedYear + ' Travel Wrapped';
+
+  var text = "🌍 My " + yearTitle + " (" + name + "):\n" +
+    "📍 " + stats.uniqueCountries.length + " Countries Visited\n" +
+    "📅 " + stats.totalDays + " Days Abroad\n" +
+    "✈️ " + stats.trips.length + " Trips Logged\n" +
+    (stats.topCountry ? "🏆 Top Destination: " + stats.topCountry + " (" + stats.topCountryDays + " days)\n" : "") +
+    (stats.uniqueCountries.length ? "Visited: " + stats.uniqueCountries.slice(0, 8).join(", ") + (stats.uniqueCountries.length > 8 ? "..." : "") + "\n" : "") +
+    "Track your visa days & travel allowance with VisaFlow 🛂✨\nhttps://visaflow.app";
 
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(function(){
+    navigator.clipboard.writeText(text).then(function() {
       showToast("Share card text copied to clipboard! 🚀");
-    }).catch(function(){
+    }).catch(function() {
       showToast("Share text copied!");
     });
   } else {
@@ -5100,20 +5755,19 @@ function shareFootprintText(){
   }
 }
 
-function shareFootprintNative(){
-  var filtered = state.travels || [];
-  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
-  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
+function shareFootprintNative() {
+  var stats = getFootprintStats(fpSelectedYear);
   var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
+  var yearTitle = fpSelectedYear === 'all' ? 'Travel Footprint' : fpSelectedYear + ' Travel Wrapped';
 
   var shareData = {
-    title: name + "'s Travel Footprint",
-    text: "🌍 " + name + " visited " + uniqueCountries.length + " countries and spent " + totalDays + " days abroad! Track your visas with VisaFlow ✈️",
+    title: name + "'s " + yearTitle,
+    text: "🌍 " + name + " visited " + stats.uniqueCountries.length + " countries and spent " + stats.totalDays + " days abroad " + (fpSelectedYear === 'all' ? 'so far' : 'in ' + fpSelectedYear) + "! Track your visas with VisaFlow ✈️",
     url: "https://visaflow.app"
   };
 
   if (navigator.share) {
-    navigator.share(shareData).catch(function(){});
+    navigator.share(shareData).catch(function() {});
   } else {
     shareFootprintText();
   }
@@ -5208,7 +5862,7 @@ function showToast(msg){
 // ONBOARDING
 // ============================================================
 let obCurrent=0;
-const OB_TOTAL=5;
+const OB_TOTAL=6;
 
 let obAuthTab = 'register';
 function setObAuthTab(tab) {
@@ -5249,14 +5903,20 @@ function setObAuthTab(tab) {
 }
 
 function applyOnboardingFieldsToState() {
-  const name=document.getElementById('ob-name').value.trim();
-  const citizenship=document.getElementById('ob-citizenship').value.trim();
-  const location=document.getElementById('ob-location').value.trim();
-  const arrival=document.getElementById('ob-arrival').value;
+  const nameInput=document.getElementById('ob-name');
+  const name=nameInput ? nameInput.value.trim() : '';
+  const citizenshipInput=document.getElementById('ob-citizenship');
+  const citizenship=citizenshipInput ? citizenshipInput.value.trim() : '';
+  const locationInput=document.getElementById('ob-location');
+  const location=locationInput ? locationInput.value.trim() : '';
+  const arrivalInput=document.getElementById('ob-arrival');
+  const arrival=arrivalInput ? arrivalInput.value : '';
 
-  state.user.name=name;
-  const parts=name.trim().split(' ');
-  state.user.initials=(parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+  if (name) {
+    state.user.name=name;
+    const parts=name.trim().split(' ');
+    state.user.initials=(parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+  }
   state.user.onboarded=true;
   if(!state.user.hasOwnProperty('isPremium')) state.user.isPremium=false;
 
@@ -5271,16 +5931,12 @@ function applyOnboardingFieldsToState() {
     state.currentEntry=arrival||today();
     state.travels=[{country:location,code:cs.code||'',start:state.currentEntry,end:null}];
     state.visas=[]; state.residencies=[];
-  } else {
-    state.visas=[]; state.residencies=[]; state.travels=[];
-    state.currentCountry=null; state.currentEntry=null;
   }
 }
 
 async function submitObAuth() {
   const email = document.getElementById('ob-auth-email').value.trim();
   const password = document.getElementById('ob-auth-password').value.trim();
-  const name = document.getElementById('ob-name').value.trim();
   const submitBtn = document.getElementById('ob-auth-submit-btn');
 
   if (!email || !password) {
@@ -5295,18 +5951,21 @@ async function submitObAuth() {
   submitBtn.disabled = true;
   submitBtn.textContent = obAuthTab === 'login' ? 'Signing in...' : 'Creating Account...';
 
-  // Apply slide 3 inputs to local state
-  applyOnboardingFieldsToState();
-
   if (window.firebaseServices && window.firebaseRegisterUser) {
     try {
       if (obAuthTab === 'register') {
-        const { user, userData } = await window.firebaseRegisterUser(email, password, name, state);
+        const { user, userData } = await window.firebaseRegisterUser(email, password, 'Explorer', state);
         showToast('Account registered with Firebase! ☁️');
         state.currentUserEmail = user.email;
-        state.user.name = userData.name || state.user.name;
+        state.user.name = userData.name || state.user.name || 'Explorer';
         state.user.isPremium = userData.isPremium || false;
-        state.user.onboarded = true;
+        // Take new user to Profile Creation (Slide 5)
+        const obNameInput = document.getElementById('ob-name');
+        if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Cloud Account';
+        obGoTo(5);
+        return;
       } else {
         const { user, userData } = await window.firebaseLoginUser(email, password);
         showToast('Welcome back! 👋');
@@ -5320,14 +5979,16 @@ async function submitObAuth() {
           state.user.isPremium = !!userData.isPremium;
         }
         state.user.onboarded = true;
+        save();
+        const ob = document.getElementById('onboarding');
+        if (ob) {
+          ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
+          setTimeout(function() { ob.classList.add('hidden'); }, 500);
+        }
+        renderAll();
+        renderProfile();
+        return;
       }
-      save();
-      const ob = document.getElementById('onboarding');
-      ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
-      setTimeout(function() { ob.classList.add('hidden'); }, 500);
-      renderAll();
-      renderProfile();
-      return;
     } catch (err) {
       console.warn('Firebase Auth note:', err);
       let errMsg = err.message || 'Authentication error';
@@ -5368,18 +6029,24 @@ async function submitObAuth() {
         users[key] = {
           email: key,
           password: password,
-          name: name || 'Explorer',
+          name: 'Explorer',
           isPremium: false,
           state: JSON.parse(JSON.stringify(state))
         };
         saveMockUsers(users);
-        showToast('Account registered! ☁️');
+        showToast('Account registered! ☁️ Please complete your profile.');
 
         state.currentUserEmail = key;
         state.user.name = users[key].name;
         state.user.isPremium = false;
-        state.user.onboarded = true;
         save();
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Cloud Account';
+        const obNameInput = document.getElementById('ob-name');
+        if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name;
+        obGoTo(5);
+        return;
       } else {
         const user = users[key];
         if (!user || user.password !== password) {
@@ -5399,23 +6066,21 @@ async function submitObAuth() {
           state.user.onboarded = true;
         }
         save();
+        submitBtn.disabled = false;
+        const ob = document.getElementById('onboarding');
+        if (ob) {
+          ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
+          setTimeout(function() { ob.classList.add('hidden'); }, 500);
+        }
+        renderAll();
+        renderProfile();
       }
-
-      submitBtn.disabled = false;
-      const ob = document.getElementById('onboarding');
-      ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
-      setTimeout(function() { ob.classList.add('hidden'); }, 500);
-      renderAll();
-      renderProfile();
     }, 600);
     return;
   }
 
   const endpoint = obAuthTab === 'login' ? '/api/auth/login' : '/api/auth/register';
   const bodyData = { email: email, password: password };
-  if (obAuthTab === 'register') {
-    bodyData.name = name || 'Explorer';
-  }
 
   fetch(endpoint, {
     method: 'POST',
@@ -5424,27 +6089,33 @@ async function submitObAuth() {
   })
   .then(safeParseJSON)
   .then(function(data) {
-    showToast(obAuthTab === 'login' ? 'Welcome back! 👋' : 'Account registered! ☁️');
-
     state.currentUserEmail = data.user.email;
     state.user.name = data.user.name || state.user.name;
     state.user.isPremium = data.user.isPremium;
-    state.user.onboarded = true;
 
-    if (obAuthTab === 'login' && data.state) {
-      state = data.state;
-      state.currentUserEmail = data.user.email;
+    if (obAuthTab === 'login') {
+      showToast('Welcome back! 👋');
+      if (data.state) {
+        state = data.state;
+        state.currentUserEmail = data.user.email;
+      }
       state.user.onboarded = true;
+      save();
+      const ob = document.getElementById('onboarding');
+      if (ob) {
+        ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
+        setTimeout(function() { ob.classList.add('hidden'); }, 500);
+      }
+      renderAll();
+      renderProfile();
     } else {
+      showToast('Account registered! ☁️ Please complete your profile.');
       silentSync();
+      save();
+      const obNameInput = document.getElementById('ob-name');
+      if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name;
+      obGoTo(5);
     }
-
-    save();
-    const ob = document.getElementById('onboarding');
-    ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
-    setTimeout(function() { ob.classList.add('hidden'); }, 500);
-    renderAll();
-    renderProfile();
   })
   .catch(function(err) {
     showToast(err.message);
@@ -5507,22 +6178,27 @@ async function submitGoogleAuth(source) {
 }
 
 function finishOnboardingGuest() {
-  obSubmitForm();
+  obGoTo(5);
 }
 
 function obNext() {
-  if (obCurrent === 3) {
+  if (obCurrent === 4) {
+    obGoTo(5);
+  } else if (obCurrent === 5) {
     const name=document.getElementById('ob-name').value.trim();
     if(!name){document.getElementById('ob-name').focus();showToast('Please enter your name');return;}
     if(!document.getElementById('ob-agree').checked){showToast('Please agree to the terms');return;}
-    obGoTo(4);
+    obSubmitForm();
   } else if (obCurrent < OB_TOTAL - 1) {
     obGoTo(obCurrent + 1);
   } else {
     obSubmitForm();
   }
 }
+
 function obGoTo(idx){
+  const ob = document.getElementById('onboarding');
+  if (ob) ob.classList.toggle('ob-full-bg', idx < 4);
   const cur=document.getElementById('ob-slide-'+obCurrent);
   if(cur){
     cur.classList.remove('active'); cur.classList.add('exit');
@@ -5541,13 +6217,15 @@ function obGoTo(idx){
   });
   const btn=document.getElementById('ob-cta'), skip=document.getElementById('ob-skip');
   if(!btn || !skip) return;
-  if(obCurrent===4){
-    btn.style.display='none';
-    skip.style.display='none';
-  } else if(obCurrent===3){
+  if(obCurrent===5){
     btn.style.display='block';
-    btn.textContent='Continue ➔';
+    btn.textContent='Complete Setup ➔';
     btn.disabled=!document.getElementById('ob-agree').checked;
+    skip.style.display='none';
+  } else if(obCurrent===4){
+    btn.style.display='block';
+    btn.textContent='Continue as Guest ➔';
+    btn.disabled=false;
     skip.style.display='none';
   } else {
     btn.style.display='block';
@@ -5559,7 +6237,7 @@ function obGoTo(idx){
 function obCheckAgree(){
   const btn=document.getElementById('ob-cta');
   const agree=document.getElementById('ob-agree');
-  if(btn && agree) btn.disabled=!agree.checked;
+  if(btn && agree && obCurrent===5) btn.disabled=!agree.checked;
 }
 function obSubmitForm(){
   const name=document.getElementById('ob-name').value.trim();
@@ -5569,8 +6247,10 @@ function obSubmitForm(){
   applyOnboardingFieldsToState();
   save();
   const ob=document.getElementById('onboarding');
-  ob.style.transition='opacity 0.5s ease'; ob.style.opacity='0';
-  setTimeout(function(){ob.classList.add('hidden');},500);
+  if (ob) {
+    ob.style.transition='opacity 0.5s ease'; ob.style.opacity='0';
+    setTimeout(function(){ob.classList.add('hidden');},500);
+  }
   renderAll(); showToast('Welcome to VisaFlow! 🎉');
 }
 function obFilterCitizenship(val){
