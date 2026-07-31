@@ -175,12 +175,12 @@
         }) : [],
         travels: Array.isArray(s.travels) ? s.travels.map(function(t){
           return {
-            id: t.id ? String(t.id) : undefined,
+            id: t.id ? String(t.id) : null,
             country: String(t.country || ''),
             code: String(t.code || ''),
             start: String(t.start || ''),
             end: t.end ? String(t.end) : null,
-            notes: t.notes ? String(t.notes) : undefined
+            notes: t.notes ? String(t.notes) : null
           };
         }) : [],
         currentCountry: s.currentCountry ? String(s.currentCountry) : null,
@@ -427,30 +427,47 @@
     return { user, userData };
   };
 
+  window.sanitizeForFirestore = function(obj) {
+    if (obj === undefined) return null;
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(window.sanitizeForFirestore);
+    const res = {};
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (val !== undefined) {
+        res[key] = window.sanitizeForFirestore(val);
+      }
+    }
+    return res;
+  };
+
   window.firebaseSyncState = async function(appState) {
     if (!window.firebaseServices) return;
     const { auth, db, doc, setDoc } = window.firebaseServices;
     const cleanState = window.safeCloneState(appState || window.state);
+    const sanitizedState = window.sanitizeForFirestore(cleanState);
     
     if (auth.currentUser) {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
-      await setDoc(userDocRef, {
-        email: auth.currentUser.email,
-        name: cleanState.user ? cleanState.user.name : '',
-        isPremium: cleanState.user ? cleanState.user.isPremium : false,
+      const payload = window.sanitizeForFirestore({
+        email: auth.currentUser.email || '',
+        name: cleanState.user ? (cleanState.user.name || '') : '',
+        isPremium: cleanState.user ? !!cleanState.user.isPremium : false,
         updatedAt: new Date().toISOString(),
-        appState: cleanState
-      }, { merge: true });
+        appState: sanitizedState
+      });
+      await setDoc(userDocRef, payload, { merge: true });
     } else if (window.currentCloudAccount) {
       const emailKey = window.currentCloudAccount.email.toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '_');
       const accountDocRef = doc(db, "accounts", emailKey);
-      await setDoc(accountDocRef, {
-        email: window.currentCloudAccount.email,
-        name: cleanState.user ? cleanState.user.name : '',
-        isPremium: cleanState.user ? cleanState.user.isPremium : false,
+      const payload = window.sanitizeForFirestore({
+        email: window.currentCloudAccount.email || '',
+        name: cleanState.user ? (cleanState.user.name || '') : '',
+        isPremium: cleanState.user ? !!cleanState.user.isPremium : false,
         updatedAt: new Date().toISOString(),
-        appState: cleanState
-      }, { merge: true });
+        appState: sanitizedState
+      });
+      await setDoc(accountDocRef, payload, { merge: true });
     }
   };
 
@@ -2088,8 +2105,23 @@ function save(){
     }
   }catch(e){} 
 }
+function sanitizeState(){
+  if(!state) return;
+  if(!state.visas) state.visas = [];
+  state.visas.forEach(function(v){
+    var tot = daysBetween(v.startDate, v.endDate);
+    var parsedStay = parseInt(v.stayDays);
+    if(isNaN(parsedStay) || parsedStay <= 0){
+      v.stayDays = (tot && !isNaN(tot) && tot > 0) ? tot : 30;
+    } else {
+      v.stayDays = parsedStay;
+    }
+    if(isNaN(parseInt(v.daysUsed))) v.daysUsed = 0;
+  });
+}
+
 function load(){
-  try{ const s=localStorage.getItem(STORAGE_KEY); if(s){ state=JSON.parse(s); return true; } }catch(e){}
+  try{ const s=localStorage.getItem(STORAGE_KEY); if(s){ state=JSON.parse(s); sanitizeState(); return true; } }catch(e){}
   return false;
 }
 
@@ -2111,9 +2143,20 @@ function initDemo(){
 // DATE HELPERS
 // ============================================================
 function today(){ return new Date().toISOString().split('T')[0]; }
-function daysBetween(a,b){ return Math.floor((new Date(b)-new Date(a))/86400000); }
+function daysBetween(a,b){
+  if(!a || !b) return 0;
+  var da = new Date(a.includes('T') ? a : a + 'T00:00:00').getTime();
+  var db = new Date(b.includes('T') ? b : b + 'T00:00:00').getTime();
+  if(isNaN(da) || isNaN(db)) return 0;
+  return Math.floor((db - da) / 86400000);
+}
 function daysFromEntry(d){ return d?Math.max(0,daysBetween(d,today())+1):0; }
-function fmtDate(d){ if(!d)return'—'; return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDate(d){
+  if(!d) return '—';
+  var dt = new Date(d.includes('T') ? d : d + 'T00:00:00');
+  if(isNaN(dt.getTime())) return '—';
+  return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
 
 // ============================================================
 // GREETING + CLOCK
@@ -2808,8 +2851,10 @@ function renderReminders(){
 // VISA CARD
 // ============================================================
 function buildVisaCard(v){
-  const dl=daysBetween(today(),v.endDate), tot=daysBetween(v.startDate,v.endDate);
-  const elapsed=daysBetween(v.startDate,today()), pct=Math.min(100,Math.round((elapsed/tot)*100));
+  const dl=daysBetween(today(),v.endDate), tot=Math.max(1, daysBetween(v.startDate,v.endDate));
+  const elapsed=daysBetween(v.startDate,today());
+  let pct=tot > 0 ? Math.min(100,Math.round((elapsed/tot)*100)) : 0;
+  if(isNaN(pct)) pct = 0;
   const isWarn=dl>=0&&dl<=tot*0.1, isExp=dl<0;
   const cs=getCS(v.country);
   const accent=isWarn||isExp?'var(--orange)':cs.accent;
@@ -2817,12 +2862,14 @@ function buildVisaCard(v){
   const badgeCls=isExp?'badge-gray':isWarn?'badge-orange':'badge-green';
   const badgeTxt=isExp?'EXPIRED':isWarn?'⚠ EXPIRING':'ACTIVE';
   const typeLabel=v.type==='multi'?'Multiple Entry':v.type==='free'?'Visa-Free':'Single Entry';
-  let entryDays=(v.entryDate?daysFromEntry(v.entryDate):0)+(v.daysUsed||0);
-  let stayLeft=Math.max(0,v.stayDays-entryDays);
+  const allowedStay = parseInt(v.stayDays) || tot || 30;
+  let entryDays=(v.entryDate?daysFromEntry(v.entryDate):0)+(parseInt(v.daysUsed)||0);
+  let stayLeft=Math.max(0, allowedStay - entryDays);
   if(v.country==='Schengen'||isSchengen(v.country)){
     const schUsed=calcSchengenDays();
     stayLeft=Math.max(0,90-schUsed);
   }
+  if(isNaN(stayLeft)) stayLeft = 0;
   let passportBadge = '';
   if (v.passportId) {
     const linkedPp = state.passports.find(function(p){ return p.id === v.passportId; });
@@ -3418,15 +3465,19 @@ function changeVisaPassport(visaId, newPassportId) {
 function showVisaDetail(id){
   if(!id) return;
   const v=state.visas.find(function(x){return x.id===id;}); if(!v) return;
-  const dl=daysBetween(today(),v.endDate), tot=daysBetween(v.startDate,v.endDate);
-  const pct=Math.min(100,Math.round((daysBetween(v.startDate,today())/tot)*100));
+  const dl=daysBetween(today(),v.endDate), tot=Math.max(1, daysBetween(v.startDate,v.endDate));
+  let pct=tot > 0 ? Math.min(100,Math.round((daysBetween(v.startDate,today())/tot)*100)) : 0;
+  if(isNaN(pct)) pct = 0;
   const typeLabel=v.type==='multi'?'Multiple Entry':v.type==='free'?'Visa-Free':'Single Entry';
-  let entryDays=(v.entryDate?daysFromEntry(v.entryDate):0)+(v.daysUsed||0);
-  let stayLeft=Math.max(0,v.stayDays-entryDays), cs=getCS(v.country);
+  const allowedStay = parseInt(v.stayDays) || tot || 30;
+  let entryDays=(v.entryDate?daysFromEntry(v.entryDate):0)+(parseInt(v.daysUsed)||0);
+  let stayLeft=Math.max(0, allowedStay - entryDays), cs=getCS(v.country);
   if(v.country==='Schengen'||isSchengen(v.country)){
     entryDays=calcSchengenDays();
     stayLeft=Math.max(0,90-entryDays);
   }
+  if(isNaN(stayLeft)) stayLeft = 0;
+  if(isNaN(entryDays)) entryDays = 0;
   
   let passportOptionsHtml = '<option value="" ' + (!v.passportId ? 'selected' : '') + '>Any / All Passports</option>';
   state.passports.forEach(function(pp){
@@ -3458,7 +3509,7 @@ function showVisaDetail(id){
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">Stay Allowance</div>'+
       '</div>'+
       '<div style="background:var(--bg2);border-radius:14px;padding:14px;text-align:center">'+
-        '<div style="font-size:28px;font-weight:800;color:var(--text)">'+v.stayDays+'</div>'+
+        '<div style="font-size:28px;font-weight:800;color:var(--text)">'+allowedStay+'</div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">Total Allowed Days</div>'+
       '</div>'+
       '<div style="background:var(--bg2);border-radius:14px;padding:14px;text-align:center">'+
@@ -5626,16 +5677,18 @@ function getFootprintStats(yearStr) {
 function renderPeriodButtons() {
   var travels = state.travels || [];
   var yearsSet = new Set();
-  var currentYear = new Date().getFullYear();
-  yearsSet.add(currentYear);
-  yearsSet.add(currentYear - 1);
+  yearsSet.add(2026);
 
   travels.forEach(function(t) {
     if (t.start) {
       var y = parseInt(t.start.split('-')[0], 10);
-      if (y && !isNaN(y)) yearsSet.add(y);
+      if (y && !isNaN(y) && y >= 2026) yearsSet.add(y);
     }
   });
+
+  if (fpSelectedYear !== 'all' && !yearsSet.has(parseInt(fpSelectedYear, 10))) {
+    fpSelectedYear = 'all';
+  }
 
   var years = Array.from(yearsSet).sort(function(a, b) { return b - a; });
   
@@ -5685,142 +5738,106 @@ function renderFootprintCard() {
   var photo = state.user ? state.user.photo : null;
 
   var avatarHtml = photo ? 
-    '<img src="' + photo + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">' : 
+    '<img src="' + photo + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" crossOrigin="anonymous">' : 
     initials;
 
   var yearTitle = fpSelectedYear === 'all' ? 'All-Time Journey' : fpSelectedYear + ' Wrapped';
 
+  var topCountryName = stats.topCountry || state.currentCountry || (stats.uniqueCountries[0] || 'Vietnam');
+  var topCs = getCS(topCountryName);
+  var bgPhotoUrl = (topCs && topCs.code) ? 
+    'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + topCs.code + '.webp' : 
+    'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp';
+
   var flagsHtml = '';
   if (!stats.uniqueCountries.length) {
-    flagsHtml = '<span style="font-size:11px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.18);padding:4px 8px;border-radius:8px">No countries logged in this period</span>';
+    flagsHtml = '<span style="font-size:10px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.35);padding:4px 10px;border-radius:10px;display:inline-block;">No countries logged in this period</span>';
   } else {
     flagsHtml = stats.uniqueCountries.map(function(c) {
       var cs = getCS(c);
-      return '<span style="background:rgba(255,255,255,0.22);padding:4px 9px;border-radius:12px;font-size:11px;display:inline-flex;align-items:center;gap:5px;color:#ffffff;font-weight:700;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(4px)">' +
-        flagImg(c, cs, 'sm') + ' ' + c +
-      '</span>';
+      if (cs.code) {
+        return '<img src="https://flagcdn.com/w80/' + cs.code + '.png" alt="' + c + '" title="' + c + '" style="width:36px; height:26px; border-radius:6px; object-fit:cover; border:1.5px solid rgba(255,255,255,0.85); box-shadow:0 3px 10px rgba(0,0,0,0.45); flex-shrink:0" crossOrigin="anonymous">';
+      } else {
+        return '<span style="font-size:18px">🌍</span>';
+      }
     }).join('');
-  }
-
-  var topCountryHtml = '';
-  if (stats.topCountry) {
-    var topCs = getCS(stats.topCountry);
-    topCountryHtml = 
-      '<div style="background:rgba(255,255,255,0.22); border:1px solid rgba(255,255,255,0.35); backdrop-filter:blur(6px); padding:8px 12px; border-radius:14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between">' +
-        '<div style="display:flex; align-items:center; gap:8px">' +
-          flagImg(stats.topCountry, topCs, 'md') +
-          '<div style="text-align:left">' +
-            '<div style="font-size:9px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; color:#FDE047">🏆 Top Destination</div>' +
-            '<div style="font-size:13px; font-weight:800; color:#ffffff">' + stats.topCountry + '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div style="background:rgba(255,255,255,0.25); color:#ffffff; font-size:11px; font-weight:800; padding:3px 9px; border-radius:20px">' +
-          stats.topCountryDays + ' Days' +
-        '</div>' +
-      '</div>';
   }
 
   var wrapper = document.getElementById('footprint-card-wrapper');
   if (!wrapper) return;
 
-  if (fpSelectedFormat === 'card') {
-    // Standard Horizontal Card Format
-    wrapper.innerHTML = 
-      '<div id="footprint-card-render" style="width:100%; max-width:390px; background:linear-gradient(135deg, #0A4D3C, #00A884); border:1.5px solid rgba(255,255,255,0.2); border-radius:18px; padding:20px; color:#ffffff; text-align:left; box-shadow:0 10px 25px rgba(0,168,132,0.25); position:relative; overflow:hidden">' +
-        '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/footprint.webp\') center/cover no-repeat; opacity:0.5; pointer-events:none; z-index:0"></div>' +
-        '<div style="position:relative; z-index:1">' +
-          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:10px">' +
-            '<div style="display:flex; align-items:center; gap:10px">' +
-              '<div style="width:38px; height:38px; border-radius:50%; background:var(--green); border:1.5px solid rgba(255,255,255,0.4); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#ffffff; overflow:hidden">' + avatarHtml + '</div>' +
-              '<div>' +
-                '<div style="font-size:15px; font-weight:800; color:#ffffff">' + name + '\'s Footprint</div>' +
-                '<div style="font-size:10.5px; color:rgba(255,255,255,0.85)">' + yearTitle + '</div>' +
-              '</div>' +
-            '</div>' +
-            '<div style="background:rgba(255,255,255,0.22); color:#ffffff; font-size:10px; font-weight:800; padding:4px 9px; border-radius:12px; border:1px solid rgba(255,255,255,0.35); backdrop-filter:blur(4px)">PASSPORT 🛂</div>' +
-          '</div>' +
+  var isCardFmt = fpSelectedFormat === 'card';
+  var cardWidth = isCardFmt ? '360px' : '300px';
+  var cardHeight = isCardFmt ? '510px' : '533px';
 
-          (stats.topCountry ? topCountryHtml : '') +
-
-          '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px; background:rgba(255,255,255,0.18); backdrop-filter:blur(6px); padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.25); text-align:center">' +
-            '<div>' +
-              '<div style="font-size:22px; font-weight:900; color:#6EE7B7">' + stats.uniqueCountries.length + '</div>' +
-              '<div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.85)">Countries</div>' +
-            '</div>' +
-            '<div>' +
-              '<div style="font-size:22px; font-weight:900; color:#93C5FD">' + stats.totalDays + '</div>' +
-              '<div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.85)">Days Abroad</div>' +
-            '</div>' +
-            '<div>' +
-              '<div style="font-size:22px; font-weight:900; color:#FDE047">' + stats.trips.length + '</div>' +
-              '<div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.85)">Trips</div>' +
-            '</div>' +
-          '</div>' +
-
-          '<div style="margin-bottom:12px">' +
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.85); text-transform:uppercase; margin-bottom:6px">Stamped Countries</div>' +
-            '<div style="display:flex; flex-wrap:wrap; gap:6px; max-height:100px; overflow-y:auto">' + flagsHtml + '</div>' +
-          '</div>' +
-
-          '<div style="border-top:1px dashed rgba(255,255,255,0.25); padding-top:10px; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.85); font-weight:600">' +
-            '<span>Tracked with <strong style="color:#ffffff">VisaFlow</strong></span>' +
-            '<span style="color:#ffffff">visaflow.app ✈️</span>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-  } else {
-    // 9:16 Instagram Story Wrapped Format (Vertical ~ 285px x 500px)
-    wrapper.innerHTML = 
-      '<div id="footprint-card-render" style="width:285px; height:500px; background:linear-gradient(165deg, #06382B 0%, #0A4D3C 40%, #00A884 100%); border:2px solid rgba(255,255,255,0.25); border-radius:22px; padding:20px 16px; color:#ffffff; text-align:left; box-shadow:0 15px 35px rgba(0,0,0,0.4); position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between">' +
-        '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/footprint.webp\') center/cover no-repeat; opacity:0.5; pointer-events:none; z-index:0"></div>' +
-        '<div style="position:relative; z-index:1; height:100%; display:flex; flex-direction:column; justify-content:space-between">' +
+  wrapper.innerHTML = 
+    '<div id="footprint-card-render" style="width:' + cardWidth + '; height:' + cardHeight + '; position:relative; overflow:hidden; border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, serif; color:#ffffff; text-align:center; background:url(\'' + bgPhotoUrl + '\') center/cover no-repeat;">' +
+      '<!-- Minimal Shadow Overlay (No Photo Blur) -->' +
+      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.28) 100%); z-index:0"></div>' +
+      
+      '<!-- Clear Poster Frame Inner Container -->' +
+      '<div style="position:relative; z-index:1; height:100%; box-sizing:border-box; padding:18px 14px; display:flex; flex-direction:column; justify-content:space-between">' +
+        
+        '<!-- High-Clarity Thin Outline Frame (No Blur) -->' +
+        '<div style="background:transparent; border:1.5px solid rgba(255,255,255,0.7); border-radius:18px; padding:20px 14px 14px 14px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 10px 30px rgba(0,0,0,0.25);">' +
           
+          '<!-- Top Header Section -->' +
           '<div>' +
-            '<!-- Header Badge -->' +
-            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">' +
-              '<div style="background:#FDE047; color:#06382B; font-size:10px; font-weight:900; letter-spacing:0.8px; padding:4px 10px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.2)">✨ ' + yearTitle.toUpperCase() + '</div>' +
-              '<div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.9)">PASSPORT 🛂</div>' +
+            '<!-- Header Pill -->' +
+            '<div style="font-size:9px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:rgba(255,255,255,0.95); text-shadow:0 1px 4px rgba(0,0,0,0.8); margin-bottom:8px">' +
+              'TRAVEL FOOTPRINT • ' + yearTitle.toUpperCase() +
             '</div>' +
 
-            '<!-- User Profile Header -->' +
-            '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; background:rgba(255,255,255,0.15); backdrop-filter:blur(6px); padding:8px 10px; border-radius:14px; border:1px solid rgba(255,255,255,0.25)">' +
-              '<div style="width:40px; height:40px; border-radius:50%; background:var(--green); border:2px solid #ffffff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#ffffff; overflow:hidden; flex-shrink:0">' + avatarHtml + '</div>' +
-              '<div style="overflow:hidden">' +
-                '<div style="font-size:14px; font-weight:900; color:#ffffff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">' + name + '\'s Travels</div>' +
-                '<div style="font-size:10px; color:rgba(255,255,255,0.85); font-weight:600">Travel Footprint Wrapped</div>' +
-              '</div>' +
+            '<!-- Category Subtitle -->' +
+            '<div style="font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#FDE047; text-shadow:0 1px 4px rgba(0,0,0,0.9); margin-bottom:4px">' +
+              'TOP DESTINATION' +
             '</div>' +
 
-            (stats.topCountry ? topCountryHtml : '') +
-
-            '<!-- Big Stats Grid -->' +
-            '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px">' +
-              '<div style="background:rgba(255,255,255,0.18); backdrop-filter:blur(6px); padding:10px 8px; border-radius:14px; border:1px solid rgba(255,255,255,0.25); text-align:center">' +
-                '<div style="font-size:24px; font-weight:900; color:#6EE7B7; line-height:1">' + stats.uniqueCountries.length + '</div>' +
-                '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.9); margin-top:4px">Countries</div>' +
-              '</div>' +
-              '<div style="background:rgba(255,255,255,0.18); backdrop-filter:blur(6px); padding:10px 8px; border-radius:14px; border:1px solid rgba(255,255,255,0.25); text-align:center">' +
-                '<div style="font-size:24px; font-weight:900; color:#93C5FD; line-height:1">' + stats.totalDays + '</div>' +
-                '<div style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.9); margin-top:4px">Days Abroad</div>' +
-              '</div>' +
-            '</div>' +
-
-            '<!-- Stamped Countries -->' +
-            '<div>' +
-              '<div style="font-size:9px; font-weight:800; color:rgba(255,255,255,0.85); text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px">Stamped Destinations</div>' +
-              '<div style="display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto">' + flagsHtml + '</div>' +
+            '<!-- Main Serif Destination Headline -->' +
+            '<div style="font-family: Georgia, \'Playfair Display\', serif; font-size:28px; font-weight:900; letter-spacing:3.5px; text-transform:uppercase; color:#ffffff; text-shadow:0 2px 20px rgba(0,0,0,0.95); margin-bottom:4px; line-height:1.15">' +
+              topCountryName +
             '</div>' +
           '</div>' +
 
-          '<!-- Story Footer -->' +
-          '<div style="border-top:1px dashed rgba(255,255,255,0.3); padding-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:rgba(255,255,255,0.9); font-weight:700">' +
-            '<div style="display:flex; align-items:center; gap:5px"><span>✈️ Tracked with</span><strong style="color:#ffffff; font-weight:900">VisaFlow</strong></div>' +
-            '<div style="background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:10px; font-size:10px; color:#ffffff; font-weight:800">visaflow.app</div>' +
+          '<!-- Bottom Section: Capsule Stats Bar + Flag Badges + Footer -->' +
+          '<div>' +
+            '<!-- Clean Capsule Stats Bar (No Blur) -->' +
+            '<div style="background:rgba(0,0,0,0.25); border:1.5px solid rgba(255,255,255,0.5); border-radius:18px; padding:10px 6px; margin-bottom:12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.25);">' +
+              '<div>' +
+                '<div style="font-size:22px; font-weight:900; color:#A7F3D0; line-height:1; text-shadow:0 1px 4px rgba(0,0,0,0.6)">' + stats.uniqueCountries.length + '</div>' +
+                '<div style="font-size:8.5px; font-weight:800; text-transform:uppercase; color:rgba(255,255,255,0.95); letter-spacing:0.8px; margin-top:4px; text-shadow:0 1px 3px rgba(0,0,0,0.7)">COUNTRIES</div>' +
+              '</div>' +
+              '<div>' +
+                '<div style="font-size:22px; font-weight:900; color:#93C5FD; line-height:1; text-shadow:0 1px 4px rgba(0,0,0,0.6)">' + stats.totalDays + '</div>' +
+                '<div style="font-size:8.5px; font-weight:800; text-transform:uppercase; color:rgba(255,255,255,0.95); letter-spacing:0.8px; margin-top:4px; text-shadow:0 1px 3px rgba(0,0,0,0.7)">DAYS ABROAD</div>' +
+              '</div>' +
+              '<div>' +
+                '<div style="font-size:22px; font-weight:900; color:#FDE047; line-height:1; text-shadow:0 1px 4px rgba(0,0,0,0.6)">' + stats.trips.length + '</div>' +
+                '<div style="font-size:8.5px; font-weight:800; text-transform:uppercase; color:rgba(255,255,255,0.95); letter-spacing:0.8px; margin-top:4px; text-shadow:0 1px 3px rgba(0,0,0,0.7)">TRIPS</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<!-- Horizontal 4:3 Flag Badges Row -->' +
+            '<div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center; margin-bottom:14px; max-height:60px; overflow-y:auto; padding:2px 0">' +
+              flagsHtml +
+            '</div>' +
+
+            '<!-- Glass Poster Footer -->' +
+            '<div style="border-top:1px dashed rgba(255,255,255,0.4); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">' +
+              '<div style="display:flex; align-items:center; gap:8px">' +
+                '<div style="width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.3); border:1.5px solid rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; color:#ffffff; overflow:hidden; flex-shrink:0">' + avatarHtml + '</div>' +
+                '<div style="text-align:left">' +
+                  '<div style="font-size:11px; font-weight:900; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">' + name + '</div>' +
+                  '<div style="font-size:8px; color:rgba(255,255,255,0.9); font-weight:600">Travel Footprint</div>' +
+                '</div>' +
+              '</div>' +
+              '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); padding:3px 10px; border-radius:14px; font-size:9.5px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">VisaFlow ✈️</div>' +
+            '</div>' +
           '</div>' +
 
         '</div>' +
-      '</div>';
-  }
+      '</div>' +
+    '</div>';
 }
 
 function openShareFootprintModal() {
