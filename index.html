@@ -652,13 +652,13 @@ body{
 .flag-circle{
   width:46px;height:46px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;overflow:hidden;
+  flex-shrink:0;overflow:hidden;position:relative;background:var(--bg2);
   box-shadow:0 2px 8px rgba(0,0,0,0.18);
   border:2.5px solid rgba(255,255,255,0.9);
 }
 .flag-circle img{width:100%;height:100%;object-fit:cover;}
 .flag-circle-sm{
-  width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;
+  width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;background:var(--bg2);
   box-shadow:0 1px 4px rgba(0,0,0,0.15);border:2px solid rgba(255,255,255,0.85);
   display:flex;align-items:center;justify-content:center;
 }
@@ -1666,25 +1666,14 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-handle"></div>
     <div style="font-size:32px; margin-bottom:4px">🌍</div>
     <div class="modal-title" style="margin-bottom:2px">Share Your Travel Footprint</div>
-    <div class="modal-sub" style="margin-bottom:14px">Show off your travel journey &amp; Yearly Wrapped on Instagram Story &amp; Socials!</div>
+    <div class="modal-sub" style="margin-bottom:14px">Show off your travel journey on Instagram Story (9:16) &amp; Socials!</div>
 
-    <!-- CONTROLS: PERIOD & FORMAT -->
-    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px; background:var(--bg2); border:1.5px solid var(--border); padding:10px 12px; border-radius:14px">
-      <!-- Period Selector -->
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap">
-        <span style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px">Period:</span>
-        <div id="fp-period-buttons" style="display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end">
-          <!-- Populated dynamically: All Time, 2026 Wrapped, 2025 Wrapped... -->
-        </div>
-      </div>
-      <!-- Format Switcher -->
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; border-top:1px dashed var(--border); padding-top:8px">
-        <span style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px">Format:</span>
-        <div style="display:flex; gap:6px">
-          <button id="fp-fmt-card" onclick="setFootprintFormat('card')" style="padding:5px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--green); background:var(--green); color:#fff transition:all 0.15s">💳 Card</button>
-          <button id="fp-fmt-story" onclick="setFootprintFormat('story')" style="padding:5px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid var(--border); background:var(--bg); color:var(--text); transition:all 0.15s">📸 9:16 Story Wrapped</button>
-        </div>
-      </div>
+    <!-- CONTROLS: PERIOD DROPDOWN -->
+    <div style="margin-bottom:14px; background:var(--bg2); border:1.5px solid var(--border); padding:10px 14px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <span style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap">Period:</span>
+      <select id="fp-period-select" onchange="setFootprintPeriod(this.value)" style="margin:0; padding:8px 12px; font-size:12px; font-weight:700; border-radius:10px; background:var(--card); color:var(--text); border:1px solid var(--border); flex:1; max-width:240px; cursor:pointer;">
+        <!-- Populated dynamically with monthly & yearly options -->
+      </select>
     </div>
 
     <!-- PREVIEW CARD RENDER AREA -->
@@ -1693,15 +1682,12 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
 
     <!-- ACTION BUTTONS -->
-    <div style="display:flex; gap:8px; flex-wrap:wrap">
-      <button onclick="shareFootprintText()" style="flex:1; min-width:120px; padding:11px; background:var(--green); color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px">
-        <span>📲 Copy Text</span>
-      </button>
-      <button onclick="downloadFootprintImage()" style="flex:1; min-width:120px; padding:11px; background:#10B981; color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px; box-shadow:0 2px 8px rgba(16,185,129,0.3)">
+    <div style="display:flex; gap:10px;">
+      <button onclick="downloadFootprintImage()" style="flex:1; padding:12px; background:#10B981; color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(16,185,129,0.3)">
         <span>🖼️ Save Image</span>
       </button>
-      <button onclick="shareFootprintNative()" style="flex:1; min-width:120px; padding:11px; background:var(--blue); color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:5px">
-        <span>📤 Share</span>
+      <button onclick="shareFootprintNative()" style="flex:1; padding:12px; background:var(--blue); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(0,135,255,0.3)">
+        <span>📤 Share Story</span>
       </button>
     </div>
     <button class="secondary-btn" onclick="closeModal('share-footprint-modal')" style="margin-top:10px">Close</button>
@@ -2055,11 +2041,18 @@ function getCS(country){
     if(country.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(country.toLowerCase())) return v;
   return {bg:'#F5F7FA',border:'#E8ECF2',accent:'#8898AA',code:null};
 }
+function getFlagEmoji(code) {
+  if (!code || typeof code !== 'string' || code.length !== 2) return '🌍';
+  const c = code.toUpperCase();
+  return String.fromCodePoint(c.charCodeAt(0) + 127397, c.charCodeAt(1) + 127397);
+}
 function flagImg(country,cs,size){
   size = size || 'normal';
-  const c=cs.code, cls=size==='sm'?'flag-circle-sm':'flag-circle';
-  if(!c) return '<div class="'+cls+'" style="background:var(--bg2);font-size:'+(size==='sm'?'14':'18')+'px;color:var(--muted)">🌍</div>';
-  return '<div class="'+cls+'"><img src="https://flagcdn.com/w80/'+c+'.png" onerror="this.parentElement.innerHTML=\'🌍\'" alt="'+country+'" loading="lazy"></div>';
+  const c=cs?cs.code:null, cls=size==='sm'?'flag-circle-sm':'flag-circle';
+  const emoji = getFlagEmoji(c);
+  const fontSize = size==='sm' ? '14px' : '20px';
+  if(!c) return '<div class="'+cls+'" style="position:relative;overflow:hidden;border-radius:50%;flex-shrink:0;"><span style="font-size:'+fontSize+';line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">'+emoji+'</span></div>';
+  return '<div class="'+cls+'" style="position:relative;overflow:hidden;border-radius:50%;flex-shrink:0;"><span style="font-size:'+fontSize+';line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">'+emoji+'</span><img src="https://flagcdn.com/w80/'+c+'.png" onload="if(this.previousElementSibling)this.previousElementSibling.style.display=\'none\'" onerror="this.remove()" alt="'+country+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%"></div>';
 }
 
 function loadCountryBackground(bgId, code) {
@@ -2918,7 +2911,7 @@ function renderPassportTabs(){
   }
   state.passports.forEach(function(pp){
     const active = (state.activePassportId === pp.id || (state.passports.length === 1 && state.activePassportId !== 'all')), cs=getCS(pp.country);
-    const flagHtml = flagImg(pp.country,cs,'sm').replace('class="flag-circle-sm"','style="width:18px;height:18px"');
+    const flagHtml = flagImg(pp.country,cs,'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:18px;height:18px"');
     html+='<div class="passport-tab '+(active?'active':'')+'" onclick="setActivePassport(\''+pp.id+'\')">'+
       '<div style="width:18px;height:18px;border-radius:50%;overflow:hidden;flex-shrink:0">'+flagHtml+'</div>'+
       pp.country+
@@ -2955,7 +2948,7 @@ function openManagePassportsModal() {
   } else {
     state.passports.forEach(function(pp) {
       const cs = getCS(pp.country);
-      const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','style="width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0"');
+      const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:24px;height:24px"');
       
       let expInfoHtml = '';
       if (pp.expiryDate) {
@@ -3086,7 +3079,7 @@ function renderVisaCheckPassportSelector(){
   state.passports.forEach(function(pp){
     const isSelected = state.vcSelectedPassportId === pp.id;
     const cs = getCS(pp.country);
-    const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','style="width:18px;height:18px"');
+    const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:18px;height:18px"');
     
     const cardBg = isSelected ? 'var(--green-l)' : 'var(--card)';
     const cardBorder = isSelected ? '1.5px solid var(--green-b)' : '1.5px solid var(--border)';
@@ -5613,44 +5606,60 @@ function setFootprintYear(yr) {
   renderFootprintCard();
 }
 
-function setFootprintFormat(fmt) {
-  fpSelectedFormat = fmt;
+var fpSelectedPeriod = 'all';
+var FP_MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function setFootprintPeriod(periodVal) {
+  fpSelectedPeriod = periodVal;
   renderFootprintCard();
 }
 
-function getTripDaysInYear(trip, yearStr) {
-  if (yearStr === 'all') {
+function getTripDaysInPeriod(trip, periodStr) {
+  if (!periodStr || periodStr === 'all') {
     return trip.end ? daysBetween(trip.start, trip.end) + 1 : daysFromEntry(trip.start);
   }
-  var yearInt = parseInt(yearStr, 10);
-  var yearStart = yearInt + '-01-01';
-  var yearEnd = yearInt + '-12-31';
   var tStart = trip.start;
   var tEnd = trip.end || today();
+  var pStart, pEnd;
 
-  if (tStart > yearEnd || tEnd < yearStart) return 0; // No overlap
+  if (periodStr.length === 4) {
+    pStart = periodStr + '-01-01';
+    pEnd = periodStr + '-12-31';
+  } else if (periodStr.length === 7) {
+    var parts = periodStr.split('-');
+    var yr = parseInt(parts[0], 10);
+    var mo = parseInt(parts[1], 10);
+    var mStr = mo < 10 ? '0' + mo : mo.toString();
+    pStart = yr + '-' + mStr + '-01';
+    var lastDay = new Date(yr, mo, 0).getDate();
+    pEnd = yr + '-' + mStr + '-' + (lastDay < 10 ? '0' + lastDay : lastDay);
+  } else {
+    return 0;
+  }
 
-  var calcStart = tStart < yearStart ? yearStart : tStart;
-  var calcEnd = tEnd > yearEnd ? yearEnd : tEnd;
+  if (tStart > pEnd || tEnd < pStart) return 0;
+
+  var calcStart = tStart < pStart ? pStart : tStart;
+  var calcEnd = tEnd > pEnd ? pEnd : tEnd;
 
   return Math.max(0, daysBetween(calcStart, calcEnd) + 1);
 }
 
-function getFootprintStats(yearStr) {
+function getFootprintStats(periodStr) {
   var travels = state.travels || [];
   var filteredTrips = [];
   var countryDaysMap = {};
   var totalDays = 0;
 
   travels.forEach(function(t) {
-    var daysInYear = getTripDaysInYear(t, yearStr);
-    if (daysInYear > 0) {
+    var daysInP = getTripDaysInPeriod(t, periodStr);
+    if (daysInP > 0) {
       filteredTrips.push(t);
-      totalDays += daysInYear;
+      totalDays += daysInP;
       if (!countryDaysMap[t.country]) {
         countryDaysMap[t.country] = 0;
       }
-      countryDaysMap[t.country] += daysInYear;
+      countryDaysMap[t.country] += daysInP;
     }
   });
 
@@ -5675,65 +5684,44 @@ function getFootprintStats(yearStr) {
   };
 }
 
-function renderPeriodButtons() {
+function renderPeriodDropdown() {
   var travels = state.travels || [];
+  var currentYr = new Date().getFullYear();
   var yearsSet = new Set();
-  yearsSet.add(2026);
+  yearsSet.add(currentYr);
 
   travels.forEach(function(t) {
     if (t.start) {
       var y = parseInt(t.start.split('-')[0], 10);
-      if (y && !isNaN(y) && y >= 2026) yearsSet.add(y);
+      if (y && !isNaN(y) && y >= 2020 && y <= currentYr + 1) yearsSet.add(y);
     }
   });
 
-  if (fpSelectedYear !== 'all' && !yearsSet.has(parseInt(fpSelectedYear, 10))) {
-    fpSelectedYear = 'all';
-  }
-
   var years = Array.from(yearsSet).sort(function(a, b) { return b - a; });
-  
-  var btnContainer = document.getElementById('fp-period-buttons');
-  if (!btnContainer) return;
+  var selectEl = document.getElementById('fp-period-select');
+  if (!selectEl) return;
 
-  var html = '<button onclick="setFootprintYear(\'all\')" style="padding:4px 9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; ' +
-    (fpSelectedYear === 'all' ? 'border:1px solid var(--green); background:var(--green); color:#fff' : 'border:1px solid var(--border); background:var(--bg); color:var(--text)') +
-    '">All Time</button>';
+  var html = '<option value="all"' + (fpSelectedPeriod === 'all' ? ' selected' : '') + '>🌍 All-Time Footprint</option>';
 
-  years.forEach(function(y) {
-    var yStr = y.toString();
-    html += '<button onclick="setFootprintYear(\'' + yStr + '\')" style="padding:4px 9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; ' +
-      (fpSelectedYear === yStr ? 'border:1px solid var(--green); background:var(--green); color:#fff' : 'border:1px solid var(--border); background:var(--bg); color:var(--text)') +
-      '">' + yStr + ' Wrapped</button>';
+  years.forEach(function(yr) {
+    html += '<option value="' + yr + '"' + (fpSelectedPeriod === yr.toString() ? ' selected' : '') + '>📅 ' + yr + ' (Full Year)</option>';
+    
+    var maxMonth = (yr === currentYr) ? (new Date().getMonth() + 1) : 12;
+    for (var m = maxMonth; m >= 1; m--) {
+      var mStr = m < 10 ? '0' + m : m.toString();
+      var val = yr + '-' + mStr;
+      var label = '🗓️ ' + FP_MONTH_NAMES[m - 1] + ' ' + yr;
+      html += '<option value="' + val + '"' + (fpSelectedPeriod === val ? ' selected' : '') + '>' + label + '</option>';
+    }
   });
 
-  btnContainer.innerHTML = html;
+  selectEl.innerHTML = html;
 }
 
 function renderFootprintCard() {
-  renderPeriodButtons();
+  renderPeriodDropdown();
 
-  var btnCard = document.getElementById('fp-fmt-card');
-  var btnStory = document.getElementById('fp-fmt-story');
-  if (btnCard && btnStory) {
-    if (fpSelectedFormat === 'card') {
-      btnCard.style.background = 'var(--green)';
-      btnCard.style.color = '#fff';
-      btnCard.style.border = '1px solid var(--green)';
-      btnStory.style.background = 'var(--bg)';
-      btnStory.style.color = 'var(--text)';
-      btnStory.style.border = '1px solid var(--border)';
-    } else {
-      btnStory.style.background = 'var(--green)';
-      btnStory.style.color = '#fff';
-      btnStory.style.border = '1px solid var(--green)';
-      btnCard.style.background = 'var(--bg)';
-      btnCard.style.color = 'var(--text)';
-      btnCard.style.border = '1px solid var(--border)';
-    }
-  }
-
-  var stats = getFootprintStats(fpSelectedYear);
+  var stats = getFootprintStats(fpSelectedPeriod);
   var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
   var initials = state.user && state.user.initials ? state.user.initials : name.charAt(0).toUpperCase();
   var photo = state.user ? state.user.photo : null;
@@ -5742,7 +5730,14 @@ function renderFootprintCard() {
     '<img src="' + photo + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover" crossOrigin="anonymous">' : 
     initials;
 
-  var yearTitle = fpSelectedYear === 'all' ? 'All-Time Journey' : fpSelectedYear + ' Wrapped';
+  var periodTitle = 'All-Time Journey';
+  if (fpSelectedPeriod.length === 4) {
+    periodTitle = fpSelectedPeriod + ' Wrapped';
+  } else if (fpSelectedPeriod.length === 7) {
+    var parts = fpSelectedPeriod.split('-');
+    var mIdx = parseInt(parts[1], 10) - 1;
+    periodTitle = (FP_MONTH_NAMES[mIdx] || parts[1]) + ' ' + parts[0];
+  }
 
   var topCountryName = stats.topCountry || state.currentCountry || (stats.uniqueCountries[0] || 'Vietnam');
   var topCs = getCS(topCountryName);
@@ -5767,26 +5762,25 @@ function renderFootprintCard() {
   var wrapper = document.getElementById('footprint-card-wrapper');
   if (!wrapper) return;
 
-  var isCardFmt = fpSelectedFormat === 'card';
-  var cardWidth = isCardFmt ? '360px' : '300px';
-  var cardHeight = isCardFmt ? '510px' : '533px';
+  var cardWidth = '300px';
+  var cardHeight = '533px'; // Fixed 9:16 Aspect Ratio for Instagram / TikTok Stories
 
   wrapper.innerHTML = 
     '<div id="footprint-card-render" style="width:' + cardWidth + '; height:' + cardHeight + '; position:relative; overflow:hidden; border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, serif; color:#ffffff; text-align:center; background:url(\'' + bgPhotoUrl + '\') center/cover no-repeat;">' +
-      '<!-- Minimal Shadow Overlay (No Photo Blur) -->' +
-      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.28) 100%); z-index:0"></div>' +
+      '<!-- Minimal Shadow Overlay for Background Photo -->' +
+      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.45) 100%); z-index:0"></div>' +
       
-      '<!-- Clear Poster Frame Inner Container -->' +
+      '<!-- 9:16 Story Poster Container -->' +
       '<div style="position:relative; z-index:1; height:100%; box-sizing:border-box; padding:18px 14px; display:flex; flex-direction:column; justify-content:space-between">' +
         
-        '<!-- High-Clarity Thin Outline Frame (No Blur) -->' +
+        '<!-- High-Clarity Thin Outline Frame -->' +
         '<div style="background:transparent; border:1.5px solid rgba(255,255,255,0.7); border-radius:18px; padding:20px 14px 14px 14px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 10px 30px rgba(0,0,0,0.25);">' +
           
           '<!-- Top Header Section -->' +
           '<div>' +
             '<!-- Header Pill -->' +
             '<div style="font-size:9px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:rgba(255,255,255,0.95); text-shadow:0 1px 4px rgba(0,0,0,0.8); margin-bottom:8px">' +
-              'TRAVEL FOOTPRINT • ' + yearTitle.toUpperCase() +
+              'TRAVEL FOOTPRINT • ' + periodTitle.toUpperCase() +
             '</div>' +
 
             '<!-- Category Subtitle -->' +
@@ -5802,8 +5796,8 @@ function renderFootprintCard() {
 
           '<!-- Bottom Section: Capsule Stats Bar + Flag Badges + Footer -->' +
           '<div>' +
-            '<!-- Clean Capsule Stats Bar (No Blur) -->' +
-            '<div style="background:rgba(0,0,0,0.25); border:1.5px solid rgba(255,255,255,0.5); border-radius:18px; padding:10px 6px; margin-bottom:12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.25);">' +
+            '<!-- Clean Capsule Stats Bar -->' +
+            '<div style="background:rgba(0,0,0,0.3); border:1.5px solid rgba(255,255,255,0.5); border-radius:18px; padding:10px 6px; margin-bottom:12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.25);">' +
               '<div>' +
                 '<div style="font-size:22px; font-weight:900; color:#A7F3D0; line-height:1; text-shadow:0 1px 4px rgba(0,0,0,0.6)">' + stats.uniqueCountries.length + '</div>' +
                 '<div style="font-size:8.5px; font-weight:800; text-transform:uppercase; color:rgba(255,255,255,0.95); letter-spacing:0.8px; margin-top:4px; text-shadow:0 1px 3px rgba(0,0,0,0.7)">COUNTRIES</div>' +
@@ -5823,7 +5817,7 @@ function renderFootprintCard() {
               flagsHtml +
             '</div>' +
 
-            '<!-- Glass Poster Footer -->' +
+            '<!-- Story Poster Footer -->' +
             '<div style="border-top:1px dashed rgba(255,255,255,0.4); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">' +
               '<div style="display:flex; align-items:center; gap:8px">' +
                 '<div style="width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.3); border:1.5px solid rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:11px; color:#ffffff; overflow:hidden; flex-shrink:0">' + avatarHtml + '</div>' +
@@ -5850,14 +5844,14 @@ function downloadFootprintImage() {
   var card = document.getElementById('footprint-card-render');
   if (!card) return;
   if (typeof html2canvas !== 'undefined') {
-    showToast("Generating card image... 📸");
+    showToast("Generating story image... 📸");
     html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
       var link = document.createElement('a');
       var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
-      link.download = name.replace(/\s+/g, '_') + '_Travel_Wrapped_' + fpSelectedYear + '.png';
+      link.download = name.replace(/\s+/g, '_') + '_Story_' + fpSelectedPeriod + '.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-      showToast("Card image downloaded! 🚀");
+      showToast("Story image downloaded! 🚀");
     }).catch(function(e) {
       console.error(e);
       showToast("Could not render image. Take a screenshot to share! 📸");
@@ -5867,45 +5861,53 @@ function downloadFootprintImage() {
   }
 }
 
-function shareFootprintText() {
-  var stats = getFootprintStats(fpSelectedYear);
+function shareFootprintNative() {
+  var card = document.getElementById('footprint-card-render');
+  if (!card) return;
+
+  var stats = getFootprintStats(fpSelectedPeriod);
   var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
-  var yearTitle = fpSelectedYear === 'all' ? 'Travel Journey' : fpSelectedYear + ' Travel Wrapped';
+  var periodTitle = fpSelectedPeriod === 'all' ? 'Travel Footprint' : fpSelectedPeriod + ' Travel Story';
+  var fileName = name.replace(/\s+/g, '_') + '_Story_' + fpSelectedPeriod + '.png';
 
-  var text = "🌍 My " + yearTitle + " (" + name + "):\n" +
-    "📍 " + stats.uniqueCountries.length + " Countries Visited\n" +
-    "📅 " + stats.totalDays + " Days Abroad\n" +
-    "✈️ " + stats.trips.length + " Trips Logged\n" +
-    (stats.topCountry ? "🏆 Top Destination: " + stats.topCountry + " (" + stats.topCountryDays + " days)\n" : "") +
-    (stats.uniqueCountries.length ? "Visited: " + stats.uniqueCountries.slice(0, 8).join(", ") + (stats.uniqueCountries.length > 8 ? "..." : "") + "\n" : "") +
-    "Track your visa days & travel allowance with VisaFlow 🛂✨\nhttps://visaflow.app";
+  showToast("Preparing story image for share... 📲");
 
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(function() {
-      showToast("Share card text copied to clipboard! 🚀");
-    }).catch(function() {
-      showToast("Share text copied!");
+  if (typeof html2canvas !== 'undefined') {
+    html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
+      canvas.toBlob(function(blob) {
+        if (!blob) {
+          downloadFootprintImage();
+          return;
+        }
+        var file = new File([blob], fileName, { type: 'image/png' });
+
+        // Try sharing file directly (Enables Instagram / IG Stories on iOS & Android mobile devices)
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+            files: [file],
+            title: name + "'s " + periodTitle,
+            text: "Check out my Travel Story on VisaFlow ✈️"
+          }).catch(function(err) {
+            console.log("Share dismissed", err);
+          });
+        } else if (navigator.share) {
+          // Standard text/link share fallback + auto-download image for desktop
+          navigator.share({
+            title: name + "'s " + periodTitle,
+            text: "🌍 Check out my Travel Story on VisaFlow ✈️",
+            url: "https://visaflow.app"
+          }).catch(function() {});
+          downloadFootprintImage();
+        } else {
+          downloadFootprintImage();
+        }
+      }, 'image/png');
+    }).catch(function(e) {
+      console.error(e);
+      downloadFootprintImage();
     });
   } else {
-    showToast("Share text copied!");
-  }
-}
-
-function shareFootprintNative() {
-  var stats = getFootprintStats(fpSelectedYear);
-  var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
-  var yearTitle = fpSelectedYear === 'all' ? 'Travel Footprint' : fpSelectedYear + ' Travel Wrapped';
-
-  var shareData = {
-    title: name + "'s " + yearTitle,
-    text: "🌍 " + name + " visited " + stats.uniqueCountries.length + " countries and spent " + stats.totalDays + " days abroad " + (fpSelectedYear === 'all' ? 'so far' : 'in ' + fpSelectedYear) + "! Track your visas with VisaFlow ✈️",
-    url: "https://visaflow.app"
-  };
-
-  if (navigator.share) {
-    navigator.share(shareData).catch(function() {});
-  } else {
-    shareFootprintText();
+    downloadFootprintImage();
   }
 }
 

@@ -8,7 +8,14 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/f726de1a-da93-4772-9ff8-6fe15b112dfc
 
-## Run Locally
+## 🚀 Roadmap & Gelecek Geliştirmeler (Planned Features)
+
+1. **Dinamik Vize Regülasyon Güncelleme Sistemi (Dynamic Visa Regulations Sync)**
+   - **Mimari:** Firebase Firestore & Serverless / Gemini API hibrit altyapısı.
+   - **Hedef:** Ülkelerin vize politikası veya kalış süresi değişikliklerini merkezi veritabanından istemcilere anlık senkronize etmek.
+   - **AI Katmanı:** Değişen vize haberlerini/konsolosluk duyurularını otomatik tarayıp JSON kural setine dönüştüren isteğe bağlı Gemini API doğrulama katmanı.
+   - **Maliyet:** Ücretsiz/Minimum tier (Milyonlarca okuma Firestore free tier kapsamında).
+
 
 **Prerequisites:**  Node.js
 
