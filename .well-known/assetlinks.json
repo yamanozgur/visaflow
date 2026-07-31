@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.yamanozgur.twa",
-        "sha256_cert_fingerprints": ["49:69:B7:D4:16:A1:8A:8F:D7:7E:CD:74:BF:19:B9:4E:76:3B:97:F9:A0:1C:9D:21:79:9E:ED:F3:0B:DA:95:CB"]
+        "sha256_cert_fingerprints": ["A8:1D:0F:C6:42:1A:7D:58:28:FB:D7:F1:3A:70:BF:52:26:23:08:C6:47:23:9D:80:E0:36:45:A6:B7:F3:57:92"]
       }
     }]
