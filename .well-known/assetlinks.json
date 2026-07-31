@@ -1,12 +1,8 @@
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "io.github.yamanozgur.twa",
-      "sha256_cert_fingerprints": [
-        "REPLACE_WITH_SHA256_FROM_PWABUILDER"
-      ]
-    }
-  }
-]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.yamanozgur.twa",
+        "sha256_cert_fingerprints": ["49:69:B7:D4:16:A1:8A:8F:D7:7E:CD:74:BF:19:B9:4E:76:3B:97:F9:A0:1C:9D:21:79:9E:ED:F3:0B:DA:95:CB"]
+      }
+    }]
