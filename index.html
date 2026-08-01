@@ -108,6 +108,9 @@
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (data.appState && window.state) {
+              if (data.appState.notifications && window.mergeNotificationReadStates) {
+                data.appState.notifications = window.mergeNotificationReadStates(data.appState.notifications);
+              }
               window.state = data.appState;
               window.state.currentUserEmail = user.email;
               if (!window.state.user) window.state.user = {};
@@ -127,6 +130,34 @@
   } catch (err) {
     console.error("Firebase init error:", err);
   }
+
+  window.mergeNotificationReadStates = function(incomingNotifications) {
+    if (!Array.isArray(incomingNotifications)) return [];
+    var readIds = {};
+    if (window.state && Array.isArray(window.state.notifications)) {
+      window.state.notifications.forEach(function(n) {
+        if (n && n.id && n.read) readIds[n.id] = true;
+      });
+    }
+    try {
+      var s = localStorage.getItem('np_v6');
+      if (s) {
+        var parsed = JSON.parse(s);
+        if (parsed && Array.isArray(parsed.notifications)) {
+          parsed.notifications.forEach(function(n) {
+            if (n && n.id && n.read) readIds[n.id] = true;
+          });
+        }
+      }
+    } catch(e) {}
+
+    incomingNotifications.forEach(function(n) {
+      if (n && n.id && readIds[n.id]) {
+        n.read = true;
+      }
+    });
+    return incomingNotifications;
+  };
 
   window.safeCloneState = function(s) {
     if (!s || typeof s !== 'object') return {};
@@ -312,9 +343,13 @@
         console.warn("Firebase Google Auth fallback active for preview domain:", err);
         const obEmail = (document.getElementById('ob-auth-email') ? document.getElementById('ob-auth-email').value : '').trim();
         const modalEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
-        const defaultEmail = (obEmail || modalEmail || 'yamanozgur@gmail.com').toLowerCase().trim();
+        let defaultEmail = (obEmail || modalEmail).toLowerCase().trim();
+        if (!defaultEmail) {
+          const randId = Math.floor(1000 + Math.random() * 9000);
+          defaultEmail = 'google.user.' + randId + '@gmail.com';
+        }
         
-        const googleName = (document.getElementById('ob-name') ? document.getElementById('ob-name').value : '').trim() || (defaultEmail.split('@')[0] || 'Explorer');
+        const googleName = (document.getElementById('ob-name') ? document.getElementById('ob-name').value : '').trim() || (defaultEmail.split('@')[0] || 'Google Explorer');
         const emailKey = 'google_' + defaultEmail.replace(/[^a-zA-Z0-9]/g, '_');
         
         user = {
@@ -327,16 +362,22 @@
       }
     }
     
+    window.currentCloudAccount = { uid: user.uid, email: user.email, displayName: user.displayName };
     const userDocRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userDocRef);
     
     let userData = null;
     if (docSnap.exists()) {
       userData = docSnap.data();
+      if (!userData.email && user.email) {
+        userData.email = user.email;
+        await setDoc(userDocRef, { email: user.email }, { merge: true });
+      }
     } else {
       userData = {
         email: user.email ? user.email.toLowerCase().trim() : '',
-        name: user.displayName || 'Explorer',
+        name: user.displayName || 'Google Explorer',
+        authProvider: 'google',
         isPremium: false,
         updatedAt: new Date().toISOString(),
         appState: window.state || {}
@@ -1068,8 +1109,8 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="ob-slide" id="ob-slide-4" style="justify-content:flex-start;padding-top:32px;overflow-y:auto;">
       <div style="width:100%;max-width:360px;margin:0 auto;">
         <div style="margin-bottom:20px">
-          <div id="ob-auth-title" style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Secure Cloud Backup</div>
-          <div id="ob-auth-sub" style="font-size:13px;color:var(--muted);line-height:1.5">Optional: Sign in to restore your existing data, or create an account for cloud sync.</div>
+          <div id="ob-auth-title" style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Create Account or Sign In</div>
+          <div id="ob-auth-sub" style="font-size:13px;color:var(--muted);line-height:1.5">A free VisaFlow account is required to protect your data and sync across devices.</div>
         </div>
 
         <div style="display:flex;background:var(--bg2);padding:3px;border-radius:12px;margin-bottom:16px;">
@@ -1111,8 +1152,6 @@ input:checked+.slider::before{transform:translateX(20px);}
             Continue with Facebook
           </button>
         </div>
-
-        <button class="secondary-btn" onclick="finishOnboardingGuest()" style="margin-top:10px;">Continue as Guest (Local Only)</button>
         <div style="height:24px"></div>
       </div>
     </div>
@@ -1127,6 +1166,14 @@ input:checked+.slider::before{transform:translateX(20px);}
         <label class="form-label">Citizenship Country</label>
         <input class="form-input" id="ob-citizenship" placeholder="e.g. Germany, United States…" oninput="obFilterCitizenship(this.value)" autocomplete="off">
         <div id="ob-citizenship-dropdown" class="country-dropdown" style="display:none"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;margin-bottom:4px">
+          <label class="form-label" style="margin:0">Passport Expiry Date</label>
+          <span style="font-size:11px;color:var(--green);font-weight:600">🔔 Expiry Reminder</span>
+        </div>
+        <input class="form-input" id="ob-passport-expiry" type="date">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:12px;display:flex;align-items:center;gap:4px">
+          <span>⚠️ Pasaport Bitiş Alarmı için gereklidir</span>
+        </div>
         <label class="form-label">Current Country</label>
         <input class="form-input" id="ob-location" placeholder="e.g. Vietnam, Thailand…" oninput="obFilterLocation(this.value)" autocomplete="off">
         <div id="ob-location-dropdown" class="country-dropdown" style="display:none"></div>
@@ -1526,6 +1573,35 @@ input:checked+.slider::before{transform:translateX(20px);}
     <textarea class="form-input" id="contact-message" rows="4" placeholder="Write your message here…" style="resize:none;height:100px;line-height:1.5"></textarea>
     <button class="submit-btn" onclick="submitContact()">Send Message</button>
     <button class="secondary-btn" onclick="closeModal('contact-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- ABOUT FLOWSPOT STUDIOS MODAL -->
+<div class="modal-overlay" id="about-modal">
+  <div class="modal" style="text-align:center">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="font-size:20px;font-weight:800;color:var(--text);margin-top:6px">FlowSpot Studios</div>
+    <div class="modal-sub" style="font-size:12px;color:var(--green);font-weight:700">Digital Nomad &amp; Travel Ecosystem</div>
+    
+    <div style="margin-top:16px;padding:16px;background:var(--bg2);border-radius:14px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
+      <p style="margin-bottom:12px">VisaFlow is crafted by <strong>FlowSpot Studios</strong> (FSS) — building intuitive, high-performance travel and lifestyle applications for global nomads and jetsetters.</p>
+      
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Product Ecosystem</div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">✈️</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text)">VisaFlow</div>
+          <div style="font-size:10px;color:var(--muted)">Visa &amp; Stay Tracker</div>
+        </div>
+        <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">✨</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text)">VibeSpot</div>
+          <div style="font-size:10px;color:var(--muted)">Travel Discovery</div>
+        </div>
+      </div>
+    </div>
+    
+    <button class="submit-btn" style="margin-top:20px" onclick="closeModal('about-modal')">Close</button>
   </div>
 </div>
 
@@ -2332,6 +2408,8 @@ function save(){
 function sanitizeState(){
   if(!state) return;
   if(!state.visas) state.visas = [];
+  if(!state.notifications) state.notifications = [];
+  if(window.mergeNotificationReadStates) state.notifications = window.mergeNotificationReadStates(state.notifications);
   state.visas.forEach(function(v){
     var tot = daysBetween(v.startDate, v.endDate);
     var parsedStay = parseInt(v.stayDays);
@@ -2359,8 +2437,10 @@ function initDemo(){
   state.visas=[];
   state.residencies=[];
   state.travels=[];
+  state.notifications=[];
   state.currentCountry=null;
   state.currentEntry=null;
+  state.currentUserEmail=null;
 }
 
 // ============================================================
@@ -4130,9 +4210,10 @@ function renderProfile(){
             '<div style="font-size:11px;color:var(--muted);margin-top:2px">Backup account: ' + state.currentUserEmail + '</div>'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;gap:8px">'+
-          '<button style="background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer" onclick="triggerSync()">Sync Now</button>'+
-          '<button style="background:none;color:var(--red);border:none;padding:6px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline" onclick="logout()">Logout</button>'+
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">'+
+          '<button style="background:var(--bg3);color:var(--text);border:1px solid var(--border);padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer" onclick="triggerSync()">Sync</button>'+
+          '<button style="background:none;color:var(--muted);border:none;padding:6px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline" onclick="logout()">Logout</button>'+
+          '<button style="background:none;color:var(--red);border:none;padding:6px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline" onclick="deleteMyAccount()">Delete Account</button>'+
         '</div>'+
       '</div>'+
     '</div>'
@@ -4265,9 +4346,20 @@ function renderProfile(){
         '<div class="settings-label">Contact Us</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
+      '<div class="settings-item" onclick="openModal(\'about-modal\')">'+
+        '<div class="settings-icon" style="background:var(--blue-l)">✨</div>'+
+        '<div class="settings-label">About FlowSpot Studios</div>'+
+        '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
     '</div>'+
 
-    '<div style="height:20px"></div>';
+    '<div style="text-align:center;padding:24px 16px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
+      '<div style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:0.2px">FlowSpot Studios</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">Empowering Next-Gen Nomad &amp; Travel Experiences</div>'+
+      '<div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:8px;opacity:0.65">VisaFlow v1.0.4 · © 2026 FlowSpot Studios</div>'+
+    '</div>'+
+
+    '<div style="height:10px"></div>';
 }
 
 function saveProfile(){
@@ -5428,14 +5520,44 @@ function logout() {
   if (window.firebaseServices && window.firebaseLogoutUser) {
     window.firebaseLogoutUser().catch(function(e) { console.error('Logout error:', e); });
   }
-  state.currentUserEmail = null;
-  state.user.isPremium = false;
-  state.user.name = '';
-  state.user.initials = '';
+  window.currentCloudAccount = null;
+  initDemo();
+  localStorage.removeItem(STORAGE_KEY);
   save();
   renderAll();
   renderProfile();
+  resetOnboarding();
   showToast('Logged out successfully');
+}
+
+async function deleteMyAccount() {
+  if (!confirm("Are you sure you want to permanently delete your account and all stored cloud data? This action cannot be undone.")) return;
+  
+  showToast("Deleting account...");
+  const cleanEmail = (state.currentUserEmail || '').toLowerCase().trim();
+  
+  if (cleanEmail && window.firebaseServices) {
+    const { db, doc, deleteDoc } = window.firebaseServices;
+    const emailKey = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
+    
+    try { await deleteDoc(doc(db, "accounts", emailKey)); } catch(e) {}
+    try { await deleteDoc(doc(db, "users", emailKey)); } catch(e) {}
+    
+    if (window.currentCloudAccount && window.currentCloudAccount.uid) {
+      try { await deleteDoc(doc(db, "users", window.currentCloudAccount.uid)); } catch(e) {}
+    }
+  }
+  
+  if (window.firebaseServices && window.firebaseLogoutUser) {
+    try { await window.firebaseLogoutUser(); } catch(e) {}
+  }
+  
+  initDemo();
+  localStorage.removeItem(STORAGE_KEY);
+  save();
+  renderAll();
+  resetOnboarding();
+  showToast("Your account & data have been completely deleted 👋");
 }
 
 window.isAdminUnlocked = false;
@@ -5510,6 +5632,7 @@ function checkAndGenerateSystemNotifications() {
 
   var todayStr = new Date().toISOString().split('T')[0];
   var todayMs = Date.now();
+  var added = false;
 
   // 1. Visa Expiry Check
   if (Array.isArray(state.visas)) {
@@ -5535,6 +5658,7 @@ function checkAndGenerateSystemNotifications() {
             actionText: 'Vizeleri Gör ➔',
             actionTarget: 'visas'
           });
+          added = true;
         }
       } else if (diffDays < 0 && diffDays >= -60) {
         var expiredId = 'sys_visa_exp_' + (v.id || v.country);
@@ -5552,6 +5676,7 @@ function checkAndGenerateSystemNotifications() {
             actionText: 'Güncelle ➔',
             actionTarget: 'visas'
           });
+          added = true;
         }
       }
     });
@@ -5582,6 +5707,7 @@ function checkAndGenerateSystemNotifications() {
             actionText: 'Pasaportu İncele ➔',
             actionTarget: 'profile'
           });
+          added = true;
         }
       }
     });
@@ -5604,23 +5730,37 @@ function checkAndGenerateSystemNotifications() {
         actionText: 'Ücretsiz Dene 💎',
         actionTarget: 'paywall'
       });
+      added = true;
     }
   }
 
-  // 4. Welcome message if empty
-  if (state.notifications.length === 0) {
-    state.notifications.push({
-      id: 'sys_welcome',
-      title: '👋 VisaFlow\'a Hoş Geldiniz!',
-      body: 'Pasaport ve vizelerinizi kaydetmeye başlayarak otomatik bitiş tarihi uyarıları ve Schengen hesaplayıcıyı aktif edebilirsiniz.',
+  // 4. Personalized English Welcome Message
+  var userName = (state.user && state.user.name && state.user.name.trim()) ? state.user.name.trim() : 'Explorer';
+  var welcomeNotifId = 'sys_welcome';
+  var welcomeItem = state.notifications.find(function(n) { return n.id === welcomeNotifId; });
+
+  if (!welcomeItem) {
+    state.notifications.unshift({
+      id: welcomeNotifId,
+      title: '👋 Welcome to VisaFlow, ' + userName + '!',
+      body: 'Welcome aboard! Keep track of your visas, passport expiry dates, and 90/180-day stay limits effortlessly. Add your first visa to get started.',
       type: 'system',
       icon: '✈️',
       date: todayStr,
       timestamp: todayMs,
       read: false,
-      actionText: 'Vize Ekle ➔',
+      actionText: 'Add Visa ➔',
       actionTarget: 'add'
     });
+    added = true;
+  } else if (welcomeItem.title !== '👋 Welcome to VisaFlow, ' + userName + '!') {
+    welcomeItem.title = '👋 Welcome to VisaFlow, ' + userName + '!';
+    welcomeItem.body = 'Welcome aboard! Keep track of your visas, passport expiry dates, and 90/180-day stay limits effortlessly. Add your first visa to get started.';
+    added = true;
+  }
+
+  if (added) {
+    save();
   }
 
   renderNotificationsBadge();
@@ -5838,16 +5978,46 @@ async function renderAdminBroadcastHistory() {
 
   var html = '';
   broadcasts.forEach(function(b) {
+    var bId = b.id || '';
     html += '<div style="background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center">'+
-      '<div>'+
+      '<div style="flex:1; padding-right:8px">'+
         '<div style="font-size:12px; font-weight:700; color:var(--text)">' + (b.icon || '📣') + ' ' + b.title + '</div>'+
         '<div style="font-size:11px; color:var(--muted); margin-top:2px">' + b.body + '</div>'+
       '</div>'+
-      '<span style="font-size:10px; color:var(--muted); white-space:nowrap; margin-left:8px">' + (b.date || '') + '</span>'+
+      '<div style="display:flex; align-items:center; gap:8px">'+
+        '<span style="font-size:10px; color:var(--muted); white-space:nowrap">' + (b.date || '') + '</span>'+
+        (bId ? '<button onclick="deleteAdminBroadcast(\'' + bId + '\')" style="background:none; border:none; color:var(--red); font-size:13px; cursor:pointer; padding:2px 4px" title="Duyuruyu Sil">🗑️</button>' : '')+
+      '</div>'+
     '</div>';
   });
 
   container.innerHTML = html;
+}
+
+async function deleteAdminBroadcast(bcastId) {
+  if (!bcastId) return;
+  if (!confirm('Bu duyuruyu silmek istediğinize emin misiniz?')) return;
+
+  if (window.firebaseServices) {
+    try {
+      const { db, doc, deleteDoc } = window.firebaseServices;
+      await deleteDoc(doc(db, "announcements", bcastId));
+    } catch(err) {
+      console.warn("Firestore delete announcement error:", err);
+    }
+  }
+
+  if (state.notifications) {
+    state.notifications = state.notifications.filter(function(n) {
+      return n.id !== bcastId && n.broadcastId !== bcastId;
+    });
+    save();
+    renderNotificationsBadge();
+    if (typeof renderInbox === 'function') renderInbox();
+  }
+
+  showToast('Duyuru silindi 🗑️');
+  renderAdminBroadcastHistory();
 }
 
 async function syncCloudBroadcasts() {
@@ -5913,15 +6083,21 @@ async function refreshAdminData() {
     const usersMap = {};
     usersSnap.forEach(function(docSnap) {
       const d = docSnap.data();
-      const email = (d.email || docSnap.id).toLowerCase().trim();
-      usersMap[email] = Object.assign({ id: docSnap.id, col: 'users' }, d);
+      const userEmail = d.email || (d.appState && d.appState.currentUserEmail) || (d.appState && d.appState.user && d.appState.user.email) || '';
+      const cleanEmail = userEmail.trim() ? userEmail.trim().toLowerCase() : docSnap.id;
+      const uName = d.name || (d.appState && d.appState.user && d.appState.user.name) || 'User';
+      const isPrem = !!d.isPremium || (d.appState && d.appState.user && !!d.appState.user.isPremium);
+      usersMap[docSnap.id] = Object.assign({ id: docSnap.id, col: 'users', email: cleanEmail, name: uName, isPremium: isPrem }, d);
     });
 
     accountsSnap.forEach(function(docSnap) {
       const d = docSnap.data();
-      const email = (d.email || docSnap.id).toLowerCase().trim();
-      if (!usersMap[email]) {
-        usersMap[email] = Object.assign({ id: docSnap.id, col: 'accounts' }, d);
+      const userEmail = d.email || (d.appState && d.appState.currentUserEmail) || (d.appState && d.appState.user && d.appState.user.email) || '';
+      const cleanEmail = userEmail.trim() ? userEmail.trim().toLowerCase() : docSnap.id;
+      const uName = d.name || (d.appState && d.appState.user && d.appState.user.name) || 'User';
+      const isPrem = !!d.isPremium || (d.appState && d.appState.user && !!d.appState.user.isPremium);
+      if (!usersMap[docSnap.id] && !usersMap[cleanEmail]) {
+        usersMap[docSnap.id] = Object.assign({ id: docSnap.id, col: 'accounts', email: cleanEmail, name: uName, isPremium: isPrem }, d);
       }
     });
 
@@ -5967,11 +6143,20 @@ function renderAdminUsers(users) {
     const name = u.name || 'User';
     const email = u.email || u.id;
     const dateStr = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : 'N/A';
+    
+    let providerBadge = '';
+    if (u.id.startsWith('google_') || u.authProvider === 'google') {
+      providerBadge = '<span style="font-size:10px; font-weight:700; background:#4285F4; color:#fff; padding:2px 6px; border-radius:6px; margin-left:6px">Google</span>';
+    } else if (u.id.startsWith('apple_') || u.authProvider === 'apple') {
+      providerBadge = '<span style="font-size:10px; font-weight:700; background:#000; color:#fff; padding:2px 6px; border-radius:6px; margin-left:6px">Apple</span>';
+    } else if (u.id.startsWith('facebook_') || u.authProvider === 'facebook') {
+      providerBadge = '<span style="font-size:10px; font-weight:700; background:#1877F2; color:#fff; padding:2px 6px; border-radius:6px; margin-left:6px">Facebook</span>';
+    }
 
     return '<div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px">'+
       '<div style="display:flex; justify-content:space-between; align-items:flex-start">'+
         '<div>'+
-          '<div style="font-size:13px; font-weight:700; color:var(--text); word-break:break-all">'+email+'</div>'+
+          '<div style="font-size:13px; font-weight:700; color:var(--text); word-break:break-all; display:flex; align-items:center">'+email+providerBadge+'</div>'+
           '<div style="font-size:11px; color:var(--muted); margin-top:2px">'+name+' · Updated: '+dateStr+'</div>'+
         '</div>'+
         '<span style="font-size:11px; font-weight:800; padding:3px 8px; border-radius:12px; background:'+(isPrem ? 'var(--orange-l)' : 'var(--bg3)')+'; color:'+(isPrem ? 'var(--orange)' : 'var(--muted)')+'; border:1px solid '+(isPrem ? 'var(--orange-b)' : 'var(--border)')+'">'+
@@ -6413,15 +6598,27 @@ function renderFootprintCard() {
     periodTitle = (FP_MONTH_NAMES[mIdx] || parts[1]) + ' ' + parts[0];
   }
 
-  var topCountryName = stats.topCountry || state.currentCountry || (stats.uniqueCountries[0] || 'Vietnam');
-  var topCs = getCS(topCountryName);
-  var bgPhotoUrl = (topCs && topCs.code) ? 
-    'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + topCs.code + '.webp' : 
-    'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp';
+  var hasNoTravels = !stats.uniqueCountries.length;
+  var topCountryName = '';
+  var categorySubtitle = '';
+  var bgPhotoUrl = '';
+
+  if (hasNoTravels) {
+    categorySubtitle = 'READY TO EXPLORE';
+    topCountryName = 'NO TRAVELS YET';
+    bgPhotoUrl = 'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp';
+  } else {
+    topCountryName = stats.topCountry || stats.uniqueCountries[0];
+    categorySubtitle = 'TOP DESTINATION';
+    var topCs = getCS(topCountryName);
+    bgPhotoUrl = (topCs && topCs.code) ? 
+      'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + topCs.code + '.webp' : 
+      'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp';
+  }
 
   var flagsHtml = '';
-  if (!stats.uniqueCountries.length) {
-    flagsHtml = '<span style="font-size:10px;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.35);padding:4px 10px;border-radius:10px;display:inline-block;">No countries logged in this period</span>';
+  if (hasNoTravels) {
+    flagsHtml = '<span style="font-size:10px;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:12px;display:inline-block;font-weight:600">✈️ Log your first trip to build your footprint!</span>';
   } else {
     flagsHtml = stats.uniqueCountries.map(function(c) {
       var cs = getCS(c);
@@ -6442,7 +6639,7 @@ function renderFootprintCard() {
   wrapper.innerHTML = 
     '<div id="footprint-card-render" style="width:' + cardWidth + '; height:' + cardHeight + '; position:relative; overflow:hidden; border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, serif; color:#ffffff; text-align:center; background:url(\'' + bgPhotoUrl + '\') center/cover no-repeat;">' +
       '<!-- Minimal Shadow Overlay for Background Photo -->' +
-      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.45) 100%); z-index:0"></div>' +
+      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.55) 100%); z-index:0"></div>' +
       
       '<!-- 9:16 Story Poster Container -->' +
       '<div style="position:relative; z-index:1; height:100%; box-sizing:border-box; padding:18px 14px; display:flex; flex-direction:column; justify-content:space-between">' +
@@ -6459,14 +6656,23 @@ function renderFootprintCard() {
 
             '<!-- Category Subtitle -->' +
             '<div style="font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#FDE047; text-shadow:0 1px 4px rgba(0,0,0,0.9); margin-bottom:4px">' +
-              'TOP DESTINATION' +
+              categorySubtitle +
             '</div>' +
 
             '<!-- Main Serif Destination Headline -->' +
-            '<div style="font-family: Georgia, \'Playfair Display\', serif; font-size:28px; font-weight:900; letter-spacing:3.5px; text-transform:uppercase; color:#ffffff; text-shadow:0 2px 20px rgba(0,0,0,0.95); margin-bottom:4px; line-height:1.15">' +
+            '<div style="font-family: Georgia, \'Playfair Display\', serif; font-size:24px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:#ffffff; text-shadow:0 2px 20px rgba(0,0,0,0.95); margin-bottom:4px; line-height:1.15">' +
               topCountryName +
             '</div>' +
           '</div>' +
+
+          (hasNoTravels ? 
+            '<!-- Empty State Banner Placeholder -->' +
+            '<div style="margin: 8px 0; padding: 12px 10px; background: rgba(0,0,0,0.38); border: 1.5px dashed rgba(255,255,255,0.5); border-radius: 14px;">' +
+              '<div style="font-size:24px; margin-bottom:4px">🗺️</div>' +
+              '<div style="font-size:11px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">Henüz seyahat günlüğünüz yok</div>' +
+              '<div style="font-size:9.5px; color:rgba(255,255,255,0.85); margin-top:2px; font-weight:500; line-height:1.3">Seyahatlerinizi ekledikçe Footprint hikaye kartınız otomatik oluşturulur.</div>' +
+            '</div>' : ''
+          ) +
 
           '<!-- Bottom Section: Capsule Stats Bar + Flag Badges + Footer -->' +
           '<div>' +
@@ -6789,6 +6995,8 @@ function applyOnboardingFieldsToState() {
   const name=nameInput ? nameInput.value.trim() : '';
   const citizenshipInput=document.getElementById('ob-citizenship');
   const citizenship=citizenshipInput ? citizenshipInput.value.trim() : '';
+  const ppExpiryInput=document.getElementById('ob-passport-expiry');
+  const ppExpiry=ppExpiryInput ? ppExpiryInput.value : '';
   const locationInput=document.getElementById('ob-location');
   const location=locationInput ? locationInput.value.trim() : '';
   const arrivalInput=document.getElementById('ob-arrival');
@@ -6804,7 +7012,14 @@ function applyOnboardingFieldsToState() {
 
   if(citizenship){
     const cs=getCS(citizenship);
-    state.passports=[{id:'pp'+Date.now(),country:citizenship,code:(cs&&cs.code)?cs.code.toLowerCase():''}];
+    const code=(cs&&cs.code)?cs.code.toLowerCase():'';
+    if(state.passports && state.passports.length > 0){
+      state.passports[0].country = citizenship;
+      state.passports[0].code = code;
+      if(ppExpiry) state.passports[0].expiryDate = ppExpiry;
+    } else {
+      state.passports=[{id:'pp'+Date.now(),country:citizenship,code:code,expiryDate:ppExpiry||null}];
+    }
     state.activePassportId=state.passports[0].id;
   }
   if(location){
@@ -7013,14 +7228,19 @@ async function submitGoogleAuth(source) {
     try {
       showToast('Opening Google Sign-In...');
       const { user, userData } = await window.firebaseGoogleLogin();
-      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
       state.currentUserEmail = user.email;
+      
+      var hasExistingOnboardedState = userData && userData.appState && userData.appState.user && userData.appState.user.onboarded;
+
       if (userData && userData.appState) {
         state = userData.appState;
         state.currentUserEmail = user.email;
       } else {
+        initDemo();
+        state.currentUserEmail = user.email;
         if (!state.user) state.user = {};
-        state.user.name = user.displayName || state.user.name || 'Explorer';
+        if (user.displayName) state.user.name = user.displayName;
+        if (!state.user.name) state.user.name = 'Explorer';
         const parts = state.user.name.trim().split(' ');
         state.user.initials = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
       }
@@ -7028,8 +7248,21 @@ async function submitGoogleAuth(source) {
       if (userData && userData.isPremium !== undefined) {
         state.user.isPremium = !!userData.isPremium;
       }
+      
+      if (source === 'ob' && !hasExistingOnboardedState) {
+        showToast('Account registered! ☁️ Please complete your profile.');
+        save();
+        silentSync();
+        const obNameInput = document.getElementById('ob-name');
+        if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name || user.displayName || '';
+        obGoTo(5);
+        return;
+      }
+
+      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
       state.user.onboarded = true;
       save();
+      silentSync();
       
       if (source === 'ob') {
         const ob = document.getElementById('onboarding');
@@ -7059,13 +7292,103 @@ async function submitGoogleAuth(source) {
   }
 }
 
+async function submitAppleAuth(source) {
+  if (window.firebaseServices && window.firebaseAppleLogin) {
+    try {
+      showToast('Opening Apple Sign-In...');
+      const { user, userData } = await window.firebaseAppleLogin();
+      state.currentUserEmail = user.email;
+      var hasExistingOnboardedState = userData && userData.appState && userData.appState.user && userData.appState.user.onboarded;
+      if (userData && userData.appState) {
+        state = userData.appState;
+        state.currentUserEmail = user.email;
+      } else {
+        initDemo();
+        state.currentUserEmail = user.email;
+        if (!state.user) state.user = {};
+        if (user.displayName) state.user.name = user.displayName;
+        if (!state.user.name) state.user.name = 'Apple User';
+      }
+      if (!state.user) state.user = {};
+      if (userData && userData.isPremium !== undefined) state.user.isPremium = !!userData.isPremium;
+      if (source === 'ob' && !hasExistingOnboardedState) {
+        showToast('Account registered! ☁️ Please complete your profile.');
+        save(); silentSync();
+        const obNameInput = document.getElementById('ob-name');
+        if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name || '';
+        obGoTo(5); return;
+      }
+      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
+      state.user.onboarded = true;
+      save(); silentSync();
+      if (source === 'ob') {
+        const ob = document.getElementById('onboarding');
+        if (ob) {
+          ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
+          setTimeout(function() { ob.classList.add('hidden'); }, 500);
+        }
+      } else { closeModal('auth-modal'); }
+      renderAll(); renderProfile();
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+      showToast(err.message || 'Apple Authentication error');
+    }
+  } else { showToast('Apple Auth is unavailable in preview mode.'); }
+}
+
+async function submitFacebookAuth(source) {
+  if (window.firebaseServices && window.firebaseFacebookLogin) {
+    try {
+      showToast('Opening Facebook Sign-In...');
+      const { user, userData } = await window.firebaseFacebookLogin();
+      state.currentUserEmail = user.email;
+      var hasExistingOnboardedState = userData && userData.appState && userData.appState.user && userData.appState.user.onboarded;
+      if (userData && userData.appState) {
+        state = userData.appState;
+        state.currentUserEmail = user.email;
+      } else {
+        initDemo();
+        state.currentUserEmail = user.email;
+        if (!state.user) state.user = {};
+        if (user.displayName) state.user.name = user.displayName;
+        if (!state.user.name) state.user.name = 'Facebook User';
+      }
+      if (!state.user) state.user = {};
+      if (userData && userData.isPremium !== undefined) state.user.isPremium = !!userData.isPremium;
+      if (source === 'ob' && !hasExistingOnboardedState) {
+        showToast('Account registered! ☁️ Please complete your profile.');
+        save(); silentSync();
+        const obNameInput = document.getElementById('ob-name');
+        if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name || '';
+        obGoTo(5); return;
+      }
+      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
+      state.user.onboarded = true;
+      save(); silentSync();
+      if (source === 'ob') {
+        const ob = document.getElementById('onboarding');
+        if (ob) {
+          ob.style.transition = 'opacity 0.5s ease'; ob.style.opacity = '0';
+          setTimeout(function() { ob.classList.add('hidden'); }, 500);
+        }
+      } else { closeModal('auth-modal'); }
+      renderAll(); renderProfile();
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+      showToast(err.message || 'Facebook Authentication error');
+    }
+  } else { showToast('Facebook Auth is unavailable in preview mode.'); }
+}
+
 function finishOnboardingGuest() {
-  obGoTo(5);
+  showToast('Devam etmek için lütfen giriş yapın veya kayıt olun.');
+  obGoTo(4);
 }
 
 function obNext() {
   if (obCurrent === 4) {
-    obGoTo(5);
+    showToast('Devam etmek için lütfen giriş yapın veya kayıt olun.');
+    return;
   } else if (obCurrent === 5) {
     const name=document.getElementById('ob-name').value.trim();
     if(!name){document.getElementById('ob-name').focus();showToast('Please enter your name');return;}
@@ -7105,14 +7428,14 @@ function obGoTo(idx){
     btn.disabled=!document.getElementById('ob-agree').checked;
     skip.style.display='none';
   } else if(obCurrent===4){
-    btn.style.display='block';
-    btn.textContent='Continue as Guest ➔';
-    btn.disabled=false;
+    btn.style.display='none';
     skip.style.display='none';
   } else {
     btn.style.display='block';
     btn.textContent=obCurrent===0 ? 'Get Started ➔' : 'Next ➔';
     skip.style.display='block';
+    skip.textContent='Sign In / Register ➔';
+    skip.onclick=function(){ obGoTo(4); };
     btn.disabled=false;
   }
 }
