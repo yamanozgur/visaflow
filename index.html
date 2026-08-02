@@ -4442,7 +4442,23 @@ function renderProfile(){
     '</div>'+
 
     '<div class="section-title">Notifications</div>'+
-        '<div class="settings-item" onclick="openAdminPanel()">'+
+    '<div class="settings-group">'+
+      '<div class="settings-item">'+
+        '<div class="settings-icon" style="background:var(--green-l)">🔔</div>'+
+        '<div class="settings-label">Visa Expiry Alerts</div>'+
+        '<label class="switch"><input type="checkbox" '+(state.user.notifVisa?'checked':'')+' onchange="state.user.notifVisa=this.checked;save()"><span class="slider"></span></label>'+
+      '</div>'+
+      '<div class="settings-item">'+
+        '<div class="settings-icon" style="background:var(--blue-l)">📋</div>'+
+        '<div class="settings-label">Application Reminders</div>'+
+        '<label class="switch"><input type="checkbox" '+(state.user.notifReminder?'checked':'')+' onchange="state.user.notifReminder=this.checked;save()"><span class="slider"></span></label>'+
+      '</div>'+
+    '</div>'+
+
+    (((typeof currentUser !== 'undefined' && currentUser && currentUser.email === 'yamanozgur@gmail.com') || window.isAdminUnlocked) ?
+    '<div class="section-title">Admin</div>'+
+    '<div class="settings-group">'+
+      '<div class="settings-item" onclick="openAdminPanel()">'+
         '<div class="settings-icon" style="background:#E0F2FE; color:#0284C7">🛡️</div>'+
         '<div class="settings-label" style="font-weight:700; color:var(--text)">Admin &amp; Management Panel</div>'+
         '<div style="font-size:11px; color:var(--muted); font-weight:700">Open ›</div>'+
@@ -4459,7 +4475,7 @@ function renderProfile(){
             '<div class="ad-headline">Consulate-approved Schengen insurance</div>'+
             '<div class="ad-subline">€30,000 coverage, delivered in minutes.</div>'+
           '</div>'+
-          '<button class="ad-action-btn" onclick="openPaywall('ads')">Info</button>'+
+          '<button class="ad-action-btn" onclick="openPaywall(\'ads\')">Info</button>'+
         '</div>'+
       '</div>' : '') +
 
@@ -4471,23 +4487,22 @@ function renderProfile(){
 
     '<div class="section-title">Support &amp; Legal</div>'+
     '<div class="settings-group">'+
-      '<div class="settings-item" onclick="openModal('faq-modal')">'+
+      '<div class="settings-item" onclick="openModal(\'faq-modal\')">'+
         '<div class="settings-icon" style="background:var(--blue-l)">❓</div>'+
         '<div class="settings-label">Help &amp; FAQ</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
-      '<div class="settings-item" onclick="openModal('credits-modal')">'+
+      '<div class="settings-item" onclick="openModal(\'credits-modal\')">'+
         '<div class="settings-icon" style="background:var(--purple-l)">📷</div>'+
         '<div class="settings-label">Photography Credits</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
-      '<div class="settings-item" onclick="openModal('privacy-modal')">'+
+      '<div class="settings-item" onclick="openModal(\'privacy-modal\')">'+
         '<div class="settings-icon" style="background:var(--green-l)">🔒</div>'+
         '<div class="settings-label">Privacy Policy &amp; Terms</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
     '</div>';
-}
 
 }
 
@@ -7471,17 +7486,28 @@ function hideAppSplash() {
     setTimeout(function() { splash.style.display = 'none'; }, 420);
   }
 }
+window.addEventListener('load', hideAppSplash);
+window.addEventListener('DOMContentLoaded', hideAppSplash);
 
 // ============================================================
 // BOOT
 // ============================================================
-const loaded=load();
-if(!loaded) initDemo();
-const bootOb=document.getElementById('onboarding');
-if(state.user.onboarded){ bootOb.classList.add('hidden'); }
-else{ bootOb.classList.remove('hidden'); bootOb.style.opacity='1'; obGoTo(0); }
-renderAll();
-setTimeout(hideAppSplash, 350);
+try {
+  const loaded=load();
+  if(!loaded) initDemo();
+  const bootOb=document.getElementById('onboarding');
+  if(bootOb) {
+    if(state.user && state.user.onboarded){ bootOb.classList.add('hidden'); }
+    else{ bootOb.classList.remove('hidden'); bootOb.style.opacity='1'; obGoTo(0); }
+  }
+  renderAll();
+} catch(e) {
+  console.error('Boot error:', e);
+} finally {
+  hideAppSplash();
+  setTimeout(hideAppSplash, 150);
+  setTimeout(hideAppSplash, 500);
+}
 initSwipeNavigation();
 updateClock();
 setInterval(updateClock,10000);
