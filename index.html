@@ -22,6 +22,7 @@
   import { 
     getFirestore, 
     enableIndexedDbPersistence,
+    getDocFromServer,
     doc, 
     getDoc, 
     setDoc,
@@ -30,6 +31,42 @@
     deleteDoc,
     updateDoc
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const OperationType = {
+    CREATE: 'create',
+    UPDATE: 'update',
+    DELETE: 'delete',
+    LIST: 'list',
+    GET: 'get',
+    WRITE: 'write',
+  };
+
+  function handleFirestoreError(error, operationType, path) {
+    const auth = window.firebaseServices?.auth;
+    const currentUser = auth?.currentUser;
+    const errInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      authInfo: {
+        userId: currentUser?.uid,
+        email: currentUser?.email,
+        emailVerified: currentUser?.emailVerified,
+        isAnonymous: currentUser?.isAnonymous,
+        tenantId: currentUser?.tenantId,
+        providerInfo: currentUser?.providerData?.map(provider => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || []
+      },
+      operationType,
+      path
+    };
+    console.warn('Firestore Error: ', JSON.stringify(errInfo));
+    if (error && (error.code === 'permission-denied' || String(error.message || '').includes('permission'))) {
+      throw new Error(JSON.stringify(errInfo));
+    }
+  }
+  window.handleFirestoreError = handleFirestoreError;
+  window.OperationType = OperationType;
 
   const firebaseConfig = {
     projectId: "visaflow-652c2",
@@ -55,6 +92,18 @@
       console.warn("IndexedDb persistence init note:", pe);
     }
 
+    // Validate connection to Firestore as per Firebase skill guidelines
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.warn("Firestore client offline mode active.");
+        }
+      }
+    }
+    testConnection();
+
     window.firebaseServices = {
       app,
       auth,
@@ -74,7 +123,10 @@
       collection,
       getDocs,
       deleteDoc,
-      updateDoc
+      updateDoc,
+      getDocFromServer,
+      handleFirestoreError,
+      OperationType
     };
 
     window.firebaseResetPassword = async function(email) {
@@ -104,8 +156,11 @@
         console.log("Firebase Auth User logged in:", user.email);
         try {
           const userDocRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(userDocRef);
-          if (docSnap.exists()) {
+          // 4s timeout so if Firestore backend connection delays, the local app stays immediate and offline mode handles local data
+          const docSnapPromise = getDoc(userDocRef);
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore sync timeout - operating offline')), 4000));
+          const docSnap = await Promise.race([docSnapPromise, timeoutPromise]);
+          if (docSnap && typeof docSnap.exists === 'function' && docSnap.exists()) {
             const data = docSnap.data();
             if (data.appState && window.state) {
               if (data.appState.notifications && window.mergeNotificationReadStates) {
@@ -4356,6 +4411,9 @@ function renderProfile(){
   const totalCountries=new Set(state.travels.map(function(t){return t.country;})).size;
   const totalDays=state.travels.reduce(function(s,t){return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start));},0);
   const avatarHtml=state.user.photo?('<img src="'+state.user.photo+'" alt="">'):('<span style="font-size:26px;font-weight:800;color:#fff">'+(state.user.initials||'?')+'</span>');
+  const activeEmail = (state.currentUserEmail || (window.currentCloudAccount ? window.currentCloudAccount.email : '') || '').toLowerCase().trim();
+  const isOwnerAdmin = (activeEmail === 'yamanozgur@gmail.com' || window.isAdminUnlocked);
+
   el.innerHTML=
     '<div class="profile-hero" onclick="openModal(\'name-modal\')" style="cursor:pointer">'+
       '<div class="profile-avatar-big">'+avatarHtml+'</div>'+
@@ -4455,15 +4513,14 @@ function renderProfile(){
       '</div>'+
     '</div>'+
 
-    (((typeof currentUser !== 'undefined' && currentUser && currentUser.email === 'yamanozgur@gmail.com') || window.isAdminUnlocked) ?
-    '<div class="section-title">Admin</div>'+
+    '<div class="section-title">Admin &amp; Control</div>'+
     '<div class="settings-group">'+
-      '<div class="settings-item" onclick="openAdminPanel()">'+
-        '<div class="settings-icon" style="background:#E0F2FE; color:#0284C7">🛡️</div>'+
+      '<div class="settings-item" onclick="openAdminPanel()" style="cursor:pointer">'+
+        '<div class="settings-icon" style="background:' + (isOwnerAdmin ? '#E0F2FE' : '#FEF3C7') + '; color:' + (isOwnerAdmin ? '#0284C7' : '#D97706') + '">🛡️</div>'+
         '<div class="settings-label" style="font-weight:700; color:var(--text)">Admin &amp; Management Panel</div>'+
-        '<div style="font-size:11px; color:var(--muted); font-weight:700">Open ›</div>'+
+        '<div style="font-size:11px; font-weight:700; color:' + (isOwnerAdmin ? '#0284C7' : 'var(--muted)') + '">' + (isOwnerAdmin ? 'Verified Admin ✓' : 'Unlock ›') + '</div>'+
       '</div>'+
-    '</div>' : '') +
+    '</div>' +
 
     (!state.user.isPremium ?
       '<div class="ad-container" style="margin-top:18px">'+
@@ -4487,20 +4544,37 @@ function renderProfile(){
 
     '<div class="section-title">Support &amp; Legal</div>'+
     '<div class="settings-group">'+
-      '<div class="settings-item" onclick="openModal(\'faq-modal\')">'+
+      '<div class="settings-item" onclick="openModal(\'about-modal\')" style="cursor:pointer">'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)">🏢</div>'+
+        '<div class="settings-label" style="font-weight:700">About FlowSpot Studios</div>'+
+        '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
+      '<div class="settings-item" onclick="openModal(\'contact-modal\')" style="cursor:pointer">'+
+        '<div class="settings-icon" style="background:var(--orange-l); color:var(--orange)">✉️</div>'+
+        '<div class="settings-label" style="font-weight:700">Contact Support</div>'+
+        '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
+      '<div class="settings-item" onclick="openModal(\'faq-modal\')" style="cursor:pointer">'+
         '<div class="settings-icon" style="background:var(--blue-l)">❓</div>'+
         '<div class="settings-label">Help &amp; FAQ</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
-      '<div class="settings-item" onclick="openModal(\'credits-modal\')">'+
+      '<div class="settings-item" onclick="openModal(\'credits-modal\')" style="cursor:pointer">'+
         '<div class="settings-icon" style="background:var(--purple-l)">📷</div>'+
         '<div class="settings-label">Photography Credits</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
-      '<div class="settings-item" onclick="openModal(\'privacy-modal\')">'+
+      '<div class="settings-item" onclick="openModal(\'privacy-modal\')" style="cursor:pointer">'+
         '<div class="settings-icon" style="background:var(--green-l)">🔒</div>'+
         '<div class="settings-label">Privacy Policy &amp; Terms</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div style="margin-top:24px; margin-bottom:30px; text-align:center">'+
+      '<div onclick="openModal(\'about-modal\')" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:100px; cursor:pointer">'+
+        '<span style="font-size:14px">✨</span>'+
+        '<span style="font-size:12px; font-weight:700; color:var(--text2)">Crafted by <strong>FlowSpot Studios</strong> v2.6</span>'+
       '</div>'+
     '</div>';
 
@@ -5546,9 +5620,10 @@ async function deleteMyAccount() {
 window.isAdminUnlocked = false;
 
 function openAdminPanel() {
-  const currentEmail = state.currentUserEmail || (window.currentCloudAccount ? window.currentCloudAccount.email : '');
+  const currentEmail = (state.currentUserEmail || (window.currentCloudAccount ? window.currentCloudAccount.email : '') || '').toLowerCase().trim();
   
   if (currentEmail === 'yamanozgur@gmail.com' || window.isAdminUnlocked) {
+    window.isAdminUnlocked = true;
     openModal('admin-panel-modal');
     refreshAdminData();
     return;
@@ -5560,6 +5635,7 @@ function openAdminPanel() {
     openModal('admin-panel-modal');
     refreshAdminData();
     showToast('🛡️ Admin Access Unlocked!');
+    renderProfile();
   } else if (pin !== null) {
     showToast('Invalid Admin PIN');
   }
