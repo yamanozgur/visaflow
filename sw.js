@@ -1,4 +1,4 @@
-const CACHE_NAME = 'visaflow-v4';
+const CACHE_NAME = 'visaflow-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -45,38 +45,43 @@ self.addEventListener('fetch', function(e){
   if(url.pathname.startsWith('/api/')) return;
 
   // Allow caching same-origin as well as CDN dependencies (jsPDF, Google Fonts, FlagCDN, GitHub raw images)
-  const isAllowedOrigin = url.origin === self.location.origin ||
+  // Cache only same-origin static assets and key CDN libraries to prevent WebView memory overflow
+  const isStaticAsset = url.origin === self.location.origin ||
     url.origin.includes('cdnjs.cloudflare.com') ||
     url.origin.includes('fonts.googleapis.com') ||
-    url.origin.includes('fonts.gstatic.com') ||
-    url.origin.includes('flagcdn.com') ||
-    url.origin.includes('githubusercontent.com');
+    url.origin.includes('fonts.gstatic.com');
 
-  if(!isAllowedOrigin) return;
+  if(!isStaticAsset) return;
 
   e.respondWith(
-    fetch(e.request)
-      .then(function(response){
-        // Cache fresh successful responses
-        if (response.status === 200 || response.type === 'opaque') {
+    caches.match(e.request).then(function(cachedResponse) {
+      if (cachedResponse) {
+        // Return cached, update in background if online
+        fetch(e.request).then(function(networkResponse) {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then(function(cache) {
+              cache.put(e.request, networkResponse);
+            });
+          }
+        }).catch(function(){});
+        return cachedResponse;
+      }
+
+      return fetch(e.request).then(function(response) {
+        if (response && response.status === 200 && response.type === 'basic') {
           var clone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache){
+          caches.open(CACHE_NAME).then(function(cache) {
             cache.put(e.request, clone);
           });
         }
         return response;
-      })
-      .catch(function(){
-        // Offline fallback
-        return caches.match(e.request).then(function(cached){
-          if (cached) return cached;
-          // Fallback to index.html for HTML navigation requests
-          const accept = e.request.headers.get('accept');
-          if (accept && accept.includes('text/html')) {
-            return caches.match('./index.html') || caches.match('./');
-          }
-          return new Response('Offline resource not available', { status: 503, statusText: 'Service Unavailable' });
-        });
-      })
+      }).catch(function() {
+        const accept = e.request.headers.get('accept');
+        if (accept && accept.includes('text/html')) {
+          return caches.match('./index.html') || caches.match('./');
+        }
+        return new Response('Offline resource not available', { status: 503 });
+      });
+    })
   );
 });
