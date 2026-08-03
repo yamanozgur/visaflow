@@ -896,10 +896,33 @@ const COUNTRIES = {
 };
 
 const QUICK_COUNTRIES = ['Vietnam','Thailand','Malaysia','Japan','Germany','Netherlands','Singapore','Indonesia','Spain','Italy','France','Portugal','UAE','USA','UK','Turkey','Greece','Australia','South Korea','Taiwan'];
-const SCHENGEN_COUNTRIES = ['Austria','Belgium','Croatia','Czechia','Denmark','Estonia','Finland','France','Germany','Greece','Hungary','Iceland','Italy','Latvia','Liechtenstein','Lithuania','Luxembourg','Malta','Netherlands','Norway','Poland','Portugal','Slovakia','Slovenia','Spain','Sweden','Switzerland'];
+const SCHENGEN_COUNTRIES = [
+  'Austria','Belgium','Bulgaria','Croatia','Czechia','Czech Republic',
+  'Denmark','Estonia','Finland','France','Germany','Greece','Hungary',
+  'Iceland','Italy','Latvia','Liechtenstein','Lithuania','Luxembourg',
+  'Malta','Netherlands','Norway','Poland','Portugal','Romania',
+  'Slovakia','Slovenia','Spain','Sweden','Switzerland',
+  'Andorra','Monaco','San Marino','Vatican','Vatican City','Cyprus','Schengen'
+];
 const OB_COUNTRIES = Object.keys(COUNTRIES);
 
-function isSchengen(c){ return SCHENGEN_COUNTRIES.some(s=>s.toLowerCase()===c.toLowerCase()); }
+function isSchengen(c){
+  if(!c) return false;
+  var cLow = c.toLowerCase().trim();
+  if(cLow === 'schengen') return true;
+  var norm = (typeof normalizeDestination === 'function') ? normalizeDestination(c) : c;
+  var normLow = norm ? norm.toLowerCase().trim() : cLow;
+
+  if (typeof COUNTRY_NAME_MAP !== 'undefined' && COUNTRY_NAME_MAP[cLow]) {
+    var mapped = COUNTRY_NAME_MAP[cLow].toLowerCase();
+    if (SCHENGEN_COUNTRIES.some(function(s){ return s.toLowerCase() === mapped; })) return true;
+  }
+
+  return SCHENGEN_COUNTRIES.some(function(s){
+    var sLow = s.toLowerCase();
+    return sLow === cLow || sLow === normLow || cLow === sLow || normLow === sLow;
+  });
+}
 function getCS(country){
   if(COUNTRIES[country]) return COUNTRIES[country];
   for(const [k,v] of Object.entries(COUNTRIES))

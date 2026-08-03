@@ -95,10 +95,16 @@
     // Validate connection to Firestore as per Firebase skill guidelines
     async function testConnection() {
       try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("client operating in offline mode or network delayed")), 3500)
+        );
+        await Promise.race([
+          getDocFromServer(doc(db, 'test', 'connection')),
+          timeoutPromise
+        ]);
       } catch (error) {
-        if (error instanceof Error && error.message.includes('the client is offline')) {
-          console.warn("Firestore client offline mode active.");
+        if (error instanceof Error) {
+          console.warn("Firestore connection status:", error.message);
         }
       }
     }
@@ -282,7 +288,7 @@
             title: String(n.title || ''),
             body: String(n.body || ''),
             type: String(n.type || 'system'),
-            icon: String(n.icon || '📌'),
+            icon: String(n.icon || ''),
             date: String(n.date || new Date().toISOString().split('T')[0]),
             timestamp: n.timestamp ? Number(n.timestamp) : Date.now(),
             read: !!n.read,
@@ -809,21 +815,25 @@
 /* NOTIFICATIONS & INBOX STYLING */
 .notif-bell-btn {
   position: relative;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 50%;
+  background: var(--green-l);
+  border: 1.5px solid var(--green-b);
+  border-radius: 12px;
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--text);
+  color: var(--green);
   transition: all 0.2s;
   outline: none;
+  box-shadow: 0 2px 8px rgba(13,158,129,0.12);
+}
+.notif-bell-btn svg {
+  stroke: var(--green) !important;
 }
 .notif-bell-btn:hover {
-  background: var(--border);
+  background: var(--green-b);
   transform: translateY(-1px);
 }
 .notif-badge {
@@ -877,17 +887,24 @@
 .notif-icon-box {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  background: var(--green-l);
+  border-radius: 12px;
+  background: var(--green-l) !important;
+  color: var(--green) !important;
+  border: 1.5px solid var(--green-b);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   flex-shrink: 0;
 }
-.notif-icon-box.alert { background: var(--orange-l); }
-.notif-icon-box.campaign { background: var(--blue-l); }
-.notif-icon-box.announcement { background: var(--green-l); }
+.notif-icon-box.alert, .notif-icon-box.campaign, .notif-icon-box.announcement {
+  background: var(--green-l) !important;
+  color: var(--green) !important;
+  border-color: var(--green-b) !important;
+}
+.notif-icon-box svg {
+  stroke: var(--green) !important;
+}
 .notif-dot {
   width: 8px;
   height: 8px;
@@ -953,22 +970,22 @@ body{
 .card:active{transform:scale(0.985);box-shadow:var(--shadow-sm);}
 .card-accent-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0;}
 .flag-circle{
-  width:46px;height:46px;border-radius:50%;
+  width:44px;height:31px;border-radius:6px;
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;overflow:hidden;position:relative;background:var(--bg2);
   box-shadow:0 2px 8px rgba(0,0,0,0.18);
-  border:2.5px solid rgba(255,255,255,0.9);
+  border:2px solid rgba(255,255,255,0.9);
 }
-.flag-circle img{width:100%;height:100%;object-fit:cover;}
+.flag-circle img{width:100%;height:100%;object-fit:cover;border-radius:4px;}
 .flag-circle-sm{
-  width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;background:var(--bg2);
-  box-shadow:0 1px 4px rgba(0,0,0,0.15);border:2px solid rgba(255,255,255,0.85);
+  width:28px;height:20px;border-radius:4px;overflow:hidden;flex-shrink:0;position:relative;background:var(--bg2);
+  box-shadow:0 1px 4px rgba(0,0,0,0.15);border:1.5px solid rgba(255,255,255,0.85);
   display:flex;align-items:center;justify-content:center;
 }
-.flag-circle-sm img{width:100%;height:100%;object-fit:cover;}
+.flag-circle-sm img{width:100%;height:100%;object-fit:cover;border-radius:3px;}
 .visa-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
-.visa-left{display:flex;align-items:center;gap:12px;}
-.visa-name{font-size:16px;font-weight:800;color:var(--text);}
+.visa-left{display:flex;align-items:flex-start;gap:12px;}
+.visa-name{font-size:16px;font-weight:800;color:var(--text);line-height:1.15;}
 .visa-sub{font-size:11px;color:var(--muted);margin-top:2px;}
 .badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;letter-spacing:0.3px;}
 .badge-green{background:var(--green-l);color:#007A60;border:1px solid var(--green-b);}
@@ -1074,7 +1091,8 @@ body{
 .settings-item:last-child{border-radius:0 0 var(--radius-sm) var(--radius-sm);}
 .settings-item:only-child{border-radius:var(--radius-sm);}
 .settings-item+.settings-item{border-top:none;}
-.settings-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.settings-icon{width:38px;height:38px;border-radius:12px;background:var(--green-l) !important;color:var(--green) !important;border:1.5px solid var(--green-b);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.settings-icon svg{stroke:var(--green) !important;}
 .settings-label{flex:1;font-size:14px;font-weight:600;color:var(--text);}
 .settings-value{font-size:13px;color:var(--muted);}
 .switch{position:relative;width:44px;height:24px;flex-shrink:0;}
@@ -1089,7 +1107,8 @@ input:checked+.slider::before{transform:translateX(20px);}
 .passport-tab.active{background:var(--green-l);border-color:var(--green-b);color:var(--green);}
 
 .reminder-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);}
-.reminder-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.reminder-icon{width:40px;height:40px;border-radius:12px;background:var(--green-l) !important;color:var(--green) !important;border:1.5px solid var(--green-b);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.reminder-icon svg{stroke:var(--green) !important;}
 .reminder-info{flex:1;}
 .reminder-title{font-size:13px;font-weight:700;color:var(--text);}
 .reminder-date{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -1206,10 +1225,10 @@ input:checked+.slider::before{transform:translateX(20px);}
 .country-dropdown{background:#fff;border:1.5px solid var(--border);border-radius:12px;max-height:160px;overflow-y:auto;box-shadow:var(--shadow);margin-top:4px;}
 .country-option{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.15s;font-size:13px;font-weight:600;color:var(--text);}
 .country-option:hover{background:var(--bg2);}
-.country-option img{width:22px;height:22px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.country-option img{width:24px;height:17px;border-radius:3px;object-fit:cover;flex-shrink:0;}
 
 .issued-pill{margin-top:4px;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,255,255,0.75);border:1px solid currentColor;border-radius:20px;font-size:10px;font-weight:700;opacity:0.85;}
-.issued-pill img{width:12px;height:12px;border-radius:50%;object-fit:cover;}
+.issued-pill img{width:14px;height:10px;border-radius:2px;object-fit:cover;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -1393,6 +1412,8 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div id="ad-dashboard"></div>
     <div id="active-visas-section"></div>
     <div id="schengen-tracker-section"></div>
+    <div id="upcoming-countdown-section"></div>
+    <div id="smart-insights-section"></div>
     <div id="ad-dashboard-2"></div>
     <div id="residency-section"></div>
     <div id="reminders-section"></div>
@@ -1440,7 +1461,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <input class="form-input" id="add-country" placeholder="e.g. Vietnam, Germany…" oninput="onAddCountryInput(this.value)" autocomplete="off">
     <div id="add-country-dropdown" class="country-dropdown" style="display:none"></div>
     <div id="schengen-banner" style="display:none;margin-top:10px;padding:12px 14px;background:var(--blue-l);border:1.5px solid var(--blue-b);border-radius:12px">
-      <div style="font-size:12px;font-weight:700;color:#1E5EA8;margin-bottom:2px;display:flex;align-items:center;gap:6px"><img src="https://flagcdn.com/w80/eu.png" alt="EU" style="width:18px;height:18px;border-radius:50%;object-fit:cover"> <span>Schengen Area Detected</span></div>
+      <div style="font-size:12px;font-weight:700;color:#1E5EA8;margin-bottom:2px;display:flex;align-items:center;gap:6px"><img src="https://flagcdn.com/w80/eu.png" alt="EU" style="width:22px;height:15px;border-radius:3px;object-fit:cover"> <span>Schengen Area Detected</span></div>
       <div style="font-size:11px;color:var(--text2);line-height:1.5">This will be saved as a <strong>Schengen visa</strong>. The issuing country will be stored in details.</div>
     </div>
     <div id="issued-by-wrap" style="display:none">
@@ -1490,14 +1511,23 @@ input:checked+.slider::before{transform:translateX(20px);}
       </div>
     </div>
     <!-- FILTERS -->
-    <div id="history-filters" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <select id="filter-country" class="form-select" style="flex:1;min-width:120px;padding:8px 12px;font-size:12px;margin-top:0" onchange="renderHistory()">
-        <option value="">All countries</option>
-      </select>
-      <input id="filter-date-from" type="date" class="form-input" style="flex:1;min-width:120px;padding:8px 12px;font-size:12px;margin-top:0" onchange="renderHistory()" placeholder="From">
-      <input id="filter-date-to" type="date" class="form-input" style="flex:1;min-width:120px;padding:8px 12px;font-size:12px;margin-top:0" onchange="renderHistory()" placeholder="To">
-      <button onclick="clearHistoryFilters()" style="padding:8px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap">Clear</button>
-      <button onclick="openAddTravelModal()" style="padding:8px 14px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;margin-left:auto;box-shadow:0 2px 8px rgba(0,168,132,0.25)">+ Log Past Trip</button>
+    <div id="history-filters" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="position:relative;flex:1;min-width:200px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="history-search-input" type="text" class="form-input" style="width:100%;padding:9px 12px 9px 36px;font-size:13px;margin-top:0;border-radius:10px" placeholder="Search trips by country, date, or notes..." oninput="renderHistory()">
+        </div>
+        <button onclick="openAddTravelModal()" style="padding:9px 16px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,168,132,0.25)">+ Log Past Trip</button>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="filter-country" class="form-select" style="flex:1;min-width:110px;padding:8px 10px;font-size:12px;margin-top:0;border-radius:8px" onchange="renderHistory()">
+          <option value="">All countries</option>
+        </select>
+        <input id="filter-date-from" type="date" class="form-input" style="flex:1;min-width:110px;padding:8px 10px;font-size:12px;margin-top:0;border-radius:8px" onchange="renderHistory()" placeholder="From">
+        <input id="filter-date-to" type="date" class="form-input" style="flex:1;min-width:110px;padding:8px 10px;font-size:12px;margin-top:0;border-radius:8px" onchange="renderHistory()" placeholder="To">
+        <button onclick="clearHistoryFilters()" style="padding:8px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap">Clear Filters</button>
+      </div>
     </div>
     <!-- SUMMARY -->
     <div id="history-summary" style="margin-bottom:10px"></div>
@@ -1543,7 +1573,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-sub">Generate official travel reports for Schengen visa applications, embassy compliance, or tax records.</div>
     <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0 10px;">
       <button onclick="exportPDF()" style="padding:14px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(0,168,132,0.25)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg> Export Official PDF Report
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg> Export Official PDF Report <span style="font-size:11px;background:rgba(255,255,255,0.25);padding:2px 8px;border-radius:10px;margin-left:auto;font-weight:800">Premium</span>
       </button>
       <button onclick="exportCSV()" style="padding:14px;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2a1 1 0 0 1 0 2H8"/><path d="M14 13h2"/><path d="M14 17h2"/></svg> Export CSV Spreadsheet
@@ -1648,8 +1678,19 @@ input:checked+.slider::before{transform:translateX(20px);}
         <input class="form-input" id="add-travel-end" type="date">
       </div>
     </div>
+    <label class="form-label" style="margin-top:12px">Trip Notes (Optional)</label>
+    <textarea class="form-input" id="add-travel-notes" rows="2" placeholder="e.g. Vacation with family, Business conference…"></textarea>
     <button class="submit-btn" onclick="saveManualTravel()" style="margin-top:20px">Save Past Trip</button>
     <button class="secondary-btn" onclick="closeModal('add-travel-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="trip-detail-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Trip Details & Notes</div>
+    <div class="modal-sub">View and edit travel dates, notes, or stay duration.</div>
+    <div id="trip-detail-content"></div>
   </div>
 </div>
 
@@ -1657,12 +1698,28 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Edit Profile</div>
+    
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;margin-top:12px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:14px">
+      <div id="edit-avatar-preview" style="width:56px;height:56px;border-radius:50%;background:var(--green-l);border:2px solid var(--green-b);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">Profile Photo</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="padding:6px 12px;background:var(--green);color:#fff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;display:inline-block">
+            Upload Photo
+            <input type="file" id="edit-photo-input" accept="image/*" style="display:none" onchange="handleProfilePhotoUpload(this)">
+          </label>
+          <button type="button" onclick="removeProfilePhoto()" style="padding:6px 12px;background:var(--bg3);color:var(--red);border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">Remove</button>
+        </div>
+      </div>
+    </div>
+
     <label class="form-label">Full Name</label>
     <input class="form-input" id="edit-name" placeholder="Full name">
-    <label class="form-label">Initials (2 letters)</label>
-    <input class="form-input" id="edit-initials" placeholder="e.g. AJ" maxlength="2" style="text-transform:uppercase">
-    <button class="submit-btn" onclick="saveProfile()">Save</button>
-    <button class="secondary-btn" onclick="closeModal('name-modal')">Cancel</button>
+    <label class="form-label" style="margin-top:12px">Initials (2 letters)</label>
+    <input class="form-input" id="edit-initials" placeholder="e.g. ÖY" maxlength="2" style="text-transform:uppercase">
+    <button class="submit-btn" style="margin-top:20px" onclick="saveProfile()">Save Changes</button>
+    <button class="secondary-btn" style="margin-top:8px" onclick="closeModal('name-modal')">Cancel</button>
   </div>
 </div>
 
@@ -1767,29 +1824,57 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="privacy-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Privacy &amp; Terms of Service</div>
-    <div class="modal-sub">Legal Agreement &amp; Data Protection</div>
+    <div class="modal-title">Privacy Policy &amp; Terms of Service</div>
+    <div class="modal-sub">Legal Agreement, Disclaimers &amp; Data Protection</div>
     
-    <div style="max-height:360px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
-      <p style="margin-bottom:12px;font-weight:700;color:var(--text)">Please read this legal agreement carefully. By using VisaFlow, you agree to be bound by these terms.</p>
+    <div style="max-height:420px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
       
-      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">1. Complete Disclaimer of Liability</h4>
-      <p style="margin-bottom:12px;color:var(--muted)">VisaFlow is a personal tracking helper designed for informational and planning purposes only. It is NOT legal, tax, or official immigration advice. Visa policies, bilateral agreements, and entry requirements change dynamically. You must always verify your status with official embassies, consulates, or border patrol before traveling. VisaFlow and its creators accept no liability for any fines, deportation, travel disruptions, denied entries, or other legal/financial consequences arising from your use of this application.</p>
-      
-      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">2. Local-First Data Storage</h4>
-      <p style="margin-bottom:12px;color:var(--muted)">Your privacy is our priority. By default, all entered passports, visas, residence permits, and travel logs remain stored locally on your device (localStorage). They are not transmitted, shared, or sold to any external servers or third parties.</p>
-      
-      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">3. Optional Cloud Sync</h4>
-      <p style="margin-bottom:12px;color:var(--muted)">Should you choose to register a backup account, your records are transmitted over an encrypted SSL connection and stored securely in our database to ensure you do not lose progress if your device is reset or replaced.</p>
-      
-      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">4. GPS Location Detection</h4>
-      <p style="margin-bottom:12px;color:var(--muted)">If requested, location-based features require temporary GPS coordinates. We do not run background location tracking or keep logs of your geographical coordinates on external servers.</p>
-      
-      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">5. Binding Agreement</h4>
-      <p style="margin-bottom:12px;color:var(--muted)">By completing your profile and initializing this app, you confirm that you have read, understood, and voluntarily accepted all Terms of Service and Privacy Policies contained herein.</p>
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);padding:12px;border-radius:10px;margin-bottom:14px;color:var(--text)">
+        <strong style="color:#ef4444;display:flex;align-items:center;gap:6px;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Important Legal Notice
+        </strong>
+        <p style="font-size:12px;margin-top:4px;color:var(--text2);margin-bottom:0">VisaFlow is an independent planning tool. It does <strong>NOT</strong> provide official legal, tax, or immigration advice, nor is it affiliated with any government or embassy.</p>
+      </div>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px;display:flex;align-items:center;gap:6px">
+        1. Non-Affiliation &amp; Government Disclaimer
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">VisaFlow is developed independently by FlowSpot Studios. VisaFlow is not affiliated with, endorsed by, authorized by, or connected to the European Union, European Commission, Schengen Area authorities, or any national embassy, consulate, or border control agency worldwide. All official immigration and visa regulations must be confirmed directly with official government sources.</p>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
+        2. Limitation of Liability &amp; "As-Is" Service
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">All calculations (including Schengen 90/180 rolling window estimates, passport validity warnings, residency permit counters, and visa entry limits) are provided strictly for personal reference on an "AS-IS" and "AS-AVAILABLE" basis without warranties of any kind. FlowSpot Studios and its developers accept no liability for any denied entries, border detentions, overstay fines, flight cancellations, deportation proceedings, missed travel connections, or financial damages resulting from reliance on this application.</p>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
+        3. Local-First Privacy &amp; Data Rights (GDPR &amp; CCPA)
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">Your privacy is our core principle. By default, all entered passport numbers, visa records, residence permit dates, and travel history remain stored locally on your device (browser localStorage/IndexedDB). We do not track, sell, share, or monetize your personal travel data to third parties. You retain complete ownership of your data and can delete or export all local records at any time from Settings.</p>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
+        4. Optional Cloud Backup &amp; Security
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">If you voluntarily create a cloud account for cross-device sync, your records are transmitted over encrypted TLS/SSL connections and stored in secure database infrastructure (Firebase). You have the right to request full account deletion and cloud data erasure ("Right to be Forgotten") at any time.</p>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
+        5. Location &amp; Camera Permissions
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">GPS location permissions are strictly optional and used on-demand solely to assist in detecting your current country for entry logging. We do not perform background location tracking or store geographic route histories. Camera permissions are used on-demand on your device for document scanning; no raw camera images or video feeds are uploaded to external servers.</p>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
+        6. Subscriptions &amp; Payments
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">In-app purchases and subscriptions are processed directly through the official Google Play Store or Apple App Store. Subscriptions auto-renew unless cancelled at least 24 hours before the renewal date via your store account settings. Refunds are managed directly by Google Play or Apple in accordance with their standard store policies.</p>
+
+      <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
+        7. User Responsibility &amp; Acceptance
+      </h4>
+      <p style="margin-bottom:12px;color:var(--muted)">You are solely responsible for ensuring the accuracy of all travel dates and passport details entered into VisaFlow. By using this application, you acknowledge that you have read, understood, and voluntarily agree to all Terms of Service and Privacy Policies contained herein.</p>
+
     </div>
     
-    <button class="submit-btn" style="margin-top:20px" onclick="closeModal('privacy-modal')">I Accept &amp; Understand</button>
+    <button class="submit-btn" style="margin-top:18px" onclick="closeModal('privacy-modal')">I Accept &amp; Understand</button>
   </div>
 </div>
 
@@ -1797,34 +1882,82 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="faq-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Help &amp; Frequently Asked Questions</div>
-    <div class="modal-sub">Everything you need to know about VisaFlow</div>
+    <div class="modal-title">Help &amp; User Guide</div>
+    <div class="modal-sub">Learn how to use every feature in VisaFlow</div>
     
-    <div style="max-height:380px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
-      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> How does the 90/180 Schengen Rule calculator work?</div>
-        <div style="color:var(--muted);font-size:12px">VisaFlow uses standard European Union rolling 180-day window algorithm. It automatically scans your past entry/exit dates to calculate your exact remaining days and tells you when your allowance resets.</div>
+    <div style="max-height:420px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
+
+      <!-- SECTION 1: CORE FEATURES -->
+      <div style="font-weight:800;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Feature Guides</div>
+
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Schengen 90/180 Calculator
+        </div>
+        <div style="color:var(--muted);font-size:12px">
+          Calculates your allowed stay in the Schengen Zone based on the EU's rolling 180-day window rule. Add your Schengen entry and exit dates to see exact remaining days, reset dates, and overstay alerts. Use <strong>Forward Planning</strong> mode to test future travel dates before booking flights.
+        </div>
       </div>
 
-      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8 11h8"/><circle cx="12" cy="16" r="1.5"/></svg> What is the 6-Month Passport Validity warning?</div>
-        <div style="color:var(--muted);font-size:12px">Most international destinations (Schengen Area, USA, UK, Asia) require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when your passport expires in under 6 months.</div>
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/><path d="M7 16h6"/></svg>
+          Visas &amp; Passport Manager
+        </div>
+        <div style="color:var(--muted);font-size:12px">
+          Log your active visas (Single/Multiple entry, validity dates, allowed days) and passports. VisaFlow automatically monitors expiration dates and triggers the <strong>6-Month Passport Validity</strong> warning required by most international border authorities.
+        </div>
       </div>
 
-      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Is my data safe &amp; private?</div>
-        <div style="color:var(--muted);font-size:12px">Yes! VisaFlow is Local-First. All your travel logs, passports, and visas are saved locally on your device by default. If you choose Cloud Sync, data is encrypted via SSL.</div>
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Residency Permit Tracker
+        </div>
+        <div style="color:var(--muted);font-size:12px">
+          Designed for digital nomads, expats, and Golden Visa holders. Track your required physical presence days (e.g., 183 days per year for tax residency) with live progress indicators and threshold alerts.
+        </div>
       </div>
 
-      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/></svg> Does VisaFlow issue official visas or legal advice?</div>
-        <div style="color:var(--muted);font-size:12px">No. VisaFlow is a personal tracker and calculator assistant. Official visa applications and legal requirements must be verified with embassies or consulates.</div>
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Travel Footprint &amp; Social Share Cards
+        </div>
+        <div style="color:var(--muted);font-size:12px">
+          Generate beautiful, high-resolution 9:16 Instagram Story &amp; TikTok share cards highlighting your travel statistics, top countries visited, and total trips. Select monthly, yearly, or all-time footprints to share with friends.
+        </div>
       </div>
 
-      <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> How do I manage or cancel my Premium subscription?</div>
-        <div style="color:var(--muted);font-size:12px">Subscriptions are managed directly by Google Play Store. You can cancel anytime with 1-tap under Google Play &gt; Subscriptions.</div>
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Data Backup &amp; Local Privacy
+        </div>
+        <div style="color:var(--muted);font-size:12px">
+          VisaFlow is 100% Local-First. Your confidential passport and travel data is saved directly on your device. You can export or restore a full JSON backup anytime from Settings.
+        </div>
       </div>
+
+      <!-- SECTION 2: FREQUENTLY ASKED QUESTIONS -->
+      <div style="font-weight:800;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:18px;margin-bottom:8px">Frequently Asked Questions</div>
+
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">How does the rolling 180-day window work?</div>
+        <div style="color:var(--muted);font-size:12px">Every day you are in Schengen, the app looks back exactly 180 days from that date and sums up your stay. Your allowance shifts continuously as past travel days age past 180 days.</div>
+      </div>
+
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">Why do I need 6 months of passport validity?</div>
+        <div style="color:var(--muted);font-size:12px">Most foreign countries reject entry or airline boarding if your passport expires in under 6 months. VisaFlow notifies you well in advance so you can renew your passport smoothly.</div>
+      </div>
+
+      <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">Does VisaFlow issue official visas?</div>
+        <div style="color:var(--muted);font-size:12px">No. VisaFlow is an intelligent personal tracker and organizer. Official entry rules and visa applications must always be confirmed with official consulates or government portals.</div>
+      </div>
+
     </div>
     
     <button class="submit-btn" style="margin-top:16px" onclick="closeModal('faq-modal')">Close</button>
@@ -1915,7 +2048,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div style="margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <label class="form-label" style="margin-bottom:0">Password</label>
-          <a href="#" id="auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px;">🔑 Forgot Password?</a>
+          <a href="#" id="auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px;"> Forgot Password?</a>
         </div>
         <input class="form-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
       </div>
@@ -1954,7 +2087,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="forgot-password-modal">
   <div class="modal" style="max-width:420px">
     <div class="modal-handle"></div>
-    <div class="modal-title">🔑 Password Reset</div>
+    <div class="modal-title">Password Reset</div>
     <div style="font-size:13px; color:var(--muted); margin-bottom:16px; text-align:center; line-height:1.4">
       Enter your registered email address below. We will send you a secure password reset link.
     </div>
@@ -1969,7 +2102,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
 
     <button class="submit-btn" style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); font-size:13px; font-weight:700; padding:11px; margin-bottom:10px; width:100%" onclick="submitPasswordResetFromModal()">
-      ✉️ Send Password Reset Link
+      Send Password Reset Link
     </button>
 
     <button class="secondary-btn" onclick="closeModal('forgot-password-modal')">Cancel</button>
@@ -1993,7 +2126,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
     
     <div style="display:flex; gap:12px; align-items:center; margin-bottom:18px;">
-      <div style="width:48px; height:48px; background:#0f172a; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 2px 5px rgba(0,0,0,0.15)">🌍</div>
+      <div style="width:48px; height:48px; background:#0f172a; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 2px 5px rgba(0,0,0,0.15)"></div>
       <div style="text-align:left">
         <div style="font-size:15px; font-weight:700; color:#202124;">VisaFlow Premium</div>
         <div style="font-size:12px; color:#5f6368;">VisaFlow App · Monthly Subscription</div>
@@ -2013,7 +2146,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 
     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f3f4; border-bottom:1px solid #f1f3f4; padding:12px 0; font-size:13px; color:#5f6368; margin-bottom:18px; width:100%">
       <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:18px;">💳</span>
+        <span style="font-size:18px;"></span>
         <span style="color:#202124; font-weight:500;">Visa •••• 5678 (Sandbox Card)</span>
       </div>
       <span style="color:#1a73e8; font-weight:600; font-size:12px;">Active</span>
@@ -2024,7 +2157,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
 
     <button id="gp-subscribe-btn" onclick="completeUpgrade()" style="width:100%; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; padding:14px; border-radius:24px; font-size:14px; font-weight:700; cursor:pointer; text-align:center; box-shadow:0 4px 14px rgba(0,168,132,0.3); transition:background 0.2s; outline:none">
-      Start 7-Day Free Trial 🎁
+      Start 7-Day Free Trial
     </button>
     <button onclick="closeModal('googleplay-modal')" style="width:100%; background:none; border:none; color:#5f6368; padding:12px; margin-top:6px; font-size:13px; font-weight:700; cursor:pointer; outline:none">
       Cancel
@@ -2036,7 +2169,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="share-footprint-modal">
   <div class="modal" style="text-align:center; max-width:440px; width:95%; max-height:90vh; overflow-y:auto; padding:20px 16px;">
     <div class="modal-handle"></div>
-    <div style="font-size:32px; margin-bottom:4px">🌍</div>
+    <div style="font-size:14px; margin-bottom:4px; font-weight:700; color:var(--green)">Global</div>
     <div class="modal-title" style="margin-bottom:2px">Share Your Travel Footprint</div>
     <div class="modal-sub" style="margin-bottom:14px">Show off your travel journey on Instagram Story (9:16) &amp; Socials!</div>
 
@@ -2056,10 +2189,10 @@ input:checked+.slider::before{transform:translateX(20px);}
     <!-- ACTION BUTTONS -->
     <div style="display:flex; gap:10px;">
       <button onclick="downloadFootprintImage()" style="flex:1; padding:12px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(0,168,132,0.3)">
-        <span>🖼️ Save Image</span>
+        <span>Save Image</span>
       </button>
       <button onclick="shareFootprintNative()" style="flex:1; padding:12px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(0,168,132,0.3)">
-        <span>📤 Share Story</span>
+        <span>Share Story</span>
       </button>
     </div>
     <button class="secondary-btn" onclick="closeModal('share-footprint-modal')" style="margin-top:10px">Close</button>
@@ -2072,7 +2205,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-handle"></div>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:22px">📥</span>
+        <span style="font-size:22px"></span>
         <div>
           <div class="modal-title" style="margin:0; text-align:left;">Inbox</div>
           <div style="font-size:11px; color:var(--muted)">In-app notifications, visa alerts, and announcements</div>
@@ -2126,7 +2259,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div id="admin-tab-users" class="admin-tab-content">
         <div style="display:flex; gap:8px; margin-bottom:12px">
           <input id="admin-user-search" class="form-input" placeholder="Search email or name..." oninput="filterAdminUsers()" style="font-size:13px; padding:8px 12px">
-          <button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; border-radius:10px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 8px rgba(0,168,132,0.25)" onclick="refreshAdminData()">🔄 Refresh</button>
+          <button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; border-radius:10px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 8px rgba(0,168,132,0.25)" onclick="refreshAdminData()">Refresh</button>
         </div>
         <div id="admin-users-list" style="display:flex; flex-direction:column; gap:10px">
           <div style="text-align:center; color:var(--muted); padding:20px; font-size:13px">Loading users from Cloud...</div>
@@ -2136,7 +2269,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <!-- TAB 2: PROMO CODES -->
       <div id="admin-tab-promos" class="admin-tab-content" style="display:none">
         <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:16px">
-          <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text)">Create New Gift / Promo Code 🎁</div>
+          <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text)">Create New Gift / Promo Code</div>
           <div style="display:flex; flex-direction:column; gap:10px">
             <div style="display:flex; gap:8px">
               <input id="admin-new-promo-code" class="form-input" style="text-transform:uppercase; font-size:13px" placeholder="e.g. OZGUR2026">
@@ -2149,7 +2282,7 @@ input:checked+.slider::before{transform:translateX(20px);}
             </div>
             <div style="display:flex; gap:8px; align-items:center">
               <input id="admin-new-promo-limit" type="number" class="form-input" placeholder="Max uses (e.g. 100)" value="100" style="font-size:13px">
-              <button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; padding:10px 16px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 8px rgba(0,168,132,0.25)" onclick="createAdminPromoCode()">Save Code 🚀</button>
+              <button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; padding:10px 16px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 8px rgba(0,168,132,0.25)" onclick="createAdminPromoCode()">Save Code</button>
             </div>
           </div>
         </div>
@@ -2167,7 +2300,7 @@ input:checked+.slider::before{transform:translateX(20px);}
           <div style="display:flex; flex-direction:column; gap:10px">
             <div>
               <label style="font-size:11px; font-weight:700; color:var(--muted)">Notification Title</label>
-              <input id="admin-broadcast-title" class="form-input" placeholder="e.g. 🎁 7-Day Free Premium Offer!" style="font-size:13px; margin-top:3px">
+              <input id="admin-broadcast-title" class="form-input" placeholder="e.g. 7-Day Free Premium Offer!" style="font-size:13px; margin-top:3px">
             </div>
             <div>
               <label style="font-size:11px; font-weight:700; color:var(--muted)">Message Content</label>
@@ -2179,7 +2312,7 @@ input:checked+.slider::before{transform:translateX(20px);}
                 <select id="admin-broadcast-type" class="form-input" style="font-size:12px; margin-top:3px">
                   <option value="campaign">🎁 Campaign / Offer</option>
                   <option value="announcement">📢 System Announcement</option>
-                  <option value="alert">⚠️ Critical Alert</option>
+                  <option value="alert">Critical Alert</option>
                   <option value="system">ℹ️ System Info</option>
                 </select>
               </div>
@@ -2188,7 +2321,7 @@ input:checked+.slider::before{transform:translateX(20px);}
                 <select id="admin-broadcast-target" class="form-input" style="font-size:12px; margin-top:3px">
                   <option value="all">👥 All Users</option>
                   <option value="free">🆓 Free Users Only</option>
-                  <option value="premium">💎 Premium Users Only</option>
+                  <option value="premium">Premium Users Only</option>
                 </select>
               </div>
             </div>
@@ -2197,8 +2330,8 @@ input:checked+.slider::before{transform:translateX(20px);}
                 <label style="font-size:11px; font-weight:700; color:var(--muted)">Action Target (Optional)</label>
                 <select id="admin-broadcast-action-target" class="form-input" style="font-size:12px; margin-top:3px">
                   <option value="">(None)</option>
-                  <option value="paywall">💎 Premium Upgrade Page</option>
-                  <option value="visas">🛂 My Visas Page</option>
+                  <option value="paywall">Premium Upgrade Page</option>
+                  <option value="visas">My Visas Page</option>
                   <option value="profile">👤 Profile & Passports</option>
                 </select>
               </div>
@@ -2232,7 +2365,7 @@ input:checked+.slider::before{transform:translateX(20px);}
         </div>
         <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px">
           <div style="font-size:12px; font-weight:700; color:var(--text); margin-bottom:6px">System & Database Status</div>
-          <div style="font-size:12px; color:var(--muted)">Firestore Database: <span style="color:var(--green); font-weight:700">Online ✓</span></div>
+          <div style="font-size:12px; color:var(--muted)">Firestore Database: <span style="color:var(--green); font-weight:700">Online</span></div>
           <div style="font-size:12px; color:var(--muted); margin-top:4px">Database ID: <code style="font-size:10px">ai-studio-visaflow-d17c7433-bd99-4004-815b-ca0474d015cc</code></div>
           <div style="font-size:12px; color:var(--muted); margin-top:4px">Owner Admin: <strong style="color:var(--text)">yamanozgur@gmail.com</strong></div>
         </div>
@@ -2669,7 +2802,7 @@ function getCS(country){
   return {bg:'#F5F7FA',border:'#E8ECF2',accent:'#8898AA',code:null};
 }
 function getFlagEmoji(code) {
-  if (!code || typeof code !== 'string' || code.length !== 2) return '🌍';
+  if (!code || typeof code !== 'string' || code.length !== 2) return '';
   const c = code.toUpperCase();
   return String.fromCodePoint(c.charCodeAt(0) + 127397, c.charCodeAt(1) + 127397);
 }
@@ -2677,9 +2810,11 @@ function flagImg(country,cs,size){
   size = size || 'normal';
   const c=cs?cs.code:null, cls=size==='sm'?'flag-circle-sm':'flag-circle';
   const emoji = getFlagEmoji(c);
-  const fontSize = size==='sm' ? '14px' : '20px';
-  if(!c) return '<div class="'+cls+'" style="position:relative;overflow:hidden;border-radius:50%;flex-shrink:0;"><span style="font-size:'+fontSize+';line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">'+emoji+'</span></div>';
-  return '<div class="'+cls+'" style="position:relative;overflow:hidden;border-radius:50%;flex-shrink:0;"><span style="font-size:'+fontSize+';line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">'+emoji+'</span><img src="https://flagcdn.com/w80/'+c+'.png" onload="if(this.previousElementSibling)this.previousElementSibling.style.display=\'none\'" onerror="this.remove()" alt="'+country+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%"></div>';
+  const fontSize = size==='sm' ? '13px' : '18px';
+  const radius = size==='sm' ? '4px' : '6px';
+  const imgRadius = size==='sm' ? '3px' : '5px';
+  if(!c) return '<div class="'+cls+'" style="position:relative;overflow:hidden;border-radius:'+radius+';flex-shrink:0;"><span style="font-size:'+fontSize+';line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">'+emoji+'</span></div>';
+  return '<div class="'+cls+'" style="position:relative;overflow:hidden;border-radius:'+radius+';flex-shrink:0;"><span style="font-size:'+fontSize+';line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%">'+emoji+'</span><img src="https://flagcdn.com/w80/'+c+'.png" onload="if(this.previousElementSibling)this.previousElementSibling.style.display=\'none\'" onerror="this.remove()" alt="'+country+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:'+imgRadius+'"></div>';
 }
 
 function loadCountryBackground(bgId, code) {
@@ -2805,7 +2940,7 @@ function updateGreeting(){
       resBtn.innerHTML = 'Add Residency Permit';
       resBtn.style.background = 'var(--green)';
     } else {
-      resBtn.innerHTML = '🔒 Add Residency Permit — Premium';
+      resBtn.innerHTML = 'Add Residency Permit — Premium';
       resBtn.style.background = 'linear-gradient(135deg,#F59E0B,#D97706)';
     }
   }
@@ -2862,7 +2997,196 @@ function renderAll(){ applyTheme(); updateGreeting(); renderDashboard(); renderA
 // ============================================================
 // DASHBOARD
 // ============================================================
-function renderDashboard(){ renderAlerts(); renderCurrentLocation(); renderAds(); renderActiveVisas(); renderSchengenTracker(); renderResidencies(); renderReminders(); renderDashboardFootprint(); }
+function renderDashboard(){ 
+  renderAlerts(); 
+  renderCurrentLocation(); 
+  renderAds(); 
+  renderActiveVisas(); 
+  renderSchengenTracker(); 
+  renderUpcomingCountdown(); 
+  renderSmartInsights(); 
+  renderResidencies(); 
+  renderReminders(); 
+  renderDashboardFootprint(); 
+}
+
+function renderUpcomingCountdown(){
+  var el = document.getElementById('upcoming-countdown-section');
+  if(!el) return;
+
+  var td = today();
+  var items = [];
+
+  // Check active visas
+  if(state.visas && state.visas.length){
+    state.visas.forEach(function(v){
+      var dl = daysBetween(td, v.endDate);
+      if(dl >= 0 && dl <= 180){
+        items.push({
+          type: 'visa',
+          title: v.country + ' Visa Expiry',
+          daysLeft: dl,
+          endDate: v.endDate,
+          country: v.country,
+          id: v.id,
+          sub: 'Expires on ' + fmtDate(v.endDate)
+        });
+      }
+    });
+  }
+
+  // Check passports
+  if(state.passports && state.passports.length){
+    state.passports.forEach(function(pp){
+      if(pp.expiryDate){
+        var dl = daysBetween(td, pp.expiryDate);
+        if(dl >= 0 && dl <= 180){
+          items.push({
+            type: 'passport',
+            title: pp.country + ' Passport Validity',
+            daysLeft: dl,
+            endDate: pp.expiryDate,
+            country: pp.country,
+            id: pp.id,
+            sub: dl <= 180 ? '6-Month validity limit approaching (' + fmtDate(pp.expiryDate) + ')' : 'Expires on ' + fmtDate(pp.expiryDate)
+          });
+        }
+      }
+    });
+  }
+
+  if(!items.length){
+    el.innerHTML = '';
+    return;
+  }
+
+  items.sort(function(a,b){ return a.daysLeft - b.daysLeft; });
+  var top = items[0];
+  var cs = getCS(top.country);
+
+  var isUrgent = top.daysLeft <= 14;
+  var badgeBg = isUrgent ? '#FEE2E2' : '#FEF3C7';
+  var badgeColor = isUrgent ? '#DC2626' : '#D97706';
+  var cardBorder = isUrgent ? '#FCA5A5' : 'var(--orange-b)';
+
+  el.innerHTML =
+    '<div class="section-title">Upcoming Deadline Countdown</div>'+
+    '<div class="card" style="background:var(--card);border:1.5px solid '+cardBorder+';padding:16px;border-radius:18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;margin-bottom:16px">'+
+      '<div style="position:absolute;top:0;left:0;right:0;height:4px;background:'+(isUrgent?'#DC2626':'#F59E0B')+'"></div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          flagImg(top.country, cs)+
+          '<div>'+
+            '<div style="font-size:15px;font-weight:800;color:var(--text)">'+top.title+'</div>'+
+            '<div style="font-size:12px;color:var(--muted);margin-top:2px;font-weight:500">'+top.sub+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right;background:'+badgeBg+';padding:8px 14px;border-radius:12px;border:1px solid '+badgeColor+'33">'+
+          '<div style="font-size:24px;font-weight:800;color:'+badgeColor+';line-height:1">'+top.daysLeft+'</div>'+
+          '<div style="font-size:10px;font-weight:700;color:'+badgeColor+';text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Days Left</div>'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">'+
+        (top.type === 'visa' ? '<button onclick="exportVisaCalendar(\''+top.id+'\')" style="flex:1;padding:8px 12px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">Add to Calendar</button>' : '<button onclick="exportPassportCalendar(\''+top.id+'\')" style="flex:1;padding:8px 12px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">Add to Calendar</button>')+
+        (top.type === 'visa' ? '<button onclick="showVisaDetail(\''+top.id+'\')" style="flex:1;padding:8px 12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">View Visa</button>' : '')+
+        (top.type === 'passport' ? '<button onclick="openEditPassportModal(\''+top.id+'\')" style="flex:1;padding:8px 12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">Edit Passport</button>' : '')+
+      '</div>'+
+    '</div>';
+}
+
+function renderSmartInsights(){
+  var el = document.getElementById('smart-insights-section');
+  if(!el) return;
+
+  var insights = [];
+
+  // 1. Passport Strength & Visa Free Tips
+  if(state.passports && state.passports.length){
+    var pName = state.passports[0].country;
+    var popularVF = ['Japan', 'South Korea', 'Singapore', 'United Kingdom', 'Georgia', 'Malaysia', 'Thailand'];
+    insights.push({
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/></svg>',
+      title: pName + ' Passport Mobility',
+      body: 'Your ' + pName + ' passport grants visa-free access to top destinations like ' + popularVF.slice(0, 4).join(', ') + '. Check full visa rules in 1-tap.',
+      action: 'showPage("visas"); setVisaSubTab("check")',
+      actionText: 'Check Visa Rules ➔'
+    });
+  }
+
+  // 2. Schengen Window Status
+  var schUsed = calcSchengenDays();
+  var schLeft = Math.max(0, 90 - schUsed);
+  if(schUsed > 0 || state.visas.some(function(v){ return v.country === 'Schengen' || isSchengen(v.country); })){
+    insights.push({
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+      title: 'Schengen Rolling Window Status',
+      body: 'You have used ' + schUsed + ' of 90 Schengen days. You have <strong>' + schLeft + ' safe days</strong> available in your current rolling 180-day window.',
+      action: 'showPage("home")',
+      actionText: 'View 90/180 Details'
+    });
+  }
+
+  // 3. Tax Residency & Stay Duration Tracker
+  if(state.travels && state.travels.length){
+    var countryStays = {};
+    var currentYear = new Date().getFullYear().toString();
+    state.travels.forEach(function(t){
+      if(!t.start) return;
+      if(t.start.startsWith(currentYear)){
+        var days = t.end ? daysBetween(t.start, t.end) + 1 : daysFromEntry(t.start);
+        countryStays[t.country] = (countryStays[t.country] || 0) + days;
+      }
+    });
+
+    var topC = Object.keys(countryStays).sort(function(a,b){ return countryStays[b] - countryStays[a]; })[0];
+    if(topC){
+      var daysSpent = countryStays[topC];
+      var taxRem = Math.max(0, 183 - daysSpent);
+      insights.push({
+        icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+        title: topC + ' Stay & Tax Residency Watch',
+        body: 'You have logged <strong>' + daysSpent + ' days</strong> in ' + topC + ' in ' + currentYear + '. You have <strong>' + taxRem + ' days remaining</strong> before reaching the standard 183-day physical presence tax residency threshold.',
+        action: 'showPage("history")',
+        actionText: 'View Travel History ➔'
+      });
+    }
+  }
+
+  if(!insights.length) {
+    el.innerHTML = '';
+    return;
+  }
+
+  var html = '<div class="section-title">Smart Travel Insights &amp; Recommendations</div>'+
+             '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">';
+
+  insights.forEach(function(item){
+    html += '<div class="card" style="padding:14px 16px;border-radius:16px;background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow-sm)">'+
+      '<div style="display:flex;align-items:flex-start;gap:12px">'+
+        '<div style="font-size:24px;line-height:1;padding:8px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">'+item.icon+'</div>'+
+        '<div style="flex:1">'+
+          '<div style="font-size:14px;font-weight:800;color:var(--text)">'+item.title+'</div>'+
+          '<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4">'+item.body+'</div>'+
+          (item.actionText ? '<button onclick="'+item.action+'" style="margin-top:8px;padding:4px 10px;background:var(--green-l);color:var(--green);border:1px solid var(--green-b);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">'+item.actionText+'</button>' : '')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function getContinent(c){
+  if(!c) return 'Other';
+  if(isSchengen(c) || ['United Kingdom','UK','Ireland','Turkey','Türkiye','Albania','Serbia','North Macedonia','Montenegro','Bosnia and Herzegovina','Cyprus','Georgia','Armenia','Moldova','Ukraine'].indexOf(c)!==-1) return 'Europe';
+  if(['Japan','South Korea','China','India','Thailand','Vietnam','Singapore','Malaysia','Indonesia','Philippines','United Arab Emirates','UAE','Saudi Arabia','Qatar','Oman','Israel','Kazakhstan','Uzbekistan','Pakistan','Bangladesh'].indexOf(c)!==-1) return 'Asia';
+  if(['United States','USA','US','Canada','Mexico','Guatemala','Costa Rica','Panama','Jamaica','Dominican Republic'].indexOf(c)!==-1) return 'North America';
+  if(['Brazil','Argentina','Chile','Colombia','Peru','Ecuador','Uruguay','Paraguay','Bolivia'].indexOf(c)!==-1) return 'South America';
+  if(['Australia','New Zealand','Fiji'].indexOf(c)!==-1) return 'Oceania';
+  if(['Egypt','Morocco','South Africa','Kenya','Tanzania','Nigeria','Ethiopia','Ghana','Tunisia'].indexOf(c)!==-1) return 'Africa';
+  return 'Global';
+}
 
 function renderDashboardFootprint(){
   var el = document.getElementById('dashboard-footprint-section');
@@ -2871,21 +3195,32 @@ function renderDashboardFootprint(){
   var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
   var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
 
+  var continentsSet = new Set();
+  var countryStayMap = {};
+  filtered.forEach(function(t){
+    continentsSet.add(getContinent(t.country));
+    var d = t.end ? daysBetween(t.start, t.end) + 1 : daysFromEntry(t.start);
+    countryStayMap[t.country] = (countryStayMap[t.country] || 0) + d;
+  });
+
+  var topCountry = Object.keys(countryStayMap).sort(function(a,b){ return countryStayMap[b] - countryStayMap[a]; })[0] || '—';
+  var topDays = topCountry !== '—' ? countryStayMap[topCountry] : 0;
+
   var flagsHtml = '';
   if(uniqueCountries.length > 0){
-    flagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center">';
-    uniqueCountries.slice(0, 18).forEach(function(c){
+    flagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center">';
+    uniqueCountries.slice(0, 20).forEach(function(c){
       var cs = getCS(c);
       var flagInner = cs.code ?
-        '<div style="width:24px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center"><img src="https://flagcdn.com/w80/' + cs.code + '.png" onerror="this.parentElement.innerHTML=\'🌍\'" alt="' + c + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>' :
-        '<div style="width:24px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.3);font-size:12px;display:flex;align-items:center;justify-content:center">🌍</div>';
+        '<div style="width:28px;height:20px;border-radius:4px;overflow:hidden;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center"><img src="https://flagcdn.com/w80/' + cs.code + '.png" onerror="this.parentElement.innerHTML=\'\'" alt="' + c + '" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>' :
+        '<div style="width:28px;height:20px;border-radius:4px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.3);font-size:12px;display:flex;align-items:center;justify-content:center"></div>';
 
-      flagsHtml += '<div title="' + c + '" style="cursor:pointer;display:inline-flex;transition:transform 0.15s" onmouseover="this.style.transform=\'scale(1.15)\'" onmouseout="this.style.transform=\'scale(1)\'">'+
+      flagsHtml += '<div title="' + c + ' (' + (countryStayMap[c]||0) + ' days)" style="cursor:pointer;display:inline-flex;transition:transform 0.15s" onclick="showPage(\'history\')" onmouseover="this.style.transform=\'scale(1.2)\'" onmouseout="this.style.transform=\'scale(1)\'">'+
         flagInner +
       '</div>';
     });
-    if(uniqueCountries.length > 18){
-      flagsHtml += '<span style="font-size:11px;color:#ffffff;font-weight:700;background:rgba(255,255,255,0.22);padding:3px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)">+ ' + (uniqueCountries.length - 18) + ' more</span>';
+    if(uniqueCountries.length > 20){
+      flagsHtml += '<span style="font-size:11px;color:#ffffff;font-weight:700;background:rgba(255,255,255,0.22);padding:3px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer" onclick="showPage(\'history\')">+ ' + (uniqueCountries.length - 20) + ' more</span>';
     }
     flagsHtml += '</div>';
   } else {
@@ -2893,37 +3228,41 @@ function renderDashboardFootprint(){
   }
 
   el.innerHTML =
-    '<div class="card" style="position:relative; overflow:hidden; border:1.5px solid rgba(255,255,255,0.25); padding:16px; margin-bottom:16px; border-radius:18px; background:linear-gradient(135deg, rgba(16,185,129,0.85) 0%, rgba(5,150,105,0.9) 100%); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#ffffff; box-shadow:0 8px 24px rgba(5,150,105,0.2)">'+
-      '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp\') center/cover no-repeat; opacity:0.25; filter:brightness(0) invert(1); pointer-events:none; z-index:0"></div>'+
+    '<div class="section-title">World Travel Footprint &amp; Stats</div>'+
+    '<div class="card" style="position:relative; overflow:hidden; border:1.5px solid rgba(255,255,255,0.25); padding:18px; margin-bottom:16px; border-radius:20px; background:linear-gradient(135deg, rgba(16,185,129,0.9) 0%, rgba(5,150,105,0.95) 100%); color:#ffffff; box-shadow:0 8px 24px rgba(5,150,105,0.25)">'+
+      '<div style="position:absolute; inset:0; background:url(\'https://raw.githubusercontent.com/yamanozgur/visaflow/main/worldline.webp\') center/cover no-repeat; opacity:0.22; filter:brightness(0) invert(1); pointer-events:none; z-index:0"></div>'+
       '<div style="position:relative; z-index:1">'+
-        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">'+
-          '<div style="display:flex; align-items:center; gap:8px">'+
-            '<div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.2); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.35); display:flex; align-items:center; justify-content:center; flex-shrink:0">'+
-              '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>'+
-            '</div>'+
-            '<div>'+
-              '<div style="font-size:14px; font-weight:800; color:#ffffff; letter-spacing:-0.2px">Travel Footprint</div>'+
-              '<div style="font-size:11px; color:rgba(255,255,255,0.85); font-weight:500">Your nomad stats &amp; stamped destinations</div>'+
-            '</div>'+
-          '</div>'+
-          '<button onclick="openShareFootprintModal()" style="background:rgba(255,255,255,0.2); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:#ffffff; border:1.5px solid rgba(255,255,255,0.35); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.1); white-space:nowrap; display:flex; align-items:center; gap:4px">'+
-            '<span>Share Card 📸</span>'+
-          '</button>'+
-        '</div>'+
-        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; background:rgba(255,255,255,0.2); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); padding:10px 12px; border-radius:12px; border:1.5px solid rgba(255,255,255,0.35); text-align:center">'+
+        '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px">'+
           '<div>'+
-            '<div style="font-size:18px; font-weight:900; color:#A7F3D0">' + uniqueCountries.length + '</div>'+
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase">Countries</div>'+
+            '<div style="font-size:16px; font-weight:800; color:#ffffff; letter-spacing:-0.2px">Passport Travel Footprint</div>'+
+            '<div style="font-size:11px; color:rgba(255,255,255,0.85); font-weight:500">Global travel statistics &amp; stamped destinations</div>'+
           '</div>'+
-          '<div>'+
-            '<div style="font-size:18px; font-weight:900; color:#7DD3FC">' + totalDays + '</div>'+
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase">Days Abroad</div>'+
-          '</div>'+
-          '<div>'+
-            '<div style="font-size:18px; font-weight:900; color:#FDE047">' + filtered.length + '</div>'+
-            '<div style="font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); text-transform:uppercase">Trips</div>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button onclick="openShareFootprintModal()" style="padding:6px 12px;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap">Share Card</button>'+
+            '<button onclick="showPage(\'history\')" style="padding:6px 12px;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap">History ➔</button>'+
           '</div>'+
         '</div>'+
+
+        /* STATS GRID */
+        '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px">'+
+          '<div style="background:rgba(0,0,0,0.18); backdrop-filter:blur(6px); border-radius:12px; padding:10px 8px; text-align:center; border:1px solid rgba(255,255,255,0.2)">'+
+            '<div style="font-size:20px; font-weight:800; color:#ffffff">'+uniqueCountries.length+'</div>'+
+            '<div style="font-size:10px; color:rgba(255,255,255,0.85); font-weight:700; margin-top:2px">Countries</div>'+
+          '</div>'+
+          '<div style="background:rgba(0,0,0,0.18); backdrop-filter:blur(6px); border-radius:12px; padding:10px 8px; text-align:center; border:1px solid rgba(255,255,255,0.2)">'+
+            '<div style="font-size:20px; font-weight:800; color:#ffffff">'+continentsSet.size+'</div>'+
+            '<div style="font-size:10px; color:rgba(255,255,255,0.85); font-weight:700; margin-top:2px">Continents</div>'+
+          '</div>'+
+          '<div style="background:rgba(0,0,0,0.18); backdrop-filter:blur(6px); border-radius:12px; padding:10px 8px; text-align:center; border:1px solid rgba(255,255,255,0.2)">'+
+            '<div style="font-size:20px; font-weight:800; color:#ffffff">'+totalDays+'</div>'+
+            '<div style="font-size:10px; color:rgba(255,255,255,0.85); font-weight:700; margin-top:2px">Days Abroad</div>'+
+          '</div>'+
+          '<div style="background:rgba(0,0,0,0.18); backdrop-filter:blur(6px); border-radius:12px; padding:10px 8px; text-align:center; border:1px solid rgba(255,255,255,0.2)">'+
+            '<div style="font-size:13px; font-weight:800; color:#ffffff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">'+topCountry+'</div>'+
+            '<div style="font-size:10px; color:rgba(255,255,255,0.85); font-weight:700; margin-top:2px">'+topDays+' Days</div>'+
+          '</div>'+
+        '</div>'+
+
         flagsHtml +
       '</div>'+
     '</div>';
@@ -2949,7 +3288,7 @@ function renderAds(){
         '<div class="ad-badge">Sponsored</div>'+
         '<div class="ad-title">Nomad Travel Insurance</div>'+
         '<div class="ad-content">'+
-          '<div class="ad-image">🛡️</div>'+
+          '<div class="ad-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'+
           '<div class="ad-text">'+
             '<div class="ad-headline">Stay covered with SafetyWing</div>'+
             '<div class="ad-subline">Worldwide medical coverage from $45/month.</div>'+
@@ -2966,7 +3305,7 @@ function renderAds(){
         '<div class="ad-badge">Sponsored</div>'+
         '<div class="ad-title">Global Connectivity</div>'+
         '<div class="ad-content">'+
-          '<div class="ad-image">📶</div>'+
+          '<div class="ad-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>'+
           '<div class="ad-text">'+
             '<div class="ad-headline">Instant Travel eSIM by Airalo</div>'+
             '<div class="ad-subline">Stay connected in 200+ countries from $4.50 without roaming fees.</div>'+
@@ -2983,7 +3322,7 @@ function renderAds(){
         '<div class="ad-badge">Sponsored</div>'+
         '<div class="ad-title">Fast e-Visa Assistance</div>'+
         '<div class="ad-content">'+
-          '<div class="ad-image">🛂</div>'+
+          '<div class="ad-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/></svg></div>'+
           '<div class="ad-text">'+
             '<div class="ad-headline">Apply for Official e-Visas Online</div>'+
             '<div class="ad-subline">Hassle-free visa applications & fast 24h approvals with iVisa.</div>'+
@@ -3000,7 +3339,7 @@ function renderAds(){
         '<div class="ad-badge">Sponsored</div>'+
         '<div class="ad-title">Flight Deals & Price Alerts</div>'+
         '<div class="ad-content">'+
-          '<div class="ad-image">✈️</div>'+
+          '<div class="ad-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div>'+
           '<div class="ad-text">'+
             '<div class="ad-headline">Compare Cheap Airfares</div>'+
             '<div class="ad-subline">Save up to 40% on international flights with Skyscanner.</div>'+
@@ -3022,20 +3361,20 @@ function renderAlerts(){
         const dl = daysBetween(today(), pp.expiryDate);
         if (dl <= 0) {
           html += '<div class="banner" style="background:#FEE2E2; border:1.5px solid #FCA5A5; margin-bottom:12px">'+
-            '<div class="banner-title" style="color:#DC2626">🚨 ' + pp.country + ' Passport Expired</div>'+
+            '<div class="banner-title" style="color:#DC2626">' + pp.country + ' Passport Expired</div>'+
             '<div class="banner-body" style="color:#991B1B">Your passport expired on <strong>' + fmtDate(pp.expiryDate) + '</strong>. You cannot travel internationally until renewed.</div>'+
             '<div style="display:flex; gap:8px; margin-top:10px">'+
-              '<button onclick="exportPassportCalendar(\'' + pp.id + '\')" style="background:#DC2626; color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">📅 Add Renewal to Calendar</button>'+
-              '<button onclick="openEditPassportModal(\'' + pp.id + '\')" style="background:#ffffff; color:#DC2626; border:1px solid #FCA5A5; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">✏️ Update Expiry Date</button>'+
+              '<button onclick="exportPassportCalendar(\'' + pp.id + '\')" style="background:#DC2626; color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">Add Renewal to Calendar</button>'+
+              '<button onclick="openEditPassportModal(\'' + pp.id + '\')" style="background:#ffffff; color:#DC2626; border:1px solid #FCA5A5; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">Update Expiry Date</button>'+
             '</div>'+
           '</div>';
         } else if (dl <= 183) {
           html += '<div class="banner warn" style="margin-bottom:12px">'+
-            '<div class="banner-title">⚠️ 6-Month Passport Validity Warning (' + pp.country + ')</div>'+
+            '<div class="banner-title">6-Month Passport Validity Warning (' + pp.country + ')</div>'+
             '<div class="banner-body">Your passport expires in <strong>' + dl + ' days</strong> (' + fmtDate(pp.expiryDate) + '). <strong>Many countries enforce the 6-month validity rule</strong> upon arrival and will deny entry or visa issuance if your passport has less than 6 months of validity remaining.</div>'+
             '<div style="display:flex; gap:8px; margin-top:10px">'+
-              '<button onclick="exportPassportCalendar(\'' + pp.id + '\')" style="background:var(--orange); color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">📅 Add Expiry to Calendar</button>'+
-              '<button onclick="openEditPassportModal(\'' + pp.id + '\')" style="background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">✏️ Update Date</button>'+
+              '<button onclick="exportPassportCalendar(\'' + pp.id + '\')" style="background:var(--orange); color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">Add Expiry to Calendar</button>'+
+              '<button onclick="openEditPassportModal(\'' + pp.id + '\')" style="background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">Update Date</button>'+
             '</div>'+
           '</div>';
         }
@@ -3048,16 +3387,16 @@ function renderAlerts(){
     const dl=daysBetween(today(),v.endDate), tot=daysBetween(v.startDate,v.endDate);
     if(dl>=0&&dl<=tot*0.1) {
       html+='<div class="banner warn" style="margin-bottom:12px">'+
-        '<div class="banner-title">⚠️ '+v.country+' visa expiring soon</div>'+
+        '<div class="banner-title">'+v.country+' visa expiring soon</div>'+
         '<div class="banner-body">Only <strong>'+dl+' day'+(dl!==1?'s':'')+'</strong> remaining. Expires '+fmtDate(v.endDate)+'.</div>'+
         '<div style="margin-top:8px">'+
-          '<button onclick="exportVisaCalendar(\''+v.id+'\')" style="background:var(--orange); color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">📅 Add Expiry to Calendar</button>'+
+          '<button onclick="exportVisaCalendar(\''+v.id+'\')" style="background:var(--orange); color:#ffffff; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:700; cursor:pointer">Add Expiry to Calendar</button>'+
         '</div>'+
       '</div>';
     }
     if(v.reminderDate){
       const rd=daysBetween(today(),v.reminderDate);
-      if(rd>=0&&rd<=7) html+='<div class="banner info" style="margin-bottom:12px"><div class="banner-title">📋 Application Reminder</div><div class="banner-body">'+v.country+' application target: <strong>'+fmtDate(v.reminderDate)+'</strong> ('+rd+' day'+(rd!==1?'s':'')+' left)</div></div>';
+      if(rd>=0&&rd<=7) html+='<div class="banner info" style="margin-bottom:12px"><div class="banner-title">Application Reminder</div><div class="banner-body">'+v.country+' application target: <strong>'+fmtDate(v.reminderDate)+'</strong> ('+rd+' day'+(rd!==1?'s':'')+' left)</div></div>';
     }
   });
 
@@ -3068,17 +3407,17 @@ function renderAlerts(){
     var remaining = 90 - used;
     if(remaining <= 0){
       html+='<div class="banner" style="background:var(--red-l);border:1.5px solid #FECACA; margin-bottom:12px">'+
-        '<div class="banner-title" style="color:var(--red)">🚨 Schengen Limit Reached</div>'+
+        '<div class="banner-title" style="color:var(--red)">Schengen Limit Reached</div>'+
         '<div class="banner-body" style="margin-bottom:0">You have used all <strong>90 days</strong> in the last 180-day window. You must leave the Schengen Area immediately.</div>'+
       '</div>';
     } else if(remaining <= 10){
       html+='<div class="banner warn" style="margin-bottom:12px">'+
-        '<div class="banner-title">⚠️ Schengen Limit Critical</div>'+
+        '<div class="banner-title">Schengen Limit Critical</div>'+
         '<div class="banner-body" style="margin-bottom:0">Only <strong>'+remaining+' day'+(remaining!==1?'s':'')+' left</strong> in your 90/180 Schengen allowance. Plan your departure.</div>'+
       '</div>';
     } else if(remaining <= 30){
       html+='<div class="banner info" style="margin-bottom:12px">'+
-        '<div class="banner-title">📋 Schengen Reminder</div>'+
+        '<div class="banner-title">Schengen Reminder</div>'+
         '<div class="banner-body" style="margin-bottom:0"><strong>'+remaining+' days remaining</strong> in your 90/180 Schengen allowance.</div>'+
       '</div>';
     }
@@ -3090,12 +3429,12 @@ function renderAlerts(){
 function renderCurrentLocation(){
   const el=document.getElementById('current-location-section');
   if(!state.currentCountry){
-    el.innerHTML='<div class="section-title">📍 Current Location</div>'+
+    el.innerHTML='<div class="section-title">Current Location</div>'+
       '<div class="card" style="text-align:center;padding:32px 24px;cursor:default;background:linear-gradient(145deg,#F0FFF9,#FAFFFE);border-color:var(--green-b)">'+
-        '<div style="font-size:44px;margin-bottom:14px">🌍</div>'+
+        '<div style="margin-bottom:14px;color:var(--muted)"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></div>'+
         '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Where are you right now?</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5">Set your location to start tracking stay allowances and get expiry alerts automatically.</div>'+
-        '<button onclick="openLocationModal()" style="padding:12px 28px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">📍 Set My Location</button>'+
+        '<button onclick="openLocationModal()" style="padding:12px 28px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">Set My Location</button>'+
       '</div>';
     return;
   }
@@ -3146,14 +3485,14 @@ function renderCurrentLocation(){
     const homeGrad = CARD_GRADIENTS[cs.code]||('135deg,'+cs.accent+' 0%,'+cs.accent+'88 100%');
     const homePhoto = cs.code ? 'https://raw.githubusercontent.com/yamanozgur/visaflow/main/'+cs.code+'.webp' : null;
     el.innerHTML=
-      '<div class="section-title">📍 Current Location</div>'+
+      '<div class="section-title">Current Location</div>'+
       '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:180px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card-home">'+
         '<div id="loc-bg-home" style="position:absolute;inset:0;background:linear-gradient('+homeGrad+');transition:opacity 0.5s;"></div>'+
         '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.55) 100%);z-index:1;"></div>'+
         '<div style="position:relative;z-index:2;padding:14px 16px;display:flex;flex-direction:column;min-height:180px;">'+
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
             '<div style="display:flex;align-items:center;gap:10px">'+
-              '<div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2.5px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0">'+
+              '<div style="width:44px;height:31px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0">'+
                 '<img src="https://flagcdn.com/w80/'+(cs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background=\'rgba(255,255,255,0.2)\'">'+
               '</div>'+
               '<div>'+
@@ -3168,7 +3507,7 @@ function renderCurrentLocation(){
           '</div>'+
           '<div style="flex:1"></div>'+
           '<div style="background:rgba(20,20,20,0.35);backdrop-filter:blur(6px);border-radius:10px;padding:12px 16px;text-align:center;">'+
-            '<div style="font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4)">You\'re home 🏠</div>'+
+            '<div style="font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4)">You\'re home </div>'+
             '<div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:4px">No visa or stay limit — unlimited stay</div>'+
           '</div>'+
         '</div>'+
@@ -3245,7 +3584,7 @@ function renderCurrentLocation(){
   const PHOTO_BASE='https://raw.githubusercontent.com/yamanozgur/visaflow/main/';
   const photoUrl=cs.code?PHOTO_BASE+cs.code+'.webp':null;
   el.innerHTML=
-    '<div class="section-title">📍 Current Location</div>'+
+    '<div class="section-title">Current Location</div>'+
     '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:210px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card">'+
       '<div id="loc-bg" style="position:absolute;inset:0;background:linear-gradient('+grad+');transition:opacity 0.5s;"></div>'+
       '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.48) 100%);z-index:1;"></div>'+
@@ -3254,7 +3593,7 @@ function renderCurrentLocation(){
         /* ── TOP ROW: flag + name + change ── */
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
           '<div style="display:flex;align-items:center;gap:10px">'+
-            '<div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2.5px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0">'+
+            '<div style="width:44px;height:31px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0">'+
               '<img src="https://flagcdn.com/w80/'+(cs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background=\'rgba(255,255,255,0.2)\'">'+
             '</div>'+
             '<div>'+
@@ -3334,23 +3673,12 @@ function renderSchengenTracker(){
   var el = document.getElementById('schengen-tracker-section');
   if(!el) return;
 
-  // Only show if user has Schengen visa
-  var hasSchengenVisa = state.visas.find(function(v){ return v.country === 'Schengen'; });
+  var hasSchengenVisa = state.visas.find(function(v){ return v.country === 'Schengen' || isSchengen(v.country); });
+  var hasSchengenTravel = state.travels.some(function(t){ return isSchengen(t.country); });
+  var inSchengen = state.currentCountry && isSchengen(state.currentCountry);
 
-  if(!hasSchengenVisa){
+  if(!hasSchengenVisa && !hasSchengenTravel && !inSchengen){
     el.innerHTML=''; return;
-  }
-
-  if(!state.user.isPremium){
-    el.innerHTML =
-      '<div class="section-title" style="display:flex;align-items:center;justify-content:flex-start;gap:6px"><img src="https://flagcdn.com/w80/eu.png" alt="EU" style="width:18px;height:18px;border-radius:50%;object-fit:cover"> <span>Schengen 90/180 Rule</span></div>'+
-      '<div class="card" style="cursor:pointer;border-style:dashed;padding:20px;text-align:center" onclick="openPaywall(\'schengen\')">'+
-        '<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px"><img src="https://flagcdn.com/w80/eu.png" alt="EU" style="width:32px;height:32px;border-radius:50%;object-fit:cover"><span style="font-size:24px">🔒</span></div>'+
-        '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Schengen 90/180 Tracker (Premium)</div>'+
-        '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Track remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.</div>'+
-        '<button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;display:inline-block;box-shadow:0 4px 12px rgba(0,168,132,0.25)">Unlock Schengen Tracker 💎</button>'+
-      '</div>';
-    return;
   }
 
   var used = calcSchengenDays();
@@ -3379,12 +3707,12 @@ function renderSchengenTracker(){
     var resetStr = resetDate.toISOString().split('T')[0];
     var daysToReset = daysBetween(today(), resetStr);
     nextResetHtml = '<div style="margin-top:8px;padding:8px 12px;background:rgba(255,255,255,0.6);border-radius:8px;font-size:11px;color:var(--text2);text-align:center">'+
-      '🔄 Days will free up from <strong>'+fmtDate(resetStr)+'</strong> ('+daysToReset+' days)'+
+      'Days will free up from <strong>'+fmtDate(resetStr)+'</strong> ('+daysToReset+' days)'+
     '</div>';
   }
 
   el.innerHTML =
-    '<div class="section-title" style="display:flex;align-items:center;justify-content:flex-start;gap:6px"><img src="https://flagcdn.com/w80/eu.png" alt="EU" style="width:18px;height:18px;border-radius:50%;object-fit:cover"> <span>Schengen 90/180 Rule</span></div>'+
+    '<div class="section-title" style="display:flex;align-items:center;justify-content:flex-start;gap:6px"><img src="https://flagcdn.com/w80/eu.png" alt="EU" style="width:22px;height:15px;border-radius:3px;object-fit:cover"> <span>Schengen 90/180 Rule</span></div>'+
     '<div class="card" style="background:'+cardBg+';border-color:'+cardBorder+';cursor:default">'+
       '<div class="card-accent-bar" style="background:'+barColor+'"></div>'+
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;margin-bottom:14px">'+
@@ -3430,7 +3758,7 @@ function renderActiveVisas(){
   if(!state.visas.length){
     el.innerHTML='<div class="section-title">Active Visas</div>'+
       '<div class="card" style="text-align:center;padding:28px 20px;cursor:pointer;border-style:dashed;border-color:var(--border2);background:var(--bg2)" onclick="showPage(\'add\')">'+
-        '<div style="font-size:32px;margin-bottom:10px">🛂</div>'+
+        '<div style="margin-bottom:10px;color:var(--muted)"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/></svg></div>'+
         '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No visas tracked yet</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">Add a visa to see expiry countdowns and alerts here</div>'+
         '<div style="display:inline-block;padding:9px 20px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border-radius:20px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,168,132,0.25)">+ Add a Visa</div>'+
@@ -3447,10 +3775,10 @@ function renderResidencies(){
   const el=document.getElementById('residency-section');
   if(!state.residencies.length){
     if(!state.user.isPremium){
-      el.innerHTML='<div class="section-title">🏠 Residency Permits</div>'+
+      el.innerHTML='<div class="section-title">Residency Permits</div>'+
         '<div class="card" style="cursor:pointer;border-style:dashed;padding:16px" onclick="openPaywall(\'residency\')">'+
           '<div style="display:flex;align-items:center;gap:12px">'+
-            '<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F59E0B,#D97706);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔒</div>'+
+            '<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F59E0B,#D97706);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0"></div>'+
             '<div>'+
               '<div style="font-size:13px;font-weight:700;color:var(--text)">Residency Permit Tracker</div>'+
               '<div style="font-size:11px;color:var(--muted);margin-top:2px">Track minimum annual stay requirements</div>'+
@@ -3476,10 +3804,10 @@ function renderResidencies(){
           '<div>'+
             '<div class="visa-name">'+r.country+'</div>'+
             '<div class="visa-sub">Residency · Since '+fmtDate(r.startDate)+(r.expiryDate?' · Until '+fmtDate(r.expiryDate):'')+'</div>'+
-            (r.notes?'<div style="margin-top:3px;font-size:10px;color:'+cs.accent+';font-weight:600">📝 '+r.notes+'</div>':'')+
+            (r.notes?'<div style="margin-top:3px;font-size:10px;color:'+cs.accent+';font-weight:600">'+r.notes+'</div>':'')+
           '</div>'+
         '</div>'+
-        '<span class="badge '+(expiryWarn?'badge-orange':'badge-green')+'">'+(expiryWarn?'⚠ EXPIRING':'ACTIVE')+'</span>'+
+        '<span class="badge '+(expiryWarn?'badge-orange':'badge-green')+'">'+(expiryWarn?'EXPIRING':'ACTIVE')+'</span>'+
       '</div>'+
       '<div class="progress-row">'+
         '<div class="progress-labels"><span class="progress-lbl">Annual target</span><span class="progress-val">'+r.spentDays+' / '+r.requiredDays+' days</span></div>'+
@@ -3499,7 +3827,7 @@ function renderReminders(){
   const el=document.getElementById('reminders-section');
   const upcoming=state.visas.filter(function(v){return v.reminderDate&&daysBetween(today(),v.reminderDate)>=0&&daysBetween(today(),v.reminderDate)<=30;});
   if(!upcoming.length){el.innerHTML='';return;}
-  let html='<div class="section-title">🔔 Upcoming Reminders</div>';
+  let html='<div class="section-title">Upcoming Reminders</div>';
   upcoming.forEach(function(v){
     const dl=daysBetween(today(),v.reminderDate), cs=getCS(v.country);
     const urgColor=dl<=7?'var(--red)':dl<=14?'var(--orange)':'var(--green)';
@@ -3525,7 +3853,7 @@ function buildVisaCard(v){
   const accent=isWarn||isExp?'var(--orange)':cs.accent;
   const cardBg=isExp?'var(--card)':cs.bg, cardBorder=isExp?'var(--border)':isWarn?'var(--orange-b)':cs.border;
   const badgeCls=isExp?'badge-gray':isWarn?'badge-orange':'badge-green';
-  const badgeTxt=isExp?'EXPIRED':isWarn?'⚠ EXPIRING':'ACTIVE';
+  const badgeTxt=isExp?'EXPIRED':isWarn?'EXPIRING':'ACTIVE';
   const typeLabel=v.type==='multi'?'Multiple Entry':v.type==='free'?'Visa-Free':'Single Entry';
   const allowedStay = parseInt(v.stayDays) || tot || 30;
   let entryDays=(v.entryDate?daysFromEntry(v.entryDate):0)+(parseInt(v.daysUsed)||0);
@@ -3554,7 +3882,7 @@ function buildVisaCard(v){
       '</div></div>'+
       '<div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px">'+
         '<span class="badge '+badgeCls+'">'+badgeTxt+'</span>'+
-        '<button onclick="event.stopPropagation();exportVisaCalendar(\''+v.id+'\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:3px 8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px" title="Add to Calendar">📅 Calendar</button>'+
+        '<button onclick="event.stopPropagation();exportVisaCalendar(\''+v.id+'\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:3px 8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px" title="Add to Calendar">Calendar</button>'+
       '</div>'+
     '</div>'+
     '<div class="progress-row">'+
@@ -3582,9 +3910,9 @@ function renderPassportTabs(){
   }
   state.passports.forEach(function(pp){
     const active = (state.activePassportId === pp.id || (state.passports.length === 1 && state.activePassportId !== 'all')), cs=getCS(pp.country);
-    const flagHtml = flagImg(pp.country,cs,'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:18px;height:18px"');
+    const flagHtml = flagImg(pp.country,cs,'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:22px;height:15px;border-radius:3px"');
     html+='<div class="passport-tab '+(active?'active':'')+'" onclick="setActivePassport(\''+pp.id+'\')">'+
-      '<div style="width:18px;height:18px;border-radius:50%;overflow:hidden;flex-shrink:0">'+flagHtml+'</div>'+
+      '<div style="width:22px;height:15px;border-radius:3px;overflow:hidden;flex-shrink:0">'+flagHtml+'</div>'+
       pp.country+
     '</div>';
   });
@@ -3593,7 +3921,7 @@ function renderPassportTabs(){
     html+='<div class="passport-tab" onclick="triggerPassportAdd()">+ Add</div>';
   }
   if (state.passports.length > 0) {
-    html+='<div class="passport-tab" onclick="openManagePassportsModal()" style="padding: 7px 10px; min-width: 32px; justify-content: center; color: var(--muted)">⚙️</div>';
+    html+='<div class="passport-tab" onclick="openManagePassportsModal()" style="padding: 7px 10px; min-width: 32px; justify-content: center; color: var(--muted)"></div>';
   }
   el.innerHTML=html;
 }
@@ -3619,17 +3947,17 @@ function openManagePassportsModal() {
   } else {
     state.passports.forEach(function(pp) {
       const cs = getCS(pp.country);
-      const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:24px;height:24px"');
+      const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:26px;height:18px;border-radius:4px"');
       
       let expInfoHtml = '';
       if (pp.expiryDate) {
         const dLeft = daysBetween(today(), pp.expiryDate);
         if (dLeft <= 0) {
-          expInfoHtml = '<div style="font-size:11px; font-weight:700; color:var(--red); margin-top:2px">🚨 Expired on ' + fmtDate(pp.expiryDate) + '</div>';
+          expInfoHtml = '<div style="font-size:11px; font-weight:700; color:var(--red); margin-top:2px">Expired on ' + fmtDate(pp.expiryDate) + '</div>';
         } else if (dLeft <= 183) {
-          expInfoHtml = '<div style="font-size:11px; font-weight:700; color:var(--orange); margin-top:2px">⚠️ Expires in ' + dLeft + ' days (< 6 months)</div>';
+          expInfoHtml = '<div style="font-size:11px; font-weight:700; color:var(--orange); margin-top:2px">Expires in ' + dLeft + ' days (< 6 months)</div>';
         } else {
-          expInfoHtml = '<div style="font-size:11px; font-weight:600; color:var(--green); margin-top:2px">✅ Valid until ' + fmtDate(pp.expiryDate) + '</div>';
+          expInfoHtml = '<div style="font-size:11px; font-weight:600; color:var(--green); margin-top:2px">Valid until ' + fmtDate(pp.expiryDate) + '</div>';
         }
       } else {
         expInfoHtml = '<div style="font-size:11px; color:var(--muted); margin-top:2px">No expiry date set</div>';
@@ -3645,15 +3973,15 @@ function openManagePassportsModal() {
                 expInfoHtml+
               '</div>'+
             '</div>'+
-            '<button onclick="deletePassport(\''+pp.id+'\')" style="background:var(--red-l); color:var(--red); border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer">🗑️ Delete</button>'+
+            '<button onclick="deletePassport(\''+pp.id+'\')" style="background:var(--red-l); color:var(--red); border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer">Delete</button>'+
           '</div>'+
           '<div style="display:flex; gap:8px; border-top:1px solid var(--border); padding-top:10px">'+
             '<button onclick="openEditPassportModal(\''+pp.id+'\')" style="flex:1; background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px">'+
-              '✏️ ' + (pp.expiryDate ? 'Edit Expiry' : 'Set Expiry Date') +
+              '' + (pp.expiryDate ? 'Edit Expiry' : 'Set Expiry Date') +
             '</button>'+
             (pp.expiryDate ?
             '<button onclick="exportPassportCalendar(\''+pp.id+'\')" style="flex:1; background:var(--blue-l); color:#1E5EA8; border:1px solid var(--blue-b); border-radius:8px; padding:7px 10px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px">'+
-              '📅 Add to Calendar'+
+              'Add to Calendar'+
             '</button>' : '')+
           '</div>'+
         '</div>';
@@ -3692,7 +4020,7 @@ function deletePassport(id) {
   if (modalEl && modalEl.classList.contains('active')) {
     openManagePassportsModal();
   }
-  showToast('Passport deleted ✓');
+  showToast('Passport deleted');
 }
 function setActivePassport(id){ state.activePassportId=id; renderAllVisas(); }
 // ============================================================
@@ -3743,14 +4071,14 @@ function renderVisaCheckPassportSelector(){
   let html = 
     '<div class="card" style="margin-bottom: 16px; border: 1.5px solid var(--border); background: var(--bg2); padding: 14px">'+
       '<div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px">'+
-        '<span>🛂</span> Which passport would you like to use?'+
+        ' Which passport would you like to use?'+
       '</div>'+
       '<div style="display:flex; gap:10px">';
 
   state.passports.forEach(function(pp){
     const isSelected = state.vcSelectedPassportId === pp.id;
     const cs = getCS(pp.country);
-    const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:18px;height:18px"');
+    const flagHtml = flagImg(pp.country, cs, 'sm').replace('class="flag-circle-sm"','class="flag-circle-sm" style="width:22px;height:15px;border-radius:3px"');
     
     const cardBg = isSelected ? 'var(--green-l)' : 'var(--card)';
     const cardBorder = isSelected ? '1.5px solid var(--green-b)' : '1.5px solid var(--border)';
@@ -3760,7 +4088,7 @@ function renderVisaCheckPassportSelector(){
     html +=
       '<div onclick="selectVCPassport(\''+pp.id+'\')" style="flex:1; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; background:'+cardBg+'; border:'+cardBorder+'; color:'+cardColor+'; border-radius:12px; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.2s">'+
         '<div style="display:flex; align-items:center; gap:8px">'+
-          '<div style="width:18px;height:18px;border-radius:50%;overflow:hidden;flex-shrink:0">'+flagHtml+'</div>'+
+          '<div style="width:22px;height:15px;border-radius:3px;overflow:hidden;flex-shrink:0">'+flagHtml+'</div>'+
           '<span>'+pp.country+'</span>'+
         '</div>'+
         checkmark+
@@ -3805,7 +4133,7 @@ function runVisaCheck(){
   if(!state.user.isPremium){
     el.innerHTML=
       '<div class="card" style="cursor:pointer;border-style:dashed;text-align:center;padding:24px" onclick="openPaywall(\'visa-check\')">'+
-        '<div style="font-size:32px;margin-bottom:10px">🔒</div>'+
+        '<div style="margin-bottom:10px;color:var(--muted)"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'+
         '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">Visa Check — Premium</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-bottom:14px">See instant entry requirements for your passport</div>'+
         '<div style="display:inline-block;padding:9px 20px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border-radius:20px;font-size:13px;font-weight:700">Upgrade to Premium</div>'+
@@ -3823,9 +4151,9 @@ function runVisaCheck(){
 
   // Destination header
   var destHeader =
-    '<div style="display:flex;align-items:center;gap:14px;padding:16px;background:'+cs.bg+';border:1.5px solid '+cs.border+';border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden">'+
+    '<div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:'+cs.bg+';border:1.5px solid '+cs.border+';border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden">'+
       '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+cs.accent+'"></div>'+
-      '<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2.5px solid rgba(255,255,255,0.9);box-shadow:0 2px 8px rgba(0,0,0,0.15);flex-shrink:0">'+
+      '<div style="width:48px;height:34px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,0.9);box-shadow:0 2px 8px rgba(0,0,0,0.15);flex-shrink:0">'+
         '<img src="https://flagcdn.com/w80/'+(cs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
       '</div>'+
       '<div>'+
@@ -3856,7 +4184,7 @@ function runVisaCheck(){
       var bgColor = fmt ? fmt.color+'08' : 'var(--card)';
       cardsHtml +=
         '<div style="background:'+bgColor+';border:1.5px solid '+borderColor+';border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">'+
-          '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.85);box-shadow:0 1px 4px rgba(0,0,0,0.15);flex-shrink:0">'+
+          '<div style="width:36px;height:25px;border-radius:5px;overflow:hidden;border:2px solid rgba(255,255,255,0.85);box-shadow:0 1px 4px rgba(0,0,0,0.15);flex-shrink:0">'+
             '<img src="https://flagcdn.com/w40/'+(ppcs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
           '</div>'+
           '<div style="flex:1">'+
@@ -3872,7 +4200,7 @@ function runVisaCheck(){
     });
     el.innerHTML = destHeader + cardsHtml +
       '<div style="font-size:10px;color:var(--muted);line-height:1.5;text-align:center;margin-top:4px">'+
-        '⚠️ For reference only. Verify with official embassy before travelling.'+
+        'For reference only. Verify with official embassy before travelling.'+
       '</div>';
   }
 
@@ -3904,7 +4232,7 @@ function renderAllVisas(){
   if(state.activePassportId && state.activePassportId !== 'all' && state.visas.length > filtered.length) {
     const hiddenCount = state.visas.length - filtered.length;
     html += '<div style="background:var(--blue-l);border:1px solid var(--blue-b);border-radius:12px;padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px">'+
-      '<span>💡 <strong>'+hiddenCount+' visa'+(hiddenCount>1?'s':'')+'</strong> linked to another passport tab.</span>'+
+      '<span><strong>'+hiddenCount+' visa'+(hiddenCount>1?'s':'')+'</strong> linked to another passport tab.</span>'+
       '<button onclick="setActivePassport(\'all\')" style="background:var(--blue);color:#fff;border:none;padding:5px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Show All</button>'+
     '</div>';
   }
@@ -3912,7 +4240,7 @@ function renderAllVisas(){
   if(active.length){html+='<div class="section-title" style="margin-top:4px">Active</div>';active.forEach(function(v){html+=buildVisaCard(v);});}
   if(expired.length){html+='<div class="section-title">Expired</div>';expired.forEach(function(v){html+=buildVisaCard(v);});}
   if(!filtered.length) {
-    html+='<div class="empty"><div class="empty-icon">🛂</div><div class="empty-text" style="margin-bottom:18px">'+(state.activePassportId && state.activePassportId !== 'all'?'No visas for this passport tab yet.':'No visas yet.')+'<br>Add your first one to start tracking.</div><button onclick="showPage(\'add\')" style="padding:12px 28px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">+ Add Your First Visa</button></div>';
+    html+='<div class="empty"><div class="empty-icon" style="display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/></svg></div><div class="empty-text" style="margin-bottom:18px">'+(state.activePassportId && state.activePassportId !== 'all'?'No visas for this passport tab yet.':'No visas yet.')+'<br>Add your first one to start tracking.</div><button onclick="showPage(\'add\')" style="padding:12px 28px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">+ Add Your First Visa</button></div>';
   }
   el.innerHTML=html;
   renderAds();
@@ -3922,11 +4250,11 @@ function renderAllVisas(){
 // HISTORY
 // ============================================================
 function setHistoryView(v){
+  if(v==='timeline' && !state.user.isPremium){
+    openPaywall('export');
+    return;
+  }
   historyView=v;
-  document.getElementById('view-list-btn').style.color=v==='list'?'var(--green)':'var(--muted)';
-  document.getElementById('view-list-btn').style.fontWeight=v==='list'?'700':'600';
-  document.getElementById('view-tl-btn').style.color=v==='timeline'?'var(--green)':'var(--muted)';
-  document.getElementById('view-tl-btn').style.fontWeight=v==='timeline'?'700':'600';
   renderHistory();
 }
 
@@ -3940,9 +4268,11 @@ function populateCountryFilter(){
 }
 
 function clearHistoryFilters(){
-  document.getElementById('filter-country').value='';
-  document.getElementById('filter-date-from').value='';
-  document.getElementById('filter-date-to').value='';
+  const sInput = document.getElementById('history-search-input');
+  if(sInput) sInput.value = '';
+  if(document.getElementById('filter-country')) document.getElementById('filter-country').value = '';
+  if(document.getElementById('filter-date-from')) document.getElementById('filter-date-from').value = '';
+  if(document.getElementById('filter-date-to')) document.getElementById('filter-date-to').value = '';
   renderHistory();
 }
 
@@ -3951,7 +4281,7 @@ function deleteTravel(origIndex){
     state.travels.splice(origIndex, 1);
     save();
     renderAll();
-    showToast('Travel record deleted ✓');
+    showToast('Travel record deleted');
   }
 }
 
@@ -3963,7 +4293,21 @@ function clearAllTravelHistory(){
     state.currentEntry = null;
     save();
     renderAll();
-    showToast('Travel history cleared ✓');
+    showToast('Travel history cleared');
+  }
+}
+
+let selectedTravelIndex = null;
+
+function clearAllTravelHistory(){
+  if(!state.travels.length) return;
+  if(confirm('Are you sure you want to clear all travel history?')){
+    state.travels = [];
+    state.currentCountry = null;
+    state.currentEntry = null;
+    save();
+    renderAll();
+    showToast('Travel history cleared');
   }
 }
 
@@ -3971,6 +4315,7 @@ function openAddTravelModal() {
   document.getElementById('add-travel-country').value = '';
   document.getElementById('add-travel-start').value = '';
   document.getElementById('add-travel-end').value = '';
+  if(document.getElementById('add-travel-notes')) document.getElementById('add-travel-notes').value = '';
   const dd = document.getElementById('add-travel-country-dropdown');
   if(dd) dd.style.display = 'none';
   openModal('add-travel-modal');
@@ -3997,6 +4342,7 @@ function saveManualTravel() {
   const country = document.getElementById('add-travel-country').value.trim();
   const start = document.getElementById('add-travel-start').value;
   const end = document.getElementById('add-travel-end').value;
+  const notes = document.getElementById('add-travel-notes') ? document.getElementById('add-travel-notes').value.trim() : '';
 
   if(!country) { showToast('Please select or enter a country.'); return; }
   if(!start) { showToast('Please enter an entry date.'); return; }
@@ -4007,7 +4353,8 @@ function saveManualTravel() {
     country: country,
     code: cs.code || '',
     start: start,
-    end: end || null
+    end: end || null,
+    notes: notes || ''
   };
 
   state.travels.push(newTravel);
@@ -4016,17 +4363,119 @@ function saveManualTravel() {
   save();
   renderAll();
   closeModal('add-travel-modal');
-  showToast('Past trip logged successfully! ✓');
+  showToast('Past trip logged successfully!');
+}
+
+function openTripDetailModal(origIndex) {
+  selectedTravelIndex = origIndex;
+  renderHistory();
+  const t = state.travels[origIndex];
+  if(!t) return;
+
+  const cs = getCS(t.country);
+  const days = t.end ? daysBetween(t.start, t.end) + 1 : daysFromEntry(t.start);
+  const isOngoing = !t.end;
+
+  const content = document.getElementById('trip-detail-content');
+  if(content) {
+    content.innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;padding:14px;background:'+cs.bg+';border-radius:14px;border:1.5px solid '+cs.border+';position:relative;overflow:hidden">'+
+        '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+cs.accent+'"></div>'+
+        flagImg(t.country, cs)+
+        '<div style="flex:1">'+
+          '<div style="font-size:18px;font-weight:800;color:var(--text);line-height:1.15">'+t.country+'</div>'+
+          '<div style="font-size:11px;font-weight:700;color:'+cs.accent+';margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.75);padding:2px 8px;border-radius:12px;border:1px solid '+cs.border+'">'+
+            '<span>'+(isOngoing ? 'Active Stay / Present' : 'Completed Trip')+' · '+days+' Days Stay</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+
+      '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">'+
+        '<div style="display:flex;gap:10px">'+
+          '<div style="flex:1;background:var(--bg2);padding:10px 12px;border-radius:12px;border:1px solid var(--border)">'+
+            '<div style="font-size:10px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:0.5px"> Entry Date</div>'+
+            '<input type="date" id="edit-trip-start" value="'+(t.start||'')+'" class="form-input" style="padding:6px 8px;font-size:12px;margin-top:4px;font-weight:700">'+
+          '</div>'+
+          '<div style="flex:1;background:var(--bg2);padding:10px 12px;border-radius:12px;border:1px solid var(--border)">'+
+            '<div style="font-size:10px;font-weight:800;color:'+(isOngoing?'#2563EB':'#DC2626')+';text-transform:uppercase;letter-spacing:0.5px"> Exit Date</div>'+
+            '<input type="date" id="edit-trip-end" value="'+(t.end||'')+'" class="form-input" style="padding:6px 8px;font-size:12px;margin-top:4px;font-weight:700" placeholder="Ongoing">'+
+          '</div>'+
+        '</div>'+
+
+        '<div>'+
+          '<label class="form-label" style="margin-top:0;margin-bottom:4px;display:flex;align-items:center;gap:6px">Trip Notes &amp; Memory Details</label>'+
+          '<textarea id="edit-trip-notes" class="form-input" rows="3" style="resize:vertical;font-size:13px;line-height:1.4" placeholder="Add notes about this trip (e.g. Vacation with family, Business meeting, Visa stamp check, etc.)">'+(t.notes||'')+'</textarea>'+
+        '</div>'+
+      '</div>'+
+
+      '<div style="display:flex;gap:8px;margin-top:16px">'+
+        '<button class="submit-btn" style="flex:1;margin-top:0" onclick="saveTripDetails('+origIndex+')">Save Changes</button>'+
+        '<button style="padding:10px 14px;background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer" onclick="deleteTravelAndClose('+origIndex+')">Delete</button>'+
+      '</div>'+
+      '<button class="secondary-btn" style="margin-top:8px" onclick="closeTripDetailModal()">Close</button>';
+  }
+  openModal('trip-detail-modal');
+}
+
+function closeTripDetailModal() {
+  selectedTravelIndex = null;
+  closeModal('trip-detail-modal');
+  renderHistory();
+}
+
+function saveTripDetails(origIndex) {
+  const t = state.travels[origIndex];
+  if(!t) return;
+  const start = document.getElementById('edit-trip-start').value;
+  const end = document.getElementById('edit-trip-end').value;
+  const notes = document.getElementById('edit-trip-notes').value.trim();
+
+  if(!start) { showToast('Please select a valid entry date.'); return; }
+  if(end && end < start) { showToast('Exit date cannot be before entry date.'); return; }
+
+  t.start = start;
+  t.end = end || null;
+  t.notes = notes;
+
+  state.travels.sort(function(a,b){ return b.start.localeCompare(a.start); });
+  save();
+  closeTripDetailModal();
+  renderAll();
+  showToast('Trip details updated');
+}
+
+function deleteTravelAndClose(origIndex) {
+  closeTripDetailModal();
+  deleteTravel(origIndex);
 }
 
 function getFilteredTravels(){
-  const country=document.getElementById('filter-country')?document.getElementById('filter-country').value:'';
-  const from=document.getElementById('filter-date-from')?document.getElementById('filter-date-from').value:'';
-  const to=document.getElementById('filter-date-to')?document.getElementById('filter-date-to').value:'';
+  const search = document.getElementById('history-search-input') ? document.getElementById('history-search-input').value.trim().toLowerCase() : '';
+  const country = document.getElementById('filter-country') ? document.getElementById('filter-country').value : '';
+  const from = document.getElementById('filter-date-from') ? document.getElementById('filter-date-from').value : '';
+  const to = document.getElementById('filter-date-to') ? document.getElementById('filter-date-to').value : '';
+
   return state.travels.map(function(t, idx){ return Object.assign({}, t, { origIndex: idx }); }).filter(function(t){
     if(country && t.country!==country) return false;
     if(from && t.end && t.end<from) return false;
     if(to && t.start>to) return false;
+
+    if(search) {
+      const formattedStart = fmtDate(t.start).toLowerCase();
+      const formattedEnd = t.end ? fmtDate(t.end).toLowerCase() : 'ongoing active present';
+      const countryName = (t.country || '').toLowerCase();
+      const notesStr = (t.notes || '').toLowerCase();
+      const rawStart = (t.start || '').toLowerCase();
+      const rawEnd = (t.end || '').toLowerCase();
+
+      const matchesSearch = countryName.includes(search) ||
+                            notesStr.includes(search) ||
+                            rawStart.includes(search) ||
+                            rawEnd.includes(search) ||
+                            formattedStart.includes(search) ||
+                            formattedEnd.includes(search);
+      if(!matchesSearch) return false;
+    }
     return true;
   });
 }
@@ -4035,6 +4484,21 @@ function renderHistory(){
   populateCountryFilter();
   const el=document.getElementById('history-container');
   const summaryEl=document.getElementById('history-summary');
+
+  if(!state.user.isPremium && historyView==='timeline'){
+    historyView='list';
+  }
+
+  const listBtn=document.getElementById('view-list-btn');
+  const tlBtn=document.getElementById('view-tl-btn');
+  if(listBtn && tlBtn){
+    listBtn.style.color=historyView==='list'?'var(--green)':'var(--muted)';
+    listBtn.style.fontWeight=historyView==='list'?'700':'600';
+    tlBtn.style.color=historyView==='timeline'?'var(--green)':'var(--muted)';
+    tlBtn.style.fontWeight=historyView==='timeline'?'700':'600';
+    tlBtn.innerHTML=state.user.isPremium ? 'Timeline' : 'Timeline';
+  }
+
   if(!state.travels.length){
     el.innerHTML='<div class="empty"><div class="empty-icon" style="display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div><div class="empty-text" style="margin-bottom:18px">No travel history yet.<br>Log past trips or add visas to start tracking.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onclick="openAddTravelModal()" style="padding:12px 20px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">+ Log Past Trip</button><button onclick="showPage(\'add\')" style="padding:12px 20px;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:20px;font-size:14px;font-weight:700;cursor:pointer">+ Add a Visa</button></div></div>';
     if(summaryEl) summaryEl.innerHTML='';
@@ -4055,22 +4519,73 @@ function renderHistory(){
   }
 
   if(historyView==='timeline'){
-    let html='<div class="timeline">';
+    let html='<div class="travel-timeline" style="display:flex;flex-direction:column;gap:18px">';
     filtered.forEach(function(t){
       const days=t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start);
-      const endLabel=t.end?fmtDate(t.end):'<span style="color:var(--green);font-weight:700">Ongoing</span>';
       const cs=getCS(t.country);
-      html+='<div class="tl-item">'+
-        '<div class="tl-dot '+(t.end?'past':'')+'"></div>'+
-        '<div class="tl-card" style="'+(!t.end?('border-color:'+cs.border+';background:'+cs.bg):'')+'">'+
-          flagImg(t.country,cs,'sm')+
-          '<div class="tl-info"><div class="tl-country">'+t.country+'</div><div class="tl-dates">'+fmtDate(t.start)+' — '+endLabel+'</div></div>'+
-          '<div style="display:flex;align-items:center;gap:8px">'+
-            '<div style="font-size:13px;font-weight:700;color:'+cs.accent+'">'+days+'d</div>'+
-            '<button onclick="event.stopPropagation();deleteTravel('+t.origIndex+')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;display:flex;align-items:center" title="Delete travel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>'+
+      const isOngoing = !t.end;
+      const isSelected = selectedTravelIndex === t.origIndex;
+      
+      const cardBorder = isSelected ? '2px solid var(--green)' : '1.5px solid var(--border)';
+      const cardShadow = isSelected ? '0 0 0 3px rgba(0,168,132,0.25), 0 6px 20px rgba(0,168,132,0.15)' : 'var(--shadow-sm)';
+      const cardTransform = isSelected ? 'translateY(-2px)' : 'none';
+
+      html +=
+        '<div class="tl-trip-card" onclick="openTripDetailModal('+t.origIndex+')" style="background:var(--card);border:'+cardBorder+';border-radius:16px;padding:16px;box-shadow:'+cardShadow+';transform:'+cardTransform+';transition:all 0.2s;cursor:pointer;position:relative;overflow:hidden">'+
+          '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+cs.accent+'"></div>'+
+          
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">'+
+            '<div style="display:flex;align-items:flex-start;gap:12px">'+
+              flagImg(t.country, cs)+
+              '<div>'+
+                '<div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.15">'+t.country+'</div>'+
+                '<div style="font-size:11px;font-weight:700;color:'+cs.accent+';margin-top:3px;display:inline-flex;align-items:center;gap:4px;background:'+cs.bg+';padding:2px 8px;border-radius:12px;border:1px solid '+cs.border+'">'+
+                  '<span>'+days+' Days Stay</span>'+
+                '</div>'+
+              '</div>'+
+            '</div>'+
+            '<button onclick="event.stopPropagation();deleteTravel('+t.origIndex+')" style="background:var(--bg2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s" title="Delete record">'+
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'+
+            '</button>'+
           '</div>'+
-        '</div>'+
-      '</div>';
+
+          '<div style="position:relative;padding-left:28px;margin-top:8px">'+
+            '<div style="position:absolute;left:11px;top:14px;bottom:14px;width:2px;background:var(--border)"></div>'+
+
+            '<div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">'+
+              '<div style="position:absolute;left:-28px;width:24px;height:24px;border-radius:50%;background:#ECFDF5;border:1.5px solid #10B981;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 1px 4px rgba(16,185,129,0.2)" title="Entry Event">'+
+                ''+
+              '</div>'+
+              '<div style="flex:1;background:var(--bg2);padding:8px 12px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+                '<div>'+
+                  '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#059669;letter-spacing:0.5px">Entry Event</div>'+
+                  '<div style="font-size:12px;font-weight:700;color:var(--text);margin-top:1px">'+fmtDate(t.start)+'</div>'+
+                '</div>'+
+                '<span style="font-size:10px;font-weight:700;color:#059669;background:#D1FAE5;padding:2px 8px;border-radius:10px;border:1px solid #A7F3D0">Check-In</span>'+
+              '</div>'+
+            '</div>'+
+
+            '<div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+              '<div style="position:absolute;left:-28px;width:24px;height:24px;border-radius:50%;background:'+(isOngoing?'#EFF6FF':'#FEF2F2')+';border:1.5px solid '+(isOngoing?'#3B82F6':'#EF4444')+';display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 1px 4px rgba(239,68,68,0.2)" title="'+(isOngoing?'Ongoing Stay':'Exit Event')+'">'+
+                (isOngoing?'':'')+
+              '</div>'+
+              '<div style="flex:1;background:var(--bg2);padding:8px 12px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+                '<div>'+
+                  '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:'+(isOngoing?'#2563EB':'#DC2626')+';letter-spacing:0.5px">'+(isOngoing?'Current Status':'Exit Event')+'</div>'+
+                  '<div style="font-size:12px;font-weight:700;color:var(--text);margin-top:1px">'+(isOngoing?'Present / Active Stay':fmtDate(t.end))+'</div>'+
+                '</div>'+
+                '<span style="font-size:10px;font-weight:700;color:'+(isOngoing?'#2563EB':'#DC2626')+';background:'+(isOngoing?'#DBEAFE':'#FEE2E2')+';padding:2px 8px;border-radius:10px;border:1px solid '+(isOngoing?'#BFDBFE':'#FECACA')+'">'+(isOngoing?'Active':'Check-Out')+'</span>'+
+              '</div>'+
+            '</div>'+
+          '</div>'+
+
+          (t.notes ? '<div style="margin-top:12px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text);display:flex;align-items:flex-start;gap:6px"><span></span> <span style="font-weight:600">'+t.notes+'</span></div>' : '')+
+
+          '<div style="margin-top:12px;padding-top:8px;border-top:1px dashed var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600">'+
+            '<span>Tap card for details &amp; notes</span>'+
+            '<span style="color:var(--green);font-weight:700;display:flex;align-items:center;gap:3px">View Details ➔</span>'+
+          '</div>'+
+        '</div>';
     });
     html+='</div>';
     el.innerHTML=html;
@@ -4078,7 +4593,7 @@ function renderHistory(){
     let html='';
     filtered.forEach(function(t){
       const days=t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start), cs=getCS(t.country);
-      html+='<div class="history-item">'+
+      html+='<div class="history-item" onclick="openTripDetailModal('+t.origIndex+')" style="cursor:pointer">'+
         flagImg(t.country,cs,'sm')+
         '<div class="history-info"><div class="history-country">'+t.country+'</div><div class="history-dates">'+fmtDate(t.start)+' — '+(t.end?fmtDate(t.end):'Ongoing')+'</div></div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
@@ -4101,7 +4616,7 @@ function changeVisaPassport(visaId, newPassportId) {
     save();
     renderAll();
     showVisaDetail(visaId);
-    showToast('Linked passport updated ✓');
+    showToast('Linked passport updated');
   }
 }
 function showVisaDetail(id){
@@ -4127,7 +4642,7 @@ function showVisaDetail(id){
   });
 
   document.getElementById('visa-detail-content').innerHTML=
-    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:16px;background:'+cs.bg+';border-radius:14px;border:1.5px solid '+cs.border+'">'+
+    '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;padding:16px;background:'+cs.bg+';border-radius:14px;border:1.5px solid '+cs.border+'">'+
       flagImg(v.country,cs)+
       '<div>'+
         '<div style="font-size:20px;font-weight:800;color:var(--text)">'+v.country+'</div>'+
@@ -4136,7 +4651,7 @@ function showVisaDetail(id){
       '</div>'+
     '</div>'+
     '<div style="padding:12px;background:var(--bg2);border-radius:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'+
-      '<span style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px">🛂 Passport:</span>'+
+      '<span style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px">Passport:</span>'+
       '<select onchange="changeVisaPassport(\''+v.id+'\', this.value)" style="background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer">'+
         passportOptionsHtml+
       '</select>'+
@@ -4166,10 +4681,10 @@ function showVisaDetail(id){
       '</div>'+
       '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;background:'+cs.accent+'"></div></div>'+
     '</div>'+
-    (v.reminderDate?('<div style="padding:12px 14px;background:var(--blue-l);border:1.5px solid var(--blue-b);border-radius:12px;font-size:13px;color:#1E5EA8;margin-bottom:12px">📋 Reminder: <strong>'+fmtDate(v.reminderDate)+'</strong></div>'):'')+
-    (v.notes?('<div style="padding:12px 14px;background:var(--bg2);border-radius:12px;font-size:13px;color:var(--muted);margin-bottom:12px">📝 '+v.notes+'</div>'):'')+
+    (v.reminderDate?('<div style="padding:12px 14px;background:var(--blue-l);border:1.5px solid var(--blue-b);border-radius:12px;font-size:13px;color:#1E5EA8;margin-bottom:12px">Reminder: <strong>'+fmtDate(v.reminderDate)+'</strong></div>'):'')+
+    (v.notes?('<div style="padding:12px 14px;background:var(--bg2);border-radius:12px;font-size:13px;color:var(--muted);margin-bottom:12px">'+v.notes+'</div>'):'')+
     '<button onclick="exportVisaCalendar(\''+v.id+'\')" style="width:100%; padding:12px; background:var(--blue-l); color:#1E5EA8; border:1.5px solid var(--blue-b); border-radius:12px; font-size:13px; font-weight:700; cursor:pointer; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px">'+
-      '📅 Export Expiry to Calendar (Google / Apple)'+
+      'Export Expiry to Calendar (Google / Apple)'+
     '</button>'+
     '<button class="delete-btn" onclick="deleteVisa(\''+v.id+'\')">Delete Visa</button>'+
     '<button class="secondary-btn" onclick="closeModal(\'visa-detail-modal\')">Close</button>';
@@ -4241,7 +4756,7 @@ function addVisa(){
     if(!state.currentCountry){state.currentCountry=country;state.currentEntry=entry;}
     state.travels.unshift({country:country,code:cs.code||'',start:entry,end:null});
   }
-  save();renderAll();showToast('Visa saved ✓');
+  save();renderAll();showToast('Visa saved');
   ['add-country','add-start','add-end','add-stay','add-used','add-entry','add-reminder','add-notes'].forEach(function(i){document.getElementById(i).value='';});
   document.getElementById('schengen-banner').style.display='none';
   document.getElementById('issued-by-wrap').style.display='none';
@@ -4295,7 +4810,7 @@ function addPassport(){
   save();
   closeModal('passport-modal');
   renderAll();
-  showToast('Passport added ✓');
+  showToast('Passport added');
 
   document.getElementById('pp-country').value='';
   if(document.getElementById('pp-expiry')) document.getElementById('pp-expiry').value='';
@@ -4311,7 +4826,7 @@ function openCalendarExportModal(title, dateStr, details) {
   var dateEl = document.getElementById('cal-event-date');
   var descEl = document.getElementById('cal-event-desc');
   if(nameEl) nameEl.textContent = title;
-  if(dateEl) dateEl.textContent = '📅 Date: ' + fmtDate(dateStr) + ' (' + dateStr + ')';
+  if(dateEl) dateEl.textContent = 'Date: ' + fmtDate(dateStr) + ' (' + dateStr + ')';
   if(descEl) descEl.textContent = details;
   
   var googleBtn = document.getElementById('cal-btn-google');
@@ -4369,7 +4884,7 @@ function downloadIcsCalendar(title, dateStr, details) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  showToast('Downloaded .ics calendar file ✓');
+  showToast('Downloaded .ics calendar file');
 }
 
 function exportVisaCalendar(visaId) {
@@ -4414,7 +4929,7 @@ function savePassportExpiry() {
     if (modalEl && modalEl.classList.contains('active')) {
       openManagePassportsModal();
     }
-    showToast('Passport expiry date saved ✓');
+    showToast('Passport expiry date saved');
   }
 }
 
@@ -4477,14 +4992,14 @@ function saveResidency(){
   if(editId){
     const idx=state.residencies.findIndex(function(r){return r.id===editId;});
     if(idx>-1) state.residencies[idx]=Object.assign({},state.residencies[idx],{country:country,startDate:startDate,expiryDate:expiryDate,requiredDays:requiredDays,spentDays:spentDays,notes:notes});
-    showToast('Residency updated ✓');
+    showToast('Residency updated');
   } else {
     if(state.residencies && state.residencies.length >= 1){
       showToast('You can add a maximum of 1 residency permit.');
       return;
     }
     state.residencies.push({id:'r'+Date.now(),country:country,startDate:startDate,expiryDate:expiryDate,requiredDays:requiredDays,spentDays:spentDays,notes:notes});
-    showToast('Residency permit added ✓');
+    showToast('Residency permit added');
   }
   save();closeModal('res-modal');renderAll();
 }
@@ -4531,7 +5046,7 @@ function renderProfile(){
         '<div style="display:flex;align-items:center;gap:10px">'+
           '<span style="display:flex;align-items:center;justify-content:center;color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19 20 16.5 17.5 14"/><path d="M20 16.5H9"/><path d="M6.5 5 4 7.5 6.5 10"/><path d="M4 7.5h11"/></svg></span>'+
           '<div style="text-align:left">'+
-            '<div style="font-size:13px;font-weight:700;color:var(--text)">Cloud Synced ✓</div>'+
+            '<div style="font-size:13px;font-weight:700;color:var(--text)">Cloud Synced</div>'+
             '<div style="font-size:11px;color:var(--muted);margin-top:2px">Backup account: ' + state.currentUserEmail + '</div>'+
           '</div>'+
         '</div>'+
@@ -4599,7 +5114,7 @@ function renderProfile(){
         '<label class="switch"><input type="checkbox" '+(state.user.notifVisa?'checked':'')+' onchange="state.user.notifVisa=this.checked;save()"><span class="slider"></span></label>'+
       '</div>'+
       '<div class="settings-item">'+
-        '<div class="settings-icon" style="background:var(--blue-l); color:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>'+
         '<div class="settings-label">Application Reminders</div>'+
         '<label class="switch"><input type="checkbox" '+(state.user.notifReminder?'checked':'')+' onchange="state.user.notifReminder=this.checked;save()"><span class="slider"></span></label>'+
       '</div>'+
@@ -4608,9 +5123,9 @@ function renderProfile(){
     '<div class="section-title">Admin &amp; Control</div>'+
     '<div class="settings-group">'+
       '<div class="settings-item" onclick="openAdminPanel()" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:' + (isOwnerAdmin ? '#E0F2FE' : '#FEF3C7') + '; color:' + (isOwnerAdmin ? '#0284C7' : '#D97706') + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'+
         '<div class="settings-label" style="font-weight:700; color:var(--text)">Admin &amp; Management Panel</div>'+
-        '<div style="font-size:11px; font-weight:700; color:' + (isOwnerAdmin ? '#0284C7' : 'var(--muted)') + '">' + (isOwnerAdmin ? 'Verified Admin ✓' : 'Unlock ›') + '</div>'+
+        '<div style="font-size:11px; font-weight:700; color:' + (isOwnerAdmin ? '#0284C7' : 'var(--muted)') + '">' + (isOwnerAdmin ? 'Verified Admin' : 'Unlock ›') + '</div>'+
       '</div>'+
     '</div>' +
 
@@ -4642,17 +5157,17 @@ function renderProfile(){
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'contact-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--orange-l); color:var(--orange)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>'+
         '<div class="settings-label" style="font-weight:700">Contact Support</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'faq-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--blue-l); color:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'+
         '<div class="settings-label">Help &amp; FAQ</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'credits-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--purple-l); color:var(--purple)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>'+
         '<div class="settings-label">Photography Credits</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
@@ -4665,8 +5180,7 @@ function renderProfile(){
 
     '<div style="margin-top:24px; margin-bottom:30px; text-align:center">'+
       '<div onclick="openModal(\'about-modal\')" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:100px; cursor:pointer">'+
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>'+
-        '<span style="font-size:12px; font-weight:700; color:var(--text2)">Crafted by <strong>FlowSpot Studios</strong> v2.6</span>'+
+        '<span style="font-size:12px; font-weight:700; color:var(--text2)">© FlowSpot Studios - 2026</span>'+
       '</div>'+
     '</div>';
 
@@ -4713,7 +5227,7 @@ function showBorderBanner(country){
         infoLines +=
           '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+
             '<img src="https://flagcdn.com/w40/'+(getCS(v.passport).code||'un')+'.png" '+
-              'style="width:18px;height:18px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+              'style="width:22px;height:15px;border-radius:3px;object-fit:cover" onerror="this.style.display=\'none\'">'+
             '<span style="font-size:12px;font-weight:700;color:'+v.fmt.color+'">'+
               v.fmt.icon+' '+v.passport+' — '+v.fmt.label+
             '</span>'+
@@ -4727,16 +5241,16 @@ function showBorderBanner(country){
     banner.innerHTML =
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
         '<img src="https://flagcdn.com/w80/'+(cs.code||'un')+'.png" '+
-          'style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid '+cs.border+'" onerror="this.style.display=\'none\'">'+
+          'style="width:38px;height:26px;border-radius:5px;object-fit:cover;border:1.5px solid '+cs.border+'" onerror="this.style.display=\'none\'">'+
         '<div style="flex:1">'+
-          '<div style="font-size:13px;font-weight:800;color:'+cs.accent+'">📍 You\'ve entered '+country+'</div>'+
+          '<div style="font-size:13px;font-weight:800;color:'+cs.accent+'">You\'ve entered '+country+'</div>'+
           (infoLines||'<div style="font-size:12px;color:var(--text2);margin-top:3px">Would you like to start tracking your stay?</div>')+
         '</div>'+
       '</div>'+
       '<div style="display:flex;gap:8px">'+
         '<button onclick="confirmBorderEntry(\''+country+'\');" '+
           'style="flex:1;padding:10px;background:'+cs.accent+';color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">'+
-          '✓ Yes, start counter'+
+          'Yes, start counter'+
         '</button>'+
         '<button onclick="document.getElementById(\'border-banner\').remove()" '+
           'style="padding:10px 14px;background:var(--bg2);color:var(--muted);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">'+
@@ -4801,11 +5315,11 @@ function confirmBorderEntry(country){
   autoLinkVisa(country, entryDate);
 
   save(); renderAll();
-  showToast('📍 Counter started for '+country);
+  showToast('Counter started for '+country);
 }
 function detectGPSInModal(){
   if(!navigator.geolocation){ showToast('Geolocation not supported on this device'); return; }
-  showToast('📡 Detecting location…');
+  showToast('Detecting location…');
   navigator.geolocation.getCurrentPosition(
     function(pos){
       fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=en')
@@ -4816,7 +5330,7 @@ function detectGPSInModal(){
             country = normalizeCountryName(country);
             document.getElementById('loc-country').value = country;
             renderLocSuggestions('');
-            showToast('✓ '+country+' detected');
+            showToast(country+' detected');
           } else {
             showToast('Could not determine country');
           }
@@ -4904,7 +5418,7 @@ function saveManualLocation(){
   // Auto-link matching visa
   autoLinkVisa(country, entry);
 
-  save();closeModal('location-modal');renderAll();showToast('📍 Location set to '+country);
+  save();closeModal('location-modal');renderAll();showToast('Location set to '+country);
 }
 
 // ============================================================
@@ -5066,7 +5580,7 @@ function renderVisaRequirement(){
       var cs = getCS(pp.country);
 
       html+='<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'+
-        '<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid var(--border);flex-shrink:0">'+
+        '<div style="width:36px;height:25px;border-radius:4px;overflow:hidden;border:1.5px solid var(--border);flex-shrink:0">'+
           '<img src="https://flagcdn.com/w40/'+(cs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
         '</div>'+
         '<div style="flex:1">'+
@@ -5085,7 +5599,7 @@ function renderVisaRequirement(){
     });
 
     html+='<div style="margin-top:10px;padding-top:10px;font-size:10px;color:var(--muted);line-height:1.5">'+
-      '⚠️ For reference only. Always verify with the official embassy or consulate before travelling.'+
+      'For reference only. Always verify with the official embassy or consulate before travelling.'+
     '</div></div>';
 
     var section = document.getElementById('visa-requirement-section');
@@ -5119,7 +5633,7 @@ function submitContact(){
   closeModal('contact-modal');
   ['contact-name','contact-email','contact-message'].forEach(function(i){document.getElementById(i).value='';});
   document.getElementById('contact-subject').value='';
-  showToast('Opening your email client… ✓');
+  showToast('Opening your email client…');
 }
 
 // ============================================================
@@ -5160,7 +5674,7 @@ function exportCSV(){
   a.href = url; a.download = 'visaflow-travel-history.csv'; a.click();
   URL.revokeObjectURL(url);
   closeModal('export-modal');
-  showToast('CSV Exported ✓');
+  showToast('CSV Exported');
 }
 
 function exportPDF(){
@@ -5237,13 +5751,98 @@ function exportPDF(){
   
   doc.save("VisaFlow_Travel_Report_" + new Date().toISOString().slice(0,10) + ".pdf");
   closeModal('export-modal');
-  showToast('Official PDF Report Exported! ✓');
+  showToast('Official PDF Report Exported!');
 }
 
 // ============================================================
 // MODAL HELPERS
 // ============================================================
-function openModal(id){ document.getElementById(id).classList.add('open'); }
+let pendingProfilePhoto = null;
+
+function openEditProfileModal() {
+  pendingProfilePhoto = state.user.photo || null;
+  var nameEl = document.getElementById('edit-name');
+  var initialsEl = document.getElementById('edit-initials');
+  if (nameEl) nameEl.value = state.user.name || '';
+  if (initialsEl) initialsEl.value = state.user.initials || '';
+  
+  updateAvatarPreviewInModal();
+  document.getElementById('name-modal').classList.add('open');
+}
+
+function updateAvatarPreviewInModal() {
+  var previewEl = document.getElementById('edit-avatar-preview');
+  if (!previewEl) return;
+  if (pendingProfilePhoto) {
+    previewEl.innerHTML = '<img src="' + pendingProfilePhoto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  } else {
+    var inits = (document.getElementById('edit-initials')?.value || state.user.initials || '?').toUpperCase();
+    previewEl.innerHTML = '<span style="font-size:20px;font-weight:800;color:var(--green)">' + inits + '</span>';
+  }
+}
+
+function handleProfilePhotoUpload(input) {
+  if (input.files && input.files[0]) {
+    var file = input.files[0];
+    if (file.size > 3 * 1024 * 1024) {
+      showToast('Image too large. Please select an image under 3MB.');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      pendingProfilePhoto = e.target.result;
+      updateAvatarPreviewInModal();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removeProfilePhoto() {
+  pendingProfilePhoto = '';
+  updateAvatarPreviewInModal();
+}
+
+function saveProfile() {
+  var nameEl = document.getElementById('edit-name');
+  var initialsEl = document.getElementById('edit-initials');
+  if (!nameEl) return;
+  
+  var nameVal = nameEl.value.trim();
+  if (!nameVal) {
+    showToast('Please enter your full name');
+    return;
+  }
+  
+  var initialsVal = initialsEl ? initialsEl.value.trim().toUpperCase() : '';
+  if (!initialsVal && nameVal) {
+    var parts = nameVal.split(/\s+/);
+    if (parts.length >= 2) {
+      initialsVal = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    } else {
+      initialsVal = nameVal.slice(0, 2).toUpperCase();
+    }
+  }
+  
+  state.user.name = nameVal;
+  state.user.initials = initialsVal || 'YN';
+  if (pendingProfilePhoto !== null) {
+    state.user.photo = pendingProfilePhoto;
+  }
+  
+  save();
+  closeModal('name-modal');
+  renderAll();
+  showToast('Profile updated');
+}
+
+function openModal(id){
+  if (id === 'name-modal') {
+    openEditProfileModal();
+    return;
+  }
+  var el = document.getElementById(id);
+  if (el) el.classList.add('open');
+}
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(function(m){
   m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});
@@ -5429,13 +6028,13 @@ async function submitAuth() {
     try {
       if (currentAuthTab === 'register') {
         const { user, userData } = await window.firebaseRegisterUser(email, password, name, state);
-        showToast('Account successfully created! ✓');
+        showToast('Account successfully created!');
         state.currentUserEmail = user.email;
         state.user.name = userData.name || state.user.name;
         state.user.isPremium = userData.isPremium || false;
       } else {
         const { user, userData } = await window.firebaseLoginUser(email, password);
-        showToast('Welcome back! ✓');
+        showToast('Welcome back!');
         state.currentUserEmail = user.email;
         if (userData && userData.appState) {
           state = userData.appState;
@@ -5500,7 +6099,7 @@ async function submitAuth() {
           state: JSON.parse(JSON.stringify(state))
         };
         saveMockUsers(users);
-        showToast('Account registered (Static Demo Mode)! ✓');
+        showToast('Account registered (Static Demo Mode)!');
         
         state.currentUserEmail = key;
         state.user.name = users[key].name;
@@ -5517,7 +6116,7 @@ async function submitAuth() {
           submitBtn.textContent = 'Sign In';
           return;
         }
-        showToast('Welcome back! ✓');
+        showToast('Welcome back!');
         state.currentUserEmail = key;
         state.user.name = user.name || state.user.name;
         state.user.isPremium = user.isPremium;
@@ -5548,7 +6147,7 @@ async function submitAuth() {
   })
   .then(safeParseJSON)
   .then(function(data) {
-    showToast(currentAuthTab === 'login' ? 'Welcome back! ✓' : 'Account registered! ✓');
+    showToast(currentAuthTab === 'login' ? 'Welcome back!' : 'Account registered!');
     
     state.currentUserEmail = data.user.email;
     state.user.name = data.user.name || state.user.name;
@@ -5618,7 +6217,7 @@ function triggerSync() {
   if (window.firebaseServices && window.firebaseSyncState) {
     window.firebaseSyncState(state)
       .then(function() {
-        showToast('Cloud backup complete! ✓');
+        showToast('Cloud backup complete!');
       })
       .catch(function(err) {
         console.error('Firebase sync error:', err);
@@ -5635,7 +6234,7 @@ function triggerSync() {
       if (users[key]) {
         users[key].state = JSON.parse(JSON.stringify(state));
         saveMockUsers(users);
-        showToast('Cloud backup complete! ✓');
+        showToast('Cloud backup complete!');
       } else {
         showToast('Account not found in local demo environment.');
       }
@@ -5653,7 +6252,7 @@ function triggerSync() {
     return res.json();
   })
   .then(function(data) {
-    showToast('Cloud backup complete! ✓');
+    showToast('Cloud backup complete!');
     if (data.isPremium && !state.user.isPremium) {
       state.user.isPremium = true;
       renderAll();
@@ -5902,13 +6501,13 @@ function checkAndGenerateSystemNotifications() {
 }
 
 function getNotificationIcon(n) {
-  if (!n) return getLineIcon('bell', 18, 'var(--muted)');
+  if (!n) return getLineIcon('bell', 18, 'var(--green)');
   if (n.icon && n.icon.includes('<svg')) return n.icon;
-  if (n.type === 'alert' || n.icon === '⚠️' || n.icon === 'alert') return getLineIcon('alert', 18, '#D97706');
+  if (n.type === 'alert' || n.icon === '⚠️' || n.icon === 'alert') return getLineIcon('alert', 18, 'var(--green)');
   if (n.type === 'campaign' || n.icon === '🎁' || n.icon === 'gift') return getLineIcon('gift', 18, 'var(--green)');
-  if (n.type === 'announcement' || n.icon === '📢' || n.icon === '📣' || n.icon === 'mega') return getLineIcon('mega', 18, 'var(--blue)');
-  if (n.icon === '🛂' || n.icon === 'passport') return getLineIcon('passport', 18, 'var(--blue)');
-  return getLineIcon('bell', 18, 'var(--muted)');
+  if (n.type === 'announcement' || n.icon === '📢' || n.icon === '📣' || n.icon === 'mega') return getLineIcon('mega', 18, 'var(--green)');
+  if (n.icon === '🛂' || n.icon === 'passport') return getLineIcon('passport', 18, 'var(--green)');
+  return getLineIcon('bell', 18, 'var(--green)');
 }
 
 function renderInbox() {
@@ -5978,7 +6577,7 @@ function markAllNotificationsAsRead() {
   save();
   renderInbox();
   renderNotificationsBadge();
-  showToast('All notifications marked as read ✓');
+  showToast('All notifications marked as read');
 }
 
 function deleteNotification(id) {
@@ -6044,7 +6643,7 @@ async function sendAdminBroadcast() {
     date: new Date().toISOString().split('T')[0],
     timestamp: Date.now(),
     actionTarget: actionTarget || null,
-    actionText: actionText || (actionTarget === 'paywall' ? 'View 🎁' : null),
+    actionText: actionText || (actionTarget === 'paywall' ? 'View' : null),
     createdBy: state.currentUserEmail || 'Admin'
   };
 
@@ -6319,7 +6918,7 @@ function renderAdminUsers(users) {
           '</button>'
         )+
         '<button style="background:rgba(239, 68, 68, 0.15); color:var(--red); border:1px solid rgba(239, 68, 68, 0.3); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px" onclick="deleteAdminUser(\''+email+'\', \''+u.id+'\', \''+u.col+'\')">'+
-          '🗑️ Delete'+
+          'Delete'+
         '</button>'+
       '</div>'+
     '</div>';
@@ -6344,7 +6943,7 @@ async function deleteAdminUser(email, docId, collectionName) {
   const currentEmail = (state.currentUserEmail || (window.currentCloudAccount ? window.currentCloudAccount.email : '') || '').toLowerCase().trim();
 
   if (cleanEmail === currentEmail) {
-    showToast('⚠️ You cannot delete your own active admin account from the admin panel!');
+    showToast('You cannot delete your own active admin account from the admin panel!');
     return;
   }
 
@@ -6489,7 +7088,7 @@ function renderAdminPromos(promos) {
       '</div>'+
       (!p.isDefault ?
         '<button style="background:var(--red-l); color:var(--red); border:none; padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer" onclick="deleteAdminPromoCode(\''+p.id+'\')">'+
-          '🗑️ Delete'+
+          'Delete'+
         '</button>'
       :
         '<span style="font-size:10px; color:var(--muted); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px">System Default</span>'
@@ -6770,7 +7369,7 @@ function renderFootprintCard() {
 
   var flagsHtml = '';
   if (hasNoTravels) {
-    flagsHtml = '<span style="font-size:10px;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:12px;display:inline-block;font-weight:600">✈️ Log your first trip to build your footprint!</span>';
+    flagsHtml = '<span style="font-size:10px;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:12px;display:inline-block;font-weight:600"> Log your first trip to build your footprint!</span>';
   } else {
     var maxFlags = 15;
     var visibleCountries = stats.uniqueCountries.slice(0, maxFlags);
@@ -6779,7 +7378,7 @@ function renderFootprintCard() {
       if (cs.code) {
         return '<img src="https://flagcdn.com/w80/' + cs.code + '.png" alt="' + c + '" title="' + c + '" style="width:24px; height:16px; border-radius:3px; object-fit:cover; border:none; box-shadow:0 1px 3px rgba(0,0,0,0.2); flex-shrink:0" crossOrigin="anonymous">';
       } else {
-        return '<span style="font-size:13px">🌍</span>';
+        return '';
       }
     }).join('');
 
@@ -6868,7 +7467,7 @@ function renderFootprintCard() {
                   '<div style="font-size:8px; color:rgba(255,255,255,0.9); font-weight:600">Travel Footprint</div>' +
                 '</div>' +
               '</div>' +
-              '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); padding:3px 10px; border-radius:14px; font-size:9.5px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">VisaFlow ✈️</div>' +
+              '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); padding:3px 10px; border-radius:14px; font-size:9.5px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">VisaFlow </div>' +
             '</div>' +
           '</div>' +
 
@@ -6886,20 +7485,20 @@ function downloadFootprintImage() {
   var card = document.getElementById('footprint-card-render');
   if (!card) return;
   if (typeof html2canvas !== 'undefined') {
-    showToast("Generating story image... 📸");
+    showToast("Generating story image...");
     html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
       var link = document.createElement('a');
       var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
       link.download = name.replace(/\s+/g, '_') + '_Story_' + fpSelectedPeriod + '.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-      showToast("Story image downloaded! 🚀");
+      showToast("Story image downloaded!");
     }).catch(function(e) {
       console.error(e);
-      showToast("Could not render image. Take a screenshot to share! 📸");
+      showToast("Could not render image. Take a screenshot to share!");
     });
   } else {
-    showToast("Take a screenshot to share your story! 📸");
+    showToast("Take a screenshot to share your story!");
   }
 }
 
@@ -6912,7 +7511,7 @@ function shareFootprintNative() {
   var periodTitle = fpSelectedPeriod === 'all' ? 'Travel Footprint' : fpSelectedPeriod + ' Travel Story';
   var fileName = name.replace(/\s+/g, '_') + '_Story_' + fpSelectedPeriod + '.png';
 
-  showToast("Preparing story image for share... 📲");
+  showToast("Preparing story image for share...");
 
   if (typeof html2canvas !== 'undefined') {
     html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
@@ -6928,7 +7527,7 @@ function shareFootprintNative() {
           navigator.share({
             files: [file],
             title: name + "'s " + periodTitle,
-            text: "Check out my Travel Story on VisaFlow ✈️"
+            text: "Check out my Travel Story on VisaFlow"
           }).catch(function(err) {
             console.log("Share dismissed", err);
           });
@@ -6936,7 +7535,7 @@ function shareFootprintNative() {
           // Standard text/link share fallback + auto-download image for desktop
           navigator.share({
             title: name + "'s " + periodTitle,
-            text: "🌍 Check out my Travel Story on VisaFlow ✈️",
+            text: " Check out my Travel Story on VisaFlow",
             url: "https://visaflow.app"
           }).catch(function() {});
           downloadFootprintImage();
@@ -6973,7 +7572,7 @@ function completeUpgrade() {
           saveMockUsers(users);
         }
       }
-      showToast('7-Day Free Trial activated! Full Premium features unlocked 💎');
+      showToast('7-Day Free Trial activated! Full Premium features unlocked');
       state.user.isPremium = true;
       save();
       renderAll();
@@ -6981,7 +7580,7 @@ function completeUpgrade() {
       closeModal('googleplay-modal');
       btn.disabled = false;
       btn.style.background = '#00875F';
-      btn.textContent = 'Start 7-Day Free Trial 🎁';
+      btn.textContent = 'Start 7-Day Free Trial';
     }, 1200);
     return;
   }
@@ -6996,7 +7595,7 @@ function completeUpgrade() {
     return res.json();
   })
   .then(function() {
-    showToast('7-Day Free Trial activated! Full Premium features unlocked 💎');
+    showToast('7-Day Free Trial activated! Full Premium features unlocked');
     state.user.isPremium = true;
     save();
     renderAll();
@@ -7206,7 +7805,7 @@ async function submitObAuth() {
     try {
       if (obAuthTab === 'register') {
         const { user, userData } = await window.firebaseRegisterUser(email, password, 'Explorer', state);
-        showToast('Account registered with Firebase! ☁️');
+        showToast('Account registered with Firebase!');
         state.currentUserEmail = user.email;
         state.user.name = userData.name || state.user.name || 'Explorer';
         state.user.isPremium = userData.isPremium || false;
@@ -7219,7 +7818,7 @@ async function submitObAuth() {
         return;
       } else {
         const { user, userData } = await window.firebaseLoginUser(email, password);
-        showToast('Welcome back! 👋');
+        showToast('Welcome back!');
         state.currentUserEmail = user.email;
         if (userData && userData.appState) {
           state = userData.appState;
@@ -7285,7 +7884,7 @@ async function submitObAuth() {
           state: JSON.parse(JSON.stringify(state))
         };
         saveMockUsers(users);
-        showToast('Account registered! ☁️ Please complete your profile.');
+        showToast('Account registered! Please complete your profile.');
 
         state.currentUserEmail = key;
         state.user.name = users[key].name;
@@ -7306,7 +7905,7 @@ async function submitObAuth() {
           submitBtn.textContent = 'Sign In';
           return;
         }
-        showToast('Welcome back! 👋');
+        showToast('Welcome back!');
         state.currentUserEmail = key;
         state.user.name = user.name || state.user.name;
         state.user.isPremium = user.isPremium;
@@ -7345,7 +7944,7 @@ async function submitObAuth() {
     state.user.isPremium = data.user.isPremium;
 
     if (obAuthTab === 'login') {
-      showToast('Welcome back! 👋');
+      showToast('Welcome back!');
       if (data.state) {
         state = data.state;
         state.currentUserEmail = data.user.email;
@@ -7360,7 +7959,7 @@ async function submitObAuth() {
       renderAll();
       renderProfile();
     } else {
-      showToast('Account registered! ☁️ Please complete your profile.');
+      showToast('Account registered! Please complete your profile.');
       silentSync();
       save();
       const obNameInput = document.getElementById('ob-name');
@@ -7404,7 +8003,7 @@ async function submitGoogleAuth(source) {
       }
       
       if (source === 'ob' && !hasExistingOnboardedState) {
-        showToast('Account registered! ☁️ Please complete your profile.');
+        showToast('Account registered! Please complete your profile.');
         save();
         silentSync();
         const obNameInput = document.getElementById('ob-name');
@@ -7413,7 +8012,7 @@ async function submitGoogleAuth(source) {
         return;
       }
 
-      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
+      showToast('Welcome ' + (user.displayName || user.email) + '!');
       state.user.onboarded = true;
       save();
       silentSync();
@@ -7466,13 +8065,13 @@ async function submitAppleAuth(source) {
       if (!state.user) state.user = {};
       if (userData && userData.isPremium !== undefined) state.user.isPremium = !!userData.isPremium;
       if (source === 'ob' && !hasExistingOnboardedState) {
-        showToast('Account registered! ☁️ Please complete your profile.');
+        showToast('Account registered! Please complete your profile.');
         save(); silentSync();
         const obNameInput = document.getElementById('ob-name');
         if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name || '';
         obGoTo(5); return;
       }
-      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
+      showToast('Welcome ' + (user.displayName || user.email) + '!');
       state.user.onboarded = true;
       save(); silentSync();
       if (source === 'ob') {
@@ -7510,13 +8109,13 @@ async function submitFacebookAuth(source) {
       if (!state.user) state.user = {};
       if (userData && userData.isPremium !== undefined) state.user.isPremium = !!userData.isPremium;
       if (source === 'ob' && !hasExistingOnboardedState) {
-        showToast('Account registered! ☁️ Please complete your profile.');
+        showToast('Account registered! Please complete your profile.');
         save(); silentSync();
         const obNameInput = document.getElementById('ob-name');
         if (obNameInput && !obNameInput.value) obNameInput.value = state.user.name || '';
         obGoTo(5); return;
       }
-      showToast('Welcome ' + (user.displayName || user.email) + '! 👋');
+      showToast('Welcome ' + (user.displayName || user.email) + '!');
       state.user.onboarded = true;
       save(); silentSync();
       if (source === 'ob') {
@@ -7630,7 +8229,7 @@ function obSubmitForm(){
     ob.style.transition='opacity 0.5s ease'; ob.style.opacity='0';
     setTimeout(function(){ob.classList.add('hidden');},500);
   }
-  renderAll(); showToast('Welcome to VisaFlow! ✓');
+  renderAll(); showToast('Welcome to VisaFlow!');
 }
 function obFilterCitizenship(val){
   const dd=document.getElementById('ob-citizenship-dropdown');
@@ -7718,7 +8317,7 @@ if('serviceWorker' in navigator){
       if (newWorker) {
         newWorker.addEventListener('statechange', function() {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            showToast('A new update was installed! Reloading page... 🔄');
+            showToast('A new update was installed! Reloading page...');
             setTimeout(function() {
               window.location.reload();
             }, 1200);
