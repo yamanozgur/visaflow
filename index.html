@@ -241,12 +241,15 @@
           return {
             id: String(v.id || ''),
             country: String(v.country || ''),
+            issuedBy: v.issuedBy ? String(v.issuedBy) : null,
             type: String(v.type || ''),
             startDate: String(v.startDate || ''),
             endDate: String(v.endDate || ''),
             notes: String(v.notes || ''),
-            durationDays: v.durationDays != null ? Number(v.durationDays) : null,
-            maxStayDays: v.maxStayDays != null ? Number(v.maxStayDays) : null,
+            stayDays: v.stayDays != null ? Number(v.stayDays) : (v.maxStayDays != null ? Number(v.maxStayDays) : 30),
+            entryDate: v.entryDate ? String(v.entryDate) : null,
+            daysUsed: v.daysUsed != null ? Number(v.daysUsed) : 0,
+            reminderDate: v.reminderDate ? String(v.reminderDate) : null,
             passportId: v.passportId ? String(v.passportId) : null
           };
         }) : [],
@@ -1540,10 +1543,10 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-sub">Generate official travel reports for Schengen visa applications, embassy compliance, or tax records.</div>
     <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0 10px;">
       <button onclick="exportPDF()" style="padding:14px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 12px rgba(0,168,132,0.25)">
-        📄 Export Official PDF Report
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg> Export Official PDF Report
       </button>
       <button onclick="exportCSV()" style="padding:14px;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-        📊 Export CSV Spreadsheet
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2a1 1 0 0 1 0 2H8"/><path d="M14 13h2"/><path d="M14 17h2"/></svg> Export CSV Spreadsheet
       </button>
     </div>
     <button class="secondary-btn" onclick="closeModal('export-modal')">Cancel</button>
@@ -1589,8 +1592,9 @@ input:checked+.slider::before{transform:translateX(20px);}
     
     <label class="form-label" style="margin-top:14px">Passport Expiry Date</label>
     <input class="form-input" id="edit-pp-expiry" type="date">
-    <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5; background:var(--bg2); padding:10px; border-radius:8px; border:1px solid var(--border)">
-      ⚠️ <strong>6-Month Rule Warning:</strong> Most countries require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when validity falls below 6 months.
+    <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5; background:var(--bg2); padding:10px; border-radius:8px; border:1px solid var(--border); display:flex; align-items:flex-start; gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber, #D97706)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div><strong>6-Month Rule Warning:</strong> Most countries require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when validity falls below 6 months.</div>
     </div>
 
     <button class="submit-btn" onclick="savePassportExpiry()" style="margin-top:20px">Save Changes</button>
@@ -1602,7 +1606,9 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="modal">
     <div class="modal-handle"></div>
     <div style="text-align:center; margin-bottom:16px">
-      <div style="font-size:36px; margin-bottom:8px">📅</div>
+      <div style="width:48px; height:48px; border-radius:12px; background:var(--green-l); color:var(--green); display:flex; align-items:center; justify-content:center; margin:0 auto 10px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
       <div class="modal-title" id="cal-modal-title">Add to Calendar</div>
       <div class="modal-sub">Sync visa and passport reminders with your device calendar</div>
     </div>
@@ -1615,10 +1621,10 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
 
     <button class="submit-btn" id="cal-btn-google" style="background:#4285F4; color:#ffffff; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px">
-      <span>🗓️</span> Add to Google Calendar
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Add to Google Calendar
     </button>
     <button class="submit-btn" id="cal-btn-ics" style="background:var(--green); color:#ffffff; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:8px">
-      <span>📥</span> Download .ics File (Apple / Outlook / Phone)
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .ics File (Apple / Outlook / Phone)
     </button>
     <button class="secondary-btn" onclick="closeModal('calendar-export-modal')">Cancel</button>
   </div>
@@ -1663,7 +1669,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="location-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">📍 Change Location</div>
+    <div class="modal-title" style="display:flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> Change Location</div>
     <div class="modal-sub">Update your current country and arrival date</div>
     <label class="form-label">Country</label>
     <input class="form-input" id="loc-country" placeholder="e.g. Thailand, Japan…" oninput="filterLocCountries(this.value)">
@@ -1671,7 +1677,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <label class="form-label">Arrival Date</label>
     <input class="form-input" id="loc-entry" type="date">
     <button class="submit-btn" style="margin-top:24px" onclick="saveManualLocation()">Update Location</button>
-    <button class="secondary-btn" style="background:var(--blue-l);color:var(--blue);border:1.5px solid var(--blue-b);margin-top:8px" onclick="detectGPSInModal()">📡 Detect via GPS</button>
+    <button class="secondary-btn" style="background:var(--blue-l);color:var(--blue);border:1.5px solid var(--blue-b);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="detectGPSInModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg> Detect via GPS</button>
     <button class="secondary-btn" onclick="closeModal('location-modal')">Cancel</button>
   </div>
 </div>
@@ -1741,12 +1747,12 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Product Ecosystem</div>
       <div style="display:flex;gap:10px">
         <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">✈️</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div>
           <div style="font-size:12px;font-weight:800;color:var(--text)">VisaFlow</div>
           <div style="font-size:10px;color:var(--muted)">Visa &amp; Stay Tracker</div>
         </div>
         <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">✨</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg></div>
           <div style="font-size:12px;font-weight:800;color:var(--text)">VibeSpot</div>
           <div style="font-size:10px;color:var(--muted)">Travel Discovery</div>
         </div>
@@ -1796,27 +1802,27 @@ input:checked+.slider::before{transform:translateX(20px);}
     
     <div style="max-height:380px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
       <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px">❓ How does the 90/180 Schengen Rule calculator work?</div>
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> How does the 90/180 Schengen Rule calculator work?</div>
         <div style="color:var(--muted);font-size:12px">VisaFlow uses standard European Union rolling 180-day window algorithm. It automatically scans your past entry/exit dates to calculate your exact remaining days and tells you when your allowance resets.</div>
       </div>
 
       <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px">🛂 What is the 6-Month Passport Validity warning?</div>
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8 11h8"/><circle cx="12" cy="16" r="1.5"/></svg> What is the 6-Month Passport Validity warning?</div>
         <div style="color:var(--muted);font-size:12px">Most international destinations (Schengen Area, USA, UK, Asia) require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when your passport expires in under 6 months.</div>
       </div>
 
       <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px">🔒 Is my data safe &amp; private?</div>
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Is my data safe &amp; private?</div>
         <div style="color:var(--muted);font-size:12px">Yes! VisaFlow is Local-First. All your travel logs, passports, and visas are saved locally on your device by default. If you choose Cloud Sync, data is encrypted via SSL.</div>
       </div>
 
       <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px">🏛️ Does VisaFlow issue official visas or legal advice?</div>
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/></svg> Does VisaFlow issue official visas or legal advice?</div>
         <div style="color:var(--muted);font-size:12px">No. VisaFlow is a personal tracker and calculator assistant. Official visa applications and legal requirements must be verified with embassies or consulates.</div>
       </div>
 
       <div style="margin-bottom:14px;background:var(--bg2);padding:12px;border-radius:10px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px">💎 How do I manage or cancel my Premium subscription?</div>
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> How do I manage or cancel my Premium subscription?</div>
         <div style="color:var(--muted);font-size:12px">Subscriptions are managed directly by Google Play Store. You can cancel anytime with 1-tap under Google Play &gt; Subscriptions.</div>
       </div>
     </div>
@@ -1829,7 +1835,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="credits-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">📷 Photography Credits</div>
+    <div class="modal-title" style="display:flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> Photography Credits</div>
     <div class="modal-sub">Attribution &amp; photo licensing information</div>
     <div style="margin-top:16px;text-align:left;line-height:1.7;font-size:13px;color:var(--text2);background:var(--bg2);padding:14px;border-radius:12px;border:1px solid var(--border)">
       Country imagery and visual assets used in VisaFlow are sourced from <strong style="color:var(--text)">Adobe Stock</strong>, <strong style="color:var(--text)">Unsplash</strong>, <strong style="color:var(--text)">Pexels</strong>, <strong style="color:var(--text)">Pixabay</strong>, and licensed stock providers. All photographs are used in accordance with their respective free and commercial licenses.<br><br>
@@ -1843,7 +1849,7 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div class="modal-overlay" id="paywall-modal">
   <div class="modal" style="text-align:center">
     <div class="modal-handle"></div>
-    <div class="paywall-badge" style="background:var(--green-l);color:var(--green);border:1px solid var(--green-b);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:10px">🎁 7-Day Free Trial Included</div>
+    <div class="paywall-badge" style="background:var(--green-l);color:var(--green);border:1px solid var(--green-b);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:10px">7-Day Free Trial Included</div>
     <div class="modal-title" id="pw-title">Unlock Full VisaFlow</div>
     <div class="modal-sub" id="pw-subtitle">Try all Premium features free for 7 days. Cancel anytime before trial ends.</div>
     <div class="paywall-features">
@@ -1869,19 +1875,19 @@ input:checked+.slider::before{transform:translateX(20px);}
         </div>
       </div>
       <div style="font-size:11.5px;font-weight:700;color:var(--green);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px">
-        <span>✨ 7 Days $0.00 · Cancel anytime in 1-click</span>
+        <span>7 Days $0.00 · Cancel anytime in 1-click</span>
       </div>
     </div>
     
     <div style="margin:14px 0 10px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Have a Promo / Gift Code? 🎁</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Have a Promo / Gift Code?</div>
       <div style="display:flex;gap:8px">
         <input id="pw-promo-code" class="form-input" style="padding:8px 12px;font-size:13px;text-transform:uppercase;letter-spacing:1px" placeholder="e.g. GIFT1MONTH">
         <button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,168,132,0.25)" onclick="redeemPromoCode()">Redeem</button>
       </div>
     </div>
 
-    <button class="submit-btn" style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);margin-top:10px;font-size:15px;padding:14px" onclick="triggerPaywallUpgrade()">Start 7-Day Free Trial 🎁</button>
+    <button class="submit-btn" style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);margin-top:10px;font-size:15px;padding:14px" onclick="triggerPaywallUpgrade()">Start 7-Day Free Trial</button>
     <button class="secondary-btn" onclick="closeModal('paywall-modal')">Close</button>
   </div>
 </div>
@@ -2688,6 +2694,7 @@ function loadCountryBackground(bgId, code) {
   const tryLoad = (index) => {
     if (index >= urls.length) return;
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       const bg = document.getElementById(bgId);
       if (bg) {
@@ -2832,7 +2839,7 @@ function toggleSimulatePremium() {
       renderProfile();
     }, 80);
   }
-  showToast(state.user.isPremium ? 'Premium Mode Activated (Simulation) 💎' : 'Free Mode Activated (Simulation) 🆓');
+  showToast(state.user.isPremium ? 'Premium Mode Activated (Simulation)' : 'Free Mode Activated (Simulation)');
 }
 
 function toggleProfilePremium(checked) {
@@ -2843,7 +2850,7 @@ function toggleProfilePremium(checked) {
   setTimeout(function() {
     renderProfile();
   }, 80);
-  showToast(state.user.isPremium ? 'Premium Mode Activated (Simulation) 💎' : 'Free Mode Activated (Simulation) 🆓');
+  showToast(state.user.isPremium ? 'Premium Mode Activated (Simulation)' : 'Free Mode Activated (Simulation)');
 }
 function updateClock(){ const clk = document.getElementById('clock'); if(clk) clk.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
 
@@ -4009,7 +4016,7 @@ function saveManualTravel() {
   save();
   renderAll();
   closeModal('add-travel-modal');
-  showToast('Past trip logged successfully! ✈️');
+  showToast('Past trip logged successfully! ✓');
 }
 
 function getFilteredTravels(){
@@ -4029,7 +4036,7 @@ function renderHistory(){
   const el=document.getElementById('history-container');
   const summaryEl=document.getElementById('history-summary');
   if(!state.travels.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">✈️</div><div class="empty-text" style="margin-bottom:18px">No travel history yet.<br>Log past trips or add visas to start tracking.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onclick="openAddTravelModal()" style="padding:12px 20px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">+ Log Past Trip</button><button onclick="showPage(\'add\')" style="padding:12px 20px;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:20px;font-size:14px;font-weight:700;cursor:pointer">+ Add a Visa</button></div></div>';
+    el.innerHTML='<div class="empty"><div class="empty-icon" style="display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div><div class="empty-text" style="margin-bottom:18px">No travel history yet.<br>Log past trips or add visas to start tracking.</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button onclick="openAddTravelModal()" style="padding:12px 20px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,168,132,0.3)">+ Log Past Trip</button><button onclick="showPage(\'add\')" style="padding:12px 20px;background:var(--bg2);color:var(--text);border:1.5px solid var(--border);border-radius:20px;font-size:14px;font-weight:700;cursor:pointer">+ Add a Visa</button></div></div>';
     if(summaryEl) summaryEl.innerHTML='';
     return;
   }
@@ -4043,7 +4050,7 @@ function renderHistory(){
   } else if(summaryEl){ summaryEl.innerHTML=''; }
 
   if(!filtered.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">No results for this filter.<br><span style="cursor:pointer;color:var(--green);font-weight:700" onclick="clearHistoryFilters()">Clear filters</span></div></div>';
+    el.innerHTML='<div class="empty"><div class="empty-icon" style="display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div class="empty-text">No results for this filter.<br><span style="cursor:pointer;color:var(--green);font-weight:700" onclick="clearHistoryFilters()">Clear filters</span></div></div>';
     return;
   }
 
@@ -4060,7 +4067,7 @@ function renderHistory(){
           '<div class="tl-info"><div class="tl-country">'+t.country+'</div><div class="tl-dates">'+fmtDate(t.start)+' — '+endLabel+'</div></div>'+
           '<div style="display:flex;align-items:center;gap:8px">'+
             '<div style="font-size:13px;font-weight:700;color:'+cs.accent+'">'+days+'d</div>'+
-            '<button onclick="event.stopPropagation();deleteTravel('+t.origIndex+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px" title="Delete travel">🗑️</button>'+
+            '<button onclick="event.stopPropagation();deleteTravel('+t.origIndex+')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;display:flex;align-items:center" title="Delete travel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>'+
           '</div>'+
         '</div>'+
       '</div>';
@@ -4076,7 +4083,7 @@ function renderHistory(){
         '<div class="history-info"><div class="history-country">'+t.country+'</div><div class="history-dates">'+fmtDate(t.start)+' — '+(t.end?fmtDate(t.end):'Ongoing')+'</div></div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
           '<div class="history-days">'+days+'d</div>'+
-          '<button onclick="event.stopPropagation();deleteTravel('+t.origIndex+')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 4px" title="Delete travel">🗑️</button>'+
+          '<button onclick="event.stopPropagation();deleteTravel('+t.origIndex+')" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;display:flex;align-items:center" title="Delete travel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>'+
         '</div>'+
       '</div>';
     });
@@ -4332,7 +4339,7 @@ function openGoogleCalendar(title, dateStr, details) {
             '&dates=' + dates +
             '&details=' + encodeURIComponent(details + '\n\nManaged with VisaFlow: https://visaflow.app');
   window.open(url, '_blank');
-  showToast('Opening Google Calendar 📅');
+  showToast('Opening Google Calendar…');
 }
 
 function downloadIcsCalendar(title, dateStr, details) {
@@ -4362,7 +4369,7 @@ function downloadIcsCalendar(title, dateStr, details) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  showToast('Downloaded .ics calendar file 📅');
+  showToast('Downloaded .ics calendar file ✓');
 }
 
 function exportVisaCalendar(visaId) {
@@ -4505,7 +4512,7 @@ function renderProfile(){
       '<div>'+
         '<div class="profile-name">'+(state.user.name||'Your Name')+'</div>'+
         '<div class="profile-sub">'+(state.passports.length?state.passports.map(function(p){return p.country;}).join(' · '):'No citizenship added')+'</div>'+
-        '<div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:6px">Tap to edit ✏️</div>'+
+        '<div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:6px">Tap to edit</div>'+
       '</div>'+
     '</div>'+
 
@@ -4522,7 +4529,7 @@ function renderProfile(){
     '<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div style="display:flex;align-items:center;gap:10px">'+
-          '<span style="font-size:20px">☁️</span>'+
+          '<span style="display:flex;align-items:center;justify-content:center;color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19 20 16.5 17.5 14"/><path d="M20 16.5H9"/><path d="M6.5 5 4 7.5 6.5 10"/><path d="M4 7.5h11"/></svg></span>'+
           '<div style="text-align:left">'+
             '<div style="font-size:13px;font-weight:700;color:var(--text)">Cloud Synced ✓</div>'+
             '<div style="font-size:11px;color:var(--muted);margin-top:2px">Backup account: ' + state.currentUserEmail + '</div>'+
@@ -4538,7 +4545,7 @@ function renderProfile(){
     :
     '<div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">'+
       '<div style="display:flex;align-items:center;gap:10px">'+
-        '<span style="font-size:20px">☁️</span>'+
+        '<span style="display:flex;align-items:center;justify-content:center;color:var(--blue)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19 20 16.5 17.5 14"/><path d="M20 16.5H9"/><path d="M6.5 5 4 7.5 6.5 10"/><path d="M4 7.5h11"/></svg></span>'+
         '<div style="text-align:left">'+
           '<div style="font-size:13px;font-weight:700;color:var(--text)">Cloud Backup &amp; Sync</div>'+
           '<div style="font-size:11px;color:var(--muted);margin-top:2px">Save your visas &amp; travel history to the cloud.</div>'+
@@ -4558,7 +4565,7 @@ function renderProfile(){
           if (dLeft <= 0) {
             statusBadge = '<span style="font-size:10px; font-weight:800; background:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:10px; border:1px solid #FCA5A5">EXPIRED</span>';
           } else if (dLeft <= 183) {
-            statusBadge = '<span style="font-size:10px; font-weight:800; background:#FFEDD5; color:#C2410C; padding:2px 6px; border-radius:10px; border:1px solid #FDBA74">⚠️ <6 MO</span>';
+            statusBadge = '<span style="font-size:10px; font-weight:800; background:#FFEDD5; color:#C2410C; padding:2px 6px; border-radius:10px; border:1px solid #FDBA74">&lt; 6 MO</span>';
           } else {
             statusBadge = '<span style="font-size:10px; font-weight:700; background:#D1FAE5; color:#047857; padding:2px 6px; border-radius:10px; border:1px solid #6EE7B7">VALID</span>';
           }
@@ -4568,18 +4575,18 @@ function renderProfile(){
             flagImg(pp.country,cs,'sm')+
             '<div>'+
               '<div class="settings-label" style="display:flex;align-items:center;gap:6px">'+pp.country+' Passport '+statusBadge+'</div>'+
-              '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(pp.expiryDate ? ('Expires: ' + fmtDate(pp.expiryDate)) : 'Tap to set expiry date ✏️')+'</div>'+
+              '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+(pp.expiryDate ? ('Expires: ' + fmtDate(pp.expiryDate)) : 'Tap to set expiry date')+'</div>'+
             '</div>'+
           '</div>'+
           '<div style="display:flex;align-items:center;gap:6px">'+
             (pp.expiryDate ?
-            '<button onclick="event.stopPropagation();exportPassportCalendar(\''+pp.id+'\')" style="background:var(--blue-l);color:#1E5EA8;border:1px solid var(--blue-b);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer" title="Add to Calendar">📅</button>' : '')+
-            '<button onclick="event.stopPropagation();deletePassport(\''+pp.id+'\')" style="background:var(--red-l);color:var(--red);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer" title="Delete Passport">🗑️</button>'+
+            '<button onclick="event.stopPropagation();exportPassportCalendar(\''+pp.id+'\')" style="background:var(--blue-l);color:#1E5EA8;border:1px solid var(--blue-b);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center" title="Add to Calendar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>' : '')+
+            '<button onclick="event.stopPropagation();deletePassport(\''+pp.id+'\')" style="background:var(--red-l);color:var(--red);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center" title="Delete Passport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>'+
           '</div>'+
         '</div>';
       }).join('')+
       '<div class="settings-item" onclick="triggerPassportAdd()">'+
-        '<div class="settings-icon" style="background:var(--green-l);font-size:20px;color:var(--green)">+</div>'+
+        '<div class="settings-icon" style="background:var(--green-l);color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>'+
         '<div class="settings-label" style="color:var(--green)">Add Passport</div>'+
       '</div>'+
     '</div>'+
@@ -4587,12 +4594,12 @@ function renderProfile(){
     '<div class="section-title">Notifications</div>'+
     '<div class="settings-group">'+
       '<div class="settings-item">'+
-        '<div class="settings-icon" style="background:var(--green-l)">🔔</div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>'+
         '<div class="settings-label">Visa Expiry Alerts</div>'+
         '<label class="switch"><input type="checkbox" '+(state.user.notifVisa?'checked':'')+' onchange="state.user.notifVisa=this.checked;save()"><span class="slider"></span></label>'+
       '</div>'+
       '<div class="settings-item">'+
-        '<div class="settings-icon" style="background:var(--blue-l)">📋</div>'+
+        '<div class="settings-icon" style="background:var(--blue-l); color:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></div>'+
         '<div class="settings-label">Application Reminders</div>'+
         '<label class="switch"><input type="checkbox" '+(state.user.notifReminder?'checked':'')+' onchange="state.user.notifReminder=this.checked;save()"><span class="slider"></span></label>'+
       '</div>'+
@@ -4601,7 +4608,7 @@ function renderProfile(){
     '<div class="section-title">Admin &amp; Control</div>'+
     '<div class="settings-group">'+
       '<div class="settings-item" onclick="openAdminPanel()" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:' + (isOwnerAdmin ? '#E0F2FE' : '#FEF3C7') + '; color:' + (isOwnerAdmin ? '#0284C7' : '#D97706') + '">🛡️</div>'+
+        '<div class="settings-icon" style="background:' + (isOwnerAdmin ? '#E0F2FE' : '#FEF3C7') + '; color:' + (isOwnerAdmin ? '#0284C7' : '#D97706') + '"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'+
         '<div class="settings-label" style="font-weight:700; color:var(--text)">Admin &amp; Management Panel</div>'+
         '<div style="font-size:11px; font-weight:700; color:' + (isOwnerAdmin ? '#0284C7' : 'var(--muted)') + '">' + (isOwnerAdmin ? 'Verified Admin ✓' : 'Unlock ›') + '</div>'+
       '</div>'+
@@ -4612,7 +4619,7 @@ function renderProfile(){
         '<div class="ad-badge">Sponsored</div>'+
         '<div class="ad-title">Schengen Travel Coverage</div>'+
         '<div class="ad-content">'+
-          '<div class="ad-image">✈️</div>'+
+          '<div class="ad-image" style="display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div>'+
           '<div class="ad-text">'+
             '<div class="ad-headline">Consulate-approved Schengen insurance</div>'+
             '<div class="ad-subline">€30,000 coverage, delivered in minutes.</div>'+
@@ -4630,27 +4637,27 @@ function renderProfile(){
     '<div class="section-title">Support &amp; Legal</div>'+
     '<div class="settings-group">'+
       '<div class="settings-item" onclick="openModal(\'about-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)">🏢</div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/></svg></div>'+
         '<div class="settings-label" style="font-weight:700">About FlowSpot Studios</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'contact-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--orange-l); color:var(--orange)">✉️</div>'+
+        '<div class="settings-icon" style="background:var(--orange-l); color:var(--orange)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>'+
         '<div class="settings-label" style="font-weight:700">Contact Support</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'faq-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--blue-l)">❓</div>'+
+        '<div class="settings-icon" style="background:var(--blue-l); color:var(--blue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>'+
         '<div class="settings-label">Help &amp; FAQ</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'credits-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--purple-l)">📷</div>'+
+        '<div class="settings-icon" style="background:var(--purple-l); color:var(--purple)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>'+
         '<div class="settings-label">Photography Credits</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
       '<div class="settings-item" onclick="openModal(\'privacy-modal\')" style="cursor:pointer">'+
-        '<div class="settings-icon" style="background:var(--green-l)">🔒</div>'+
+        '<div class="settings-icon" style="background:var(--green-l); color:var(--green)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'+
         '<div class="settings-label">Privacy Policy &amp; Terms</div>'+
         '<div style="color:var(--muted);font-size:16px">›</div>'+
       '</div>'+
@@ -4658,7 +4665,7 @@ function renderProfile(){
 
     '<div style="margin-top:24px; margin-bottom:30px; text-align:center">'+
       '<div onclick="openModal(\'about-modal\')" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:100px; cursor:pointer">'+
-        '<span style="font-size:14px">✨</span>'+
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg>'+
         '<span style="font-size:12px; font-weight:700; color:var(--text2)">Crafted by <strong>FlowSpot Studios</strong> v2.6</span>'+
       '</div>'+
     '</div>';
@@ -5006,14 +5013,14 @@ function lookupVisa(passport, destination){
 function formatVisaRequirement(req){
   if(!req || req==='-1') return null;
   var n = parseInt(req);
-  if(!isNaN(n) && n>0) return { type:'visa-free', days:n, label:'Visa-Free · '+n+' days', color:'var(--green)', icon:'✅' };
-  if(req==='visa free') return { type:'visa-free', days:null, label:'Visa-Free', color:'var(--green)', icon:'✅' };
-  if(req==='visa on arrival') return { type:'voa', days:null, label:'Visa on Arrival', color:'var(--orange)', icon:'🪙' };
-  if(req==='e-visa') return { type:'evisa', days:null, label:'e-Visa Required', color:'var(--blue)', icon:'💻' };
-  if(req==='eta') return { type:'eta', days:null, label:'eTA Required', color:'var(--blue)', icon:'📱' };
-  if(req==='visa required') return { type:'required', days:null, label:'Visa Required', color:'var(--red)', icon:'🚫' };
-  if(req==='no admission') return { type:'blocked', days:null, label:'No Admission', color:'var(--red)', icon:'⛔' };
-  return { type:'unknown', days:null, label:req, color:'var(--muted)', icon:'❓' };
+  if(!isNaN(n) && n>0) return { type:'visa-free', days:n, label:'Visa-Free · '+n+' days', color:'var(--green)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' };
+  if(req==='visa free') return { type:'visa-free', days:null, label:'Visa-Free', color:'var(--green)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' };
+  if(req==='visa on arrival') return { type:'voa', days:null, label:'Visa on Arrival', color:'var(--orange)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' };
+  if(req==='e-visa') return { type:'evisa', days:null, label:'e-Visa Required', color:'var(--blue)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' };
+  if(req==='eta') return { type:'eta', days:null, label:'eTA Required', color:'var(--blue)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' };
+  if(req==='visa required') return { type:'required', days:null, label:'Visa Required', color:'var(--red)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' };
+  if(req==='no admission') return { type:'blocked', days:null, label:'No Admission', color:'var(--red)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' };
+  return { type:'unknown', days:null, label:req, color:'var(--muted)', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' };
 }
 
 function renderVisaRequirement(){
@@ -5028,10 +5035,10 @@ function renderVisaRequirement(){
   // Premium gate
   if(!state.user.isPremium){
     el.innerHTML=
-      '<div class="section-title">🛂 Entry Requirements</div>'+
+      '<div class="section-title" style="display:flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8 11h8"/><circle cx="12" cy="16" r="1.5"/></svg> Entry Requirements</div>'+
       '<div class="card" style="cursor:pointer;border-style:dashed" onclick="openPaywall(\'visa-check\')">'+
         '<div style="display:flex;align-items:center;gap:12px">'+
-          '<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F59E0B,#D97706);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔒</div>'+
+          '<div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F59E0B,#D97706);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'+
           '<div>'+
             '<div style="font-size:13px;font-weight:700;color:var(--text)">Visa Check — Premium</div>'+
             '<div style="font-size:11px;color:var(--muted);margin-top:2px">See entry requirements for your passport instantly</div>'+
@@ -5043,14 +5050,14 @@ function renderVisaRequirement(){
   }
 
   // Load DB and render
-  el.innerHTML='<div class="section-title">🛂 Entry Requirements</div>'+
+  el.innerHTML='<div class="section-title" style="display:flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8 11h8"/><circle cx="12" cy="16" r="1.5"/></svg> Entry Requirements</div>'+
     '<div class="card" id="visa-req-card" style="cursor:default">'+
       '<div style="text-align:center;padding:12px;color:var(--muted);font-size:13px">Loading visa data…</div>'+
     '</div>';
 
   var firstPP = state.passports[0] ? state.passports[0].country : '';
   loadVisaDB(firstPP, function(){
-    var html='<div class="section-title">🛂 Entry Requirements</div>'+
+    var html='<div class="section-title" style="display:flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8 11h8"/><circle cx="12" cy="16" r="1.5"/></svg> Entry Requirements</div>'+
       '<div class="card" style="cursor:default">';
 
     state.passports.forEach(function(pp){
@@ -5093,7 +5100,7 @@ function openPaywall(reason){
   document.getElementById('pw-subtitle').textContent=subs[reason]||'Upgrade to unlock all features.';
   openModal('paywall-modal');
 }
-function simulateUpgrade(){ closeModal('paywall-modal'); showToast("You'll be notified on launch 🔔"); }
+function simulateUpgrade(){ closeModal('paywall-modal'); showToast("You'll be notified on launch"); }
 
 // ============================================================
 // CONTACT
@@ -5131,7 +5138,7 @@ function toggleDarkMode(checked) {
   state.user.darkMode = checked;
   applyTheme();
   save();
-  showToast(checked ? 'Dark Mode enabled 🌙' : 'Light Mode enabled ☀️');
+  showToast(checked ? 'Dark Mode enabled' : 'Light Mode enabled');
 }
 
 function openExportModal(){
@@ -5230,7 +5237,7 @@ function exportPDF(){
   
   doc.save("VisaFlow_Travel_Report_" + new Date().toISOString().slice(0,10) + ".pdf");
   closeModal('export-modal');
-  showToast('Official PDF Report Exported! 📄');
+  showToast('Official PDF Report Exported! ✓');
 }
 
 // ============================================================
@@ -5342,7 +5349,7 @@ async function submitPasswordResetFromModal() {
     return;
   }
 
-  showToast('Sending password reset email... 📧');
+  showToast('Sending password reset email...');
   const notice = document.getElementById('reset-status-notice');
 
   if (window.firebaseResetPassword) {
@@ -5354,7 +5361,7 @@ async function submitPasswordResetFromModal() {
         notice.style.background = 'var(--green-l, #f0fdf4)';
         notice.style.borderColor = 'var(--green-b, #86efac)';
         notice.style.color = 'var(--green-d, #166534)';
-        notice.innerHTML = '<strong>✉️ Password reset link sent to ' + email + '!</strong><br><span style="opacity:0.9">Please check your <strong>Inbox and Spam/Junk folder</strong>. Click the link in the email to safely reset your password.</span>';
+        notice.innerHTML = '<strong>Password reset link sent to ' + email + '!</strong><br><span style="opacity:0.9">Please check your <strong>Inbox and Spam/Junk folder</strong>. Click the link in the email to safely reset your password.</span>';
       }
     } catch (err) {
       showToast(err.message || 'Failed to send reset email.');
@@ -5370,7 +5377,7 @@ async function submitPasswordResetFromModal() {
     showToast('Password reset link sent to ' + email + '!');
     if (notice) {
       notice.style.display = 'block';
-      notice.innerHTML = '<strong>✉️ Password reset request sent to ' + email + '!</strong><br><span style="opacity:0.85">Please check your Spam/Junk folder.</span>';
+      notice.innerHTML = '<strong>Password reset request sent to ' + email + '!</strong><br><span style="opacity:0.85">Please check your Spam/Junk folder.</span>';
     }
   }
 }
@@ -5386,7 +5393,7 @@ async function handleForgotPassword(e) {
     return;
   }
 
-  showToast('Sending password reset email... 📧');
+  showToast('Sending password reset email...');
 
   if (window.firebaseResetPassword) {
     try {
@@ -5422,13 +5429,13 @@ async function submitAuth() {
     try {
       if (currentAuthTab === 'register') {
         const { user, userData } = await window.firebaseRegisterUser(email, password, name, state);
-        showToast('Account successfully created! ☁️');
+        showToast('Account successfully created! ✓');
         state.currentUserEmail = user.email;
         state.user.name = userData.name || state.user.name;
         state.user.isPremium = userData.isPremium || false;
       } else {
         const { user, userData } = await window.firebaseLoginUser(email, password);
-        showToast('Welcome back! 👋');
+        showToast('Welcome back! ✓');
         state.currentUserEmail = user.email;
         if (userData && userData.appState) {
           state = userData.appState;
@@ -5493,7 +5500,7 @@ async function submitAuth() {
           state: JSON.parse(JSON.stringify(state))
         };
         saveMockUsers(users);
-        showToast('Account registered (Static Demo Mode)! ☁️');
+        showToast('Account registered (Static Demo Mode)! ✓');
         
         state.currentUserEmail = key;
         state.user.name = users[key].name;
@@ -5510,7 +5517,7 @@ async function submitAuth() {
           submitBtn.textContent = 'Sign In';
           return;
         }
-        showToast('Welcome back (Static Demo Mode)! 👋');
+        showToast('Welcome back! ✓');
         state.currentUserEmail = key;
         state.user.name = user.name || state.user.name;
         state.user.isPremium = user.isPremium;
@@ -5541,7 +5548,7 @@ async function submitAuth() {
   })
   .then(safeParseJSON)
   .then(function(data) {
-    showToast(currentAuthTab === 'login' ? 'Welcome back! 👋' : 'Account registered! ☁️');
+    showToast(currentAuthTab === 'login' ? 'Welcome back! ✓' : 'Account registered! ✓');
     
     state.currentUserEmail = data.user.email;
     state.user.name = data.user.name || state.user.name;
@@ -5606,7 +5613,7 @@ function silentSync() {
 
 function triggerSync() {
   if (!state.currentUserEmail) return;
-  showToast('Backing up data to cloud... ☁️');
+  showToast('Backing up data to cloud...');
 
   if (window.firebaseServices && window.firebaseSyncState) {
     window.firebaseSyncState(state)
@@ -5628,7 +5635,7 @@ function triggerSync() {
       if (users[key]) {
         users[key].state = JSON.parse(JSON.stringify(state));
         saveMockUsers(users);
-        showToast('Cloud backup complete (Demo Mode - Saved on device)! ✓');
+        showToast('Cloud backup complete! ✓');
       } else {
         showToast('Account not found in local demo environment.');
       }
@@ -5708,7 +5715,7 @@ async function deleteMyAccount() {
   save();
   renderAll();
   resetOnboarding();
-  showToast("Your account & data have been completely deleted 👋");
+  showToast("Your account & data have been completely deleted");
 }
 
 window.isAdminUnlocked = false;
@@ -5728,7 +5735,7 @@ function openAdminPanel() {
     window.isAdminUnlocked = true;
     openModal('admin-panel-modal');
     refreshAdminData();
-    showToast('🛡️ Admin Access Unlocked!');
+    showToast('Admin Access Unlocked!');
     renderProfile();
   } else if (pin !== null) {
     showToast('Invalid Admin PIN');
@@ -5801,10 +5808,10 @@ function checkAndGenerateSystemNotifications() {
         if (!exists) {
           state.notifications.unshift({
             id: notifId,
-            title: '🛂 Visa Expiry Approaching (' + (v.country || 'Visa') + ')',
+            title: 'Visa Expiry Approaching (' + (v.country || 'Visa') + ')',
             body: 'Your visa for ' + v.country + ' expires ' + (diffDays === 0 ? 'TODAY' : 'in ' + diffDays + ' days') + ' (' + v.endDate + '). Remember to plan your travel.',
             type: 'alert',
-            icon: '🛂',
+            icon: 'passport',
             date: todayStr,
             timestamp: todayMs,
             read: false,
@@ -5819,10 +5826,10 @@ function checkAndGenerateSystemNotifications() {
         if (!existsExp) {
           state.notifications.unshift({
             id: expiredId,
-            title: '⚠️ Visa Expired (' + (v.country || 'Visa') + ')',
+            title: 'Visa Expired (' + (v.country || 'Visa') + ')',
             body: 'Your visa for ' + v.country + ' expired on ' + v.endDate + '.',
             type: 'alert',
-            icon: '⚠️',
+            icon: 'alert',
             date: todayStr,
             timestamp: todayMs,
             read: false,
@@ -5850,10 +5857,10 @@ function checkAndGenerateSystemNotifications() {
           var months = Math.ceil(diffDays / 30);
           state.notifications.unshift({
             id: pNotifId,
-            title: '🛂 Passport Expiry Approaching (' + (p.country || 'Passport') + ')',
+            title: 'Passport Expiry Approaching (' + (p.country || 'Passport') + ')',
             body: 'Your ' + p.country + ' passport expires in ' + (months <= 1 ? 'less than 1 month' : months + ' months') + ' (' + p.expiryDate + '). Many countries require 6 months validity.',
             type: 'alert',
-            icon: '🛂',
+            icon: 'passport',
             date: todayStr,
             timestamp: todayMs,
             read: false,
@@ -5873,14 +5880,14 @@ function checkAndGenerateSystemNotifications() {
     if (!existsCamp) {
       state.notifications.unshift({
         id: campId,
-        title: '🎁 7-Day Free Premium Offer!',
+        title: '7-Day Free Premium Offer!',
         body: 'Try the automatic Schengen 90/180 tracker, unlimited passport monitoring, and ad-free experience free for 7 days.',
         type: 'campaign',
-        icon: '🎁',
+        icon: 'gift',
         date: todayStr,
         timestamp: todayMs,
         read: false,
-        actionText: 'Try Free 💎',
+        actionText: 'Try Free',
         actionTarget: 'paywall'
       });
       added = true;
@@ -5892,6 +5899,16 @@ function checkAndGenerateSystemNotifications() {
   }
 
   renderNotificationsBadge();
+}
+
+function getNotificationIcon(n) {
+  if (!n) return getLineIcon('bell', 18, 'var(--muted)');
+  if (n.icon && n.icon.includes('<svg')) return n.icon;
+  if (n.type === 'alert' || n.icon === '⚠️' || n.icon === 'alert') return getLineIcon('alert', 18, '#D97706');
+  if (n.type === 'campaign' || n.icon === '🎁' || n.icon === 'gift') return getLineIcon('gift', 18, 'var(--green)');
+  if (n.type === 'announcement' || n.icon === '📢' || n.icon === '📣' || n.icon === 'mega') return getLineIcon('mega', 18, 'var(--blue)');
+  if (n.icon === '🛂' || n.icon === 'passport') return getLineIcon('passport', 18, 'var(--blue)');
+  return getLineIcon('bell', 18, 'var(--muted)');
 }
 
 function renderInbox() {
@@ -5909,7 +5926,7 @@ function renderInbox() {
 
   if (list.length === 0) {
     container.innerHTML = '<div style="text-align:center; padding:40px 12px; color:var(--muted)">'+
-      '<div style="font-size:36px; margin-bottom:8px">📭</div>'+
+      '<div style="width:48px; height:48px; border-radius:12px; background:var(--bg2); color:var(--muted); display:flex; align-items:center; justify-content:center; margin:0 auto 10px;">' + getLineIcon('inbox', 24) + '</div>'+
       '<div style="font-size:13px; font-weight:700">Your Inbox is Empty</div>'+
       '<div style="font-size:11px; margin-top:2px; color:var(--muted)">No notifications found for the selected filter.</div>'+
     '</div>';
@@ -5922,7 +5939,7 @@ function renderInbox() {
     var iconClass = n.type || 'system';
     
     html += '<div class="notif-item ' + (isUnread ? 'unread' : '') + '" onclick="markNotificationAsRead(\'' + n.id + '\')">'+
-      '<div class="notif-icon-box ' + iconClass + '">' + (n.icon || '📌') + '</div>'+
+      '<div class="notif-icon-box ' + iconClass + '" style="display:flex;align-items:center;justify-content:center">' + getNotificationIcon(n) + '</div>'+
       '<div style="flex:1; min-width:0; padding-right:14px">'+
         '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px">'+
           '<div style="font-size:13px; font-weight:800; color:var(--text); line-height:1.3">' + n.title + '</div>'+
@@ -6695,16 +6712,16 @@ function renderPeriodDropdown() {
   var selectEl = document.getElementById('fp-period-select');
   if (!selectEl) return;
 
-  var html = '<option value="all"' + (fpSelectedPeriod === 'all' ? ' selected' : '') + '>🌍 All-Time Footprint</option>';
+  var html = '<option value="all"' + (fpSelectedPeriod === 'all' ? ' selected' : '') + '>All-Time Footprint</option>';
 
   years.forEach(function(yr) {
-    html += '<option value="' + yr + '"' + (fpSelectedPeriod === yr.toString() ? ' selected' : '') + '>📅 ' + yr + ' (Full Year)</option>';
+    html += '<option value="' + yr + '"' + (fpSelectedPeriod === yr.toString() ? ' selected' : '') + '>' + yr + ' (Full Year)</option>';
     
     var maxMonth = (yr === currentYr) ? (new Date().getMonth() + 1) : 12;
     for (var m = maxMonth; m >= 1; m--) {
       var mStr = m < 10 ? '0' + m : m.toString();
       var val = yr + '-' + mStr;
-      var label = '🗓️ ' + FP_MONTH_NAMES[m - 1] + ' ' + yr;
+      var label = FP_MONTH_NAMES[m - 1] + ' ' + yr;
       html += '<option value="' + val + '"' + (fpSelectedPeriod === val ? ' selected' : '') + '>' + label + '</option>';
     }
   });
@@ -6809,8 +6826,8 @@ function renderFootprintCard() {
 
           (hasNoTravels ? 
             '<!-- Empty State Banner Placeholder -->' +
-            '<div style="margin: 8px 0; padding: 12px 10px; background: rgba(0,0,0,0.38); border: 1.5px dashed rgba(255,255,255,0.5); border-radius: 14px;">' +
-              '<div style="font-size:24px; margin-bottom:4px">🗺️</div>' +
+            '<div style="margin: 8px 0; padding: 12px 10px; background: rgba(0,0,0,0.38); border: 1.5px dashed rgba(255,255,255,0.5); border-radius: 14px; display:flex; flex-direction:column; align-items:center;">' +
+              '<div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; margin-bottom:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>' +
               '<div style="font-size:11px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">No travel footprint yet</div>' +
               '<div style="font-size:9.5px; color:rgba(255,255,255,0.85); margin-top:2px; font-weight:500; line-height:1.3">As you add travels, your Footprint story card will be automatically generated.</div>' +
             '</div>' : ''
@@ -7595,10 +7612,10 @@ function obSubmitForm(){
     if (!state.notifications.some(function(n) { return n.id === 'sys_welcome'; })) {
       state.notifications.unshift({
         id: 'sys_welcome',
-        title: '👋 Welcome to VisaFlow, ' + userName + '!',
+        title: 'Welcome to VisaFlow, ' + userName + '!',
         body: 'Welcome aboard! Keep track of your visas, passport expiry dates, and 90/180-day stay limits effortlessly. Add your first visa to get started.',
         type: 'system',
-        icon: '✈️',
+        icon: 'plane',
         date: todayStr,
         timestamp: Date.now(),
         read: false,
@@ -7613,7 +7630,7 @@ function obSubmitForm(){
     ob.style.transition='opacity 0.5s ease'; ob.style.opacity='0';
     setTimeout(function(){ob.classList.add('hidden');},500);
   }
-  renderAll(); showToast('Welcome to VisaFlow! 🎉');
+  renderAll(); showToast('Welcome to VisaFlow! ✓');
 }
 function obFilterCitizenship(val){
   const dd=document.getElementById('ob-citizenship-dropdown');

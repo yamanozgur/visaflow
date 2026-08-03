@@ -11,8 +11,18 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Serve static files from the root directory
-app.use(express.static(__dirname));
+// Serve static files from the root directory without caching HTML
+app.use(express.static(__dirname, {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 const DATA_FILE = path.join(__dirname, 'users.json');
 
