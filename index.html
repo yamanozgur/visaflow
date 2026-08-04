@@ -2838,15 +2838,14 @@ function loadCountryBackground(bgId, code) {
   if (!code) return;
   const c = code.toLowerCase();
   const urls = [
+    'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + c + '.webp',
     './' + c + '.webp',
-    '/' + c + '.webp',
-    'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + c + '.webp'
+    '/' + c + '.webp'
   ];
 
   const tryLoad = (index) => {
     if (index >= urls.length) return;
     const img = new Image();
-    img.crossOrigin = "anonymous";
     img.onload = () => {
       const bg = document.getElementById(bgId);
       if (bg) {
