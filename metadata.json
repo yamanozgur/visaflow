@@ -1,6 +1,6 @@
 {
-  "name": "VisaFlow",
-  "description": "Smart visa and travel tracking for digital nomads",
+  "name": "Viflo",
+  "description": "Smart travel tracking and visa compliance for global nomads",
   "requestFramePermissions": [
     "geolocation"
   ],

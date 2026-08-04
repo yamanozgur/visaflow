@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>VisaFlow</title>
+<title>viflo — Smart Travel & Visa Tracking</title>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -716,19 +716,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 
 <!-- PWA -->
-<link rel="canonical" href="https://yamanozgur.github.io/visaflow/">
+<link rel="canonical" href="https://yamanozgur.github.io/viflo/">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d9e81">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="VisaFlow">
-<link rel="icon" type="image/png" href="icon-512.png">
-<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="apple-mobile-web-app-title" content="viflo">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/yamanozgur/visaflow/main/favicon.png">
+<link rel="shortcut icon" href="https://raw.githubusercontent.com/yamanozgur/visaflow/main/favicon.png">
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yamanozgur/visaflow/main/favicon.png">
 <!-- Open Graph -->
 <meta name="description" content="Smart visa and travel tracking for digital nomads">
-<meta property="og:title" content="VisaFlow">
-<meta property="og:description" content="Smart visa and travel tracking for digital nomads">
+<meta property="og:title" content="viflo — Freedom to Wander">
+<meta property="og:description" content="Smart visa and travel tracking with kırlangıç freedom">
 <meta property="og:type" content="website">
 
 <!-- jsPDF Libraries for Official Travel Reports -->
@@ -1236,11 +1237,19 @@ input:checked+.slider::before{transform:translateX(20px);}
 
 <!-- APP INITIAL SPLASH / LOADING SCREEN -->
 <div id="app-splash" style="position:fixed; inset:0; z-index:999999; background:linear-gradient(135deg, var(--green) 0%, #00C49A 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; max-width:430px; margin:0 auto; transition:opacity 0.4s ease, visibility 0.4s ease;">
-  <div style="width:190px; height:190px; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 10px 24px rgba(0,0,0,0.2));">
-    <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/vf_logo.png" alt="VisaFlow Logo" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
-    <span style="display:none; font-size:64px;"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></span>
+  <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="width:140px; height:140px; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 12px 28px rgba(0,0,0,0.2));">
+      <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/logo.png" alt="viflo logo" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
+      <div style="display:none; width:84px; height:84px; border-radius:22px; background:rgba(255,255,255,0.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.35); align-items:center; justify-content:center; color:#ffffff; box-shadow:0 14px 32px rgba(0,0,0,0.15);">
+        <svg width="50" height="50" viewBox="0 0 32 32" fill="currentColor">
+          <path d="M30 4C22.5 6.2 17.5 11.2 13.5 17.2C11 21 9 25.2 6.5 28.7C5.8 29.7 4.5 29.7 4 28.7C3.5 27.7 4.3 26.2 5.3 24.7C7.5 21.2 9 16.2 6.5 13.2C4.3 10.5 1.5 9.2 1.5 9.2C6 10.2 10 9.2 13.5 6.7C17.5 3.7 22.5 2.2 30 4Z"/>
+        </svg>
+      </div>
+    </div>
+    <div style="font-size:36px; font-weight:900; letter-spacing:-1.2px; color:#ffffff; margin-top:10px;">viflo</div>
+    <div style="font-size:12px; font-weight:700; color:rgba(255,255,255,0.85); letter-spacing:2px; text-transform:uppercase; margin-top:2px;">Travel &amp; Visa Freedom</div>
   </div>
-  <div style="margin-top:24px; display:flex; align-items:center; gap:8px;">
+  <div style="margin-top:28px; display:flex; align-items:center; gap:8px;">
     <div style="width:9px; height:9px; border-radius:50%; background:#ffffff; animation: splashPulse 1.2s infinite ease-in-out;"></div>
     <div style="width:9px; height:9px; border-radius:50%; background:#ffffff; animation: splashPulse 1.2s infinite ease-in-out 0.2s;"></div>
     <div style="width:9px; height:9px; border-radius:50%; background:#ffffff; animation: splashPulse 1.2s infinite ease-in-out 0.4s;"></div>
@@ -1251,22 +1260,30 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div id="onboarding" class="ob-full-bg">
   <div class="ob-slides">
     <div class="ob-slide active" id="ob-slide-0">
-      <div style="width:220px;height:220px;margin:0 auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/vf_logo.png" alt="VisaFlow Logo" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
-        <span style="display:none;font-size:72px;"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span>
+      <div style="width:240px;margin:0 auto;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+        <div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 10px 24px rgba(0,0,0,0.15));">
+          <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/logo.png" alt="viflo logo" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
+          <div style="display:none;width:90px;height:90px;border-radius:24px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);align-items:center;justify-content:center;color:#ffffff;box-shadow:0 12px 30px rgba(0,196,154,0.35);">
+            <svg width="54" height="54" viewBox="0 0 32 32" fill="currentColor">
+              <path d="M30 4C22.5 6.2 17.5 11.2 13.5 17.2C11 21 9 25.2 6.5 28.7C5.8 29.7 4.5 29.7 4 28.7C3.5 27.7 4.3 26.2 5.3 24.7C7.5 21.2 9 16.2 6.5 13.2C4.3 10.5 1.5 9.2 1.5 9.2C6 10.2 10 9.2 13.5 6.7C17.5 3.7 22.5 2.2 30 4Z"/>
+            </svg>
+          </div>
+        </div>
+        <div style="font-size:36px;font-weight:900;letter-spacing:-1.2px;color:var(--text);margin-top:2px;">viflo</div>
+        <div style="font-size:13px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;">Freedom to Wander</div>
       </div>
     </div>
     <div class="ob-slide" id="ob-slide-1">
       <div style="width:140px;height:140px;margin-bottom:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob2_icon.png" alt="VisaFlow Icon 1" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob2_icon.png" alt="Viflo Icon 1" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
         <span style="display:none;font-size:56px;"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M8 7h8"/><path d="M8 11h8"/><circle cx="12" cy="16" r="1.5"/></svg></span>
       </div>
       <div class="ob-title">Never Lose Track of Your Visa</div>
-      <div class="ob-body">VisaFlow tracks your visa validity, stay allowances, and entry dates — all in one place.</div>
+      <div class="ob-body">Viflo tracks your visa validity, stay allowances, and entry dates — all in one place.</div>
     </div>
     <div class="ob-slide" id="ob-slide-2">
       <div style="width:140px;height:140px;margin-bottom:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob3_icon.png" alt="VisaFlow Icon 2" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob3_icon.png" alt="Viflo Icon 2" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
         <span style="display:none;font-size:56px;"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
       </div>
       <div class="ob-title">Know Exactly Where You Stand</div>
@@ -1274,7 +1291,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     </div>
     <div class="ob-slide" id="ob-slide-3">
       <div style="width:140px;height:140px;margin-bottom:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob4_icon.png" alt="VisaFlow Icon 3" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
+        <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/ob4_icon.png" alt="Viflo Icon 3" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';">
         <span style="display:none;font-size:56px;"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></span>
       </div>
       <div class="ob-title">Your Full Travel History</div>
@@ -1284,7 +1301,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div style="width:100%;max-width:360px;margin:0 auto;">
         <div style="margin-bottom:20px">
           <div id="ob-auth-title" style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Create Account or Sign In</div>
-          <div id="ob-auth-sub" style="font-size:13px;color:var(--muted);line-height:1.5">A free VisaFlow account is required to protect your data and sync across devices.</div>
+          <div id="ob-auth-sub" style="font-size:13px;color:var(--muted);line-height:1.5">A free Viflo account is required to protect your data and sync across devices.</div>
         </div>
 
         <div style="display:flex;background:var(--bg2);padding:3px;border-radius:12px;margin-bottom:16px;">
@@ -1355,14 +1372,14 @@ input:checked+.slider::before{transform:translateX(20px);}
         <input class="form-input" id="ob-arrival" type="date">
         <div class="disclaimer-box">
           <strong>Disclaimer &amp; Terms of Use</strong><br><br>
-          VisaFlow is a personal travel tracking tool for informational purposes only. Nothing in this app constitutes legal, tax, or immigration advice.<br><br>
+          Viflo is a personal travel tracking tool for informational purposes only. Nothing in this app constitutes legal, tax, or immigration advice.<br><br>
           Visa regulations and entry policies change frequently. Always verify your status with the relevant embassy or immigration authority before making travel decisions.<br><br>
-          VisaFlow is not liable for any fines, deportation, or legal consequences arising from reliance on this application. By using VisaFlow you accept full responsibility for complying with all applicable immigration laws.<br><br>
+          Viflo is not liable for any fines, deportation, or legal consequences arising from reliance on this application. By using Viflo you accept full responsibility for complying with all applicable immigration laws.<br><br>
           Your data is stored locally on your device and is not shared with third parties.
         </div>
         <label class="disclaimer-check" style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;color:var(--text2)">
           <input type="checkbox" id="ob-agree" onchange="obCheckAgree()" style="margin-top:2px">
-          <span>I understand and agree to the <a href="#" onclick="event.preventDefault();openModal('privacy-modal')" style="color:var(--green);font-weight:700;text-decoration:underline">Terms of Use &amp; Privacy Policy</a>, fully releasing VisaFlow from any liability.</span>
+          <span>I understand and agree to the <a href="#" onclick="event.preventDefault();openModal('privacy-modal')" style="color:var(--green);font-weight:700;text-decoration:underline">Terms of Use &amp; Privacy Policy</a>, fully releasing Viflo from any liability.</span>
         </label>
         <div style="height:16px"></div>
       </div>
@@ -1379,7 +1396,7 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="ob-bottom">
     <button class="ob-btn" id="ob-cta" onclick="obNext()">Get Started ➔</button>
     <button class="ob-skip" id="ob-skip" onclick="finishOnboarding()">Skip for Now</button>
-    <div class="ob-version">VISAFLOW 1.0</div>
+    <div class="ob-version">VIFLO 1.0</div>
   </div>
 </div>
 
@@ -1624,7 +1641,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <input class="form-input" id="edit-pp-expiry" type="date">
     <div style="font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5; background:var(--bg2); padding:10px; border-radius:8px; border:1px solid var(--border); display:flex; align-items:flex-start; gap:8px">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber, #D97706)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <div><strong>6-Month Rule Warning:</strong> Most countries require your passport to have at least 6 months of remaining validity upon arrival. VisaFlow alerts you automatically when validity falls below 6 months.</div>
+      <div><strong>6-Month Rule Warning:</strong> Most countries require your passport to have at least 6 months of remaining validity upon arrival. Viflo alerts you automatically when validity falls below 6 months.</div>
     </div>
 
     <button class="submit-btn" onclick="savePassportExpiry()" style="margin-top:20px">Save Changes</button>
@@ -1799,13 +1816,13 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-sub" style="font-size:12px;color:var(--green);font-weight:700">Digital Nomad &amp; Travel Ecosystem</div>
     
     <div style="margin-top:16px;padding:16px;background:var(--bg2);border-radius:14px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
-      <p style="margin-bottom:12px">VisaFlow is crafted by <strong>FlowSpot Studios</strong> (FSS) — building intuitive, high-performance travel and lifestyle applications for global nomads and jetsetters.</p>
+      <p style="margin-bottom:12px">Viflo is crafted by <strong>FlowSpot Studios</strong> (FSS) — building intuitive, high-performance travel and lifestyle applications for global nomads and jetsetters.</p>
       
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Product Ecosystem</div>
       <div style="display:flex;gap:10px">
         <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
           <div style="width:36px;height:36px;border-radius:10px;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div>
-          <div style="font-size:12px;font-weight:800;color:var(--text)">VisaFlow</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text)">Viflo</div>
           <div style="font-size:10px;color:var(--muted)">Visa &amp; Stay Tracker</div>
         </div>
         <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
@@ -1834,13 +1851,13 @@ input:checked+.slider::before{transform:translateX(20px);}
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Important Legal Notice
         </strong>
-        <p style="font-size:12px;margin-top:4px;color:var(--text2);margin-bottom:0">VisaFlow is an independent planning tool. It does <strong>NOT</strong> provide official legal, tax, or immigration advice, nor is it affiliated with any government or embassy.</p>
+        <p style="font-size:12px;margin-top:4px;color:var(--text2);margin-bottom:0">Viflo is an independent planning tool. It does <strong>NOT</strong> provide official legal, tax, or immigration advice, nor is it affiliated with any government or embassy.</p>
       </div>
 
       <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px;display:flex;align-items:center;gap:6px">
         1. Non-Affiliation &amp; Government Disclaimer
       </h4>
-      <p style="margin-bottom:12px;color:var(--muted)">VisaFlow is developed independently by FlowSpot Studios. VisaFlow is not affiliated with, endorsed by, authorized by, or connected to the European Union, European Commission, Schengen Area authorities, or any national embassy, consulate, or border control agency worldwide. All official immigration and visa regulations must be confirmed directly with official government sources.</p>
+      <p style="margin-bottom:12px;color:var(--muted)">Viflo is developed independently by FlowSpot Studios. Viflo is not affiliated with, endorsed by, authorized by, or connected to the European Union, European Commission, Schengen Area authorities, or any national embassy, consulate, or border control agency worldwide. All official immigration and visa regulations must be confirmed directly with official government sources.</p>
 
       <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
         2. Limitation of Liability &amp; "As-Is" Service
@@ -1870,7 +1887,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <h4 style="font-size:13px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:4px">
         7. User Responsibility &amp; Acceptance
       </h4>
-      <p style="margin-bottom:12px;color:var(--muted)">You are solely responsible for ensuring the accuracy of all travel dates and passport details entered into VisaFlow. By using this application, you acknowledge that you have read, understood, and voluntarily agree to all Terms of Service and Privacy Policies contained herein.</p>
+      <p style="margin-bottom:12px;color:var(--muted)">You are solely responsible for ensuring the accuracy of all travel dates and passport details entered into Viflo. By using this application, you acknowledge that you have read, understood, and voluntarily agree to all Terms of Service and Privacy Policies contained herein.</p>
 
     </div>
     
@@ -1883,7 +1900,7 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Help &amp; User Guide</div>
-    <div class="modal-sub">Learn how to use every feature in VisaFlow</div>
+    <div class="modal-sub">Learn how to use every feature in Viflo</div>
     
     <div style="max-height:420px;overflow-y:auto;padding-right:6px;margin-top:16px;text-align:left;line-height:1.6;font-size:13px;color:var(--text2)">
 
@@ -1906,7 +1923,7 @@ input:checked+.slider::before{transform:translateX(20px);}
           Visas &amp; Passport Manager
         </div>
         <div style="color:var(--muted);font-size:12px">
-          Log your active visas (Single/Multiple entry, validity dates, allowed days) and passports. VisaFlow automatically monitors expiration dates and triggers the <strong>6-Month Passport Validity</strong> warning required by most international border authorities.
+          Log your active visas (Single/Multiple entry, validity dates, allowed days) and passports. Viflo automatically monitors expiration dates and triggers the <strong>6-Month Passport Validity</strong> warning required by most international border authorities.
         </div>
       </div>
 
@@ -1936,7 +1953,7 @@ input:checked+.slider::before{transform:translateX(20px);}
           Data Backup &amp; Local Privacy
         </div>
         <div style="color:var(--muted);font-size:12px">
-          VisaFlow is 100% Local-First. Your confidential passport and travel data is saved directly on your device. You can export or restore a full JSON backup anytime from Settings.
+          Viflo is 100% Local-First. Your confidential passport and travel data is saved directly on your device. You can export or restore a full JSON backup anytime from Settings.
         </div>
       </div>
 
@@ -1950,12 +1967,12 @@ input:checked+.slider::before{transform:translateX(20px);}
 
       <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
         <div style="font-weight:800;color:var(--text);margin-bottom:4px">Why do I need 6 months of passport validity?</div>
-        <div style="color:var(--muted);font-size:12px">Most foreign countries reject entry or airline boarding if your passport expires in under 6 months. VisaFlow notifies you well in advance so you can renew your passport smoothly.</div>
+        <div style="color:var(--muted);font-size:12px">Most foreign countries reject entry or airline boarding if your passport expires in under 6 months. Viflo notifies you well in advance so you can renew your passport smoothly.</div>
       </div>
 
       <div style="margin-bottom:12px;background:var(--bg2);padding:12px 14px;border-radius:12px;border:1px solid var(--border)">
-        <div style="font-weight:800;color:var(--text);margin-bottom:4px">Does VisaFlow issue official visas?</div>
-        <div style="color:var(--muted);font-size:12px">No. VisaFlow is an intelligent personal tracker and organizer. Official entry rules and visa applications must always be confirmed with official consulates or government portals.</div>
+        <div style="font-weight:800;color:var(--text);margin-bottom:4px">Does Viflo issue official visas?</div>
+        <div style="color:var(--muted);font-size:12px">No. Viflo is an intelligent personal tracker and organizer. Official entry rules and visa applications must always be confirmed with official consulates or government portals.</div>
       </div>
 
     </div>
@@ -1971,8 +1988,8 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-title" style="display:flex;align-items:center;gap:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg> Photography Credits</div>
     <div class="modal-sub">Attribution &amp; photo licensing information</div>
     <div style="margin-top:16px;text-align:left;line-height:1.7;font-size:13px;color:var(--text2);background:var(--bg2);padding:14px;border-radius:12px;border:1px solid var(--border)">
-      Country imagery and visual assets used in VisaFlow are sourced from <strong style="color:var(--text)">Adobe Stock</strong>, <strong style="color:var(--text)">Unsplash</strong>, <strong style="color:var(--text)">Pexels</strong>, <strong style="color:var(--text)">Pixabay</strong>, and licensed stock providers. All photographs are used in accordance with their respective free and commercial licenses.<br><br>
-      We are immensely grateful to the talented photographers and visual contributors whose work enhances the user experience of VisaFlow. If you believe your photograph has been used without proper attribution or against license terms, please reach out via Contact Us.
+      Country imagery and visual assets used in Viflo are sourced from <strong style="color:var(--text)">Adobe Stock</strong>, <strong style="color:var(--text)">Unsplash</strong>, <strong style="color:var(--text)">Pexels</strong>, <strong style="color:var(--text)">Pixabay</strong>, and licensed stock providers. All photographs are used in accordance with their respective free and commercial licenses.<br><br>
+      We are immensely grateful to the talented photographers and visual contributors whose work enhances the user experience of Viflo. If you believe your photograph has been used without proper attribution or against license terms, please reach out via Contact Us.
     </div>
     <button class="submit-btn" style="margin-top:20px" onclick="closeModal('credits-modal')">Close</button>
   </div>
@@ -1983,7 +2000,7 @@ input:checked+.slider::before{transform:translateX(20px);}
   <div class="modal" style="text-align:center">
     <div class="modal-handle"></div>
     <div class="paywall-badge" style="background:var(--green-l);color:var(--green);border:1px solid var(--green-b);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-bottom:10px">7-Day Free Trial Included</div>
-    <div class="modal-title" id="pw-title">Unlock Full VisaFlow</div>
+    <div class="modal-title" id="pw-title">Unlock Full Viflo</div>
     <div class="modal-sub" id="pw-subtitle">Try all Premium features free for 7 days. Cancel anytime before trial ends.</div>
     <div class="paywall-features">
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Unlimited Visas &amp; Passports</strong></span></div>
@@ -2128,8 +2145,8 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div style="display:flex; gap:12px; align-items:center; margin-bottom:18px;">
       <div style="width:48px; height:48px; background:#0f172a; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 2px 5px rgba(0,0,0,0.15)"></div>
       <div style="text-align:left">
-        <div style="font-size:15px; font-weight:700; color:#202124;">VisaFlow Premium</div>
-        <div style="font-size:12px; color:#5f6368;">VisaFlow App · Monthly Subscription</div>
+        <div style="font-size:15px; font-weight:700; color:#202124;">Viflo Premium</div>
+        <div style="font-size:12px; color:#5f6368;">Viflo App · Monthly Subscription</div>
       </div>
     </div>
 
@@ -2852,7 +2869,7 @@ function loadCountryBackground(bgId, code) {
 // STORAGE
 // ============================================================
 const STORAGE_KEY = 'np_v6';
-['np_v1','np_v2','np_v3','np_v4','np_v4_free','visaflow','np_v5'].forEach(function(k){ localStorage.removeItem(k); });
+['np_v1','np_v2','np_v3','np_v4','np_v4_free','viflo','np_v5'].forEach(function(k){ localStorage.removeItem(k); });
 function save(){ 
   try{ 
     const cleanState = window.safeCloneState ? window.safeCloneState(state) : state;
@@ -4852,7 +4869,7 @@ function openGoogleCalendar(title, dateStr, details) {
   var url = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
             '&text=' + encodeURIComponent(title) +
             '&dates=' + dates +
-            '&details=' + encodeURIComponent(details + '\n\nManaged with VisaFlow: https://visaflow.app');
+            '&details=' + encodeURIComponent(details + '\n\nManaged with Viflo: https://viflo.app');
   window.open(url, '_blank');
   showToast('Opening Google Calendar…');
 }
@@ -4863,16 +4880,16 @@ function downloadIcsCalendar(title, dateStr, details) {
   var icsContent = 
     'BEGIN:VCALENDAR\r\n' +
     'VERSION:2.0\r\n' +
-    'PRODID:-//VisaFlow//Calendar Export v1.0//EN\r\n' +
+    'PRODID:-//Viflo//Calendar Export v1.0//EN\r\n' +
     'CALSCALE:GREGORIAN\r\n' +
     'METHOD:PUBLISH\r\n' +
     'BEGIN:VEVENT\r\n' +
-    'UID:visaflow-' + Date.now() + '@visaflow.app\r\n' +
+    'UID:viflo-' + Date.now() + '@viflo.app\r\n' +
     'DTSTAMP:' + now + '\r\n' +
     'DTSTART;VALUE=DATE:' + cleanDate + '\r\n' +
     'DTEND;VALUE=DATE:' + cleanDate + '\r\n' +
     'SUMMARY:' + title + '\r\n' +
-    'DESCRIPTION:' + details.replace(/\n/g, '\\n') + '\\n\\nManaged with VisaFlow\r\n' +
+    'DESCRIPTION:' + details.replace(/\n/g, '\\n') + '\\n\\nManaged with Viflo\r\n' +
     'STATUS:CONFIRMED\r\n' +
     'END:VEVENT\r\n' +
     'END:VCALENDAR';
@@ -4890,7 +4907,7 @@ function downloadIcsCalendar(title, dateStr, details) {
 function exportVisaCalendar(visaId) {
   var v = state.visas.find(function(x){ return x.id === visaId; });
   if (!v) return;
-  var title = '[VisaFlow] Visa Expiry: ' + v.country;
+  var title = '[Viflo] Visa Expiry: ' + v.country;
   var details = v.country + ' Visa expires on ' + fmtDate(v.endDate) + ' (' + v.endDate + '). Make sure to renew, extend, or exit before this date to avoid overstaying.\n\nVisa Type: ' + (v.type === 'multi' ? 'Multiple Entry' : 'Single Entry') + '\nAllowed Stay: ' + v.stayDays + ' days';
   openCalendarExportModal(title, v.endDate, details);
 }
@@ -4901,7 +4918,7 @@ function exportPassportCalendar(ppId) {
     showToast('Please set passport expiry date first');
     return;
   }
-  var title = '[VisaFlow] Passport Expiry: ' + pp.country;
+  var title = '[Viflo] Passport Expiry: ' + pp.country;
   var details = pp.country + ' Passport expires on ' + fmtDate(pp.expiryDate) + ' (' + pp.expiryDate + '). Note: Most countries enforce the 6-Month Validity Rule upon entry!';
   openCalendarExportModal(title, pp.expiryDate, details);
 }
@@ -5317,6 +5334,15 @@ function confirmBorderEntry(country){
   save(); renderAll();
   showToast('Counter started for '+country);
 }
+function openLocationModal(){
+  const entryEl = document.getElementById('loc-entry');
+  if(entryEl) entryEl.value = today();
+  const countryEl = document.getElementById('loc-country');
+  if(countryEl) countryEl.value = '';
+  const sugEl = document.getElementById('loc-suggestions');
+  if(sugEl) { sugEl.style.display = 'none'; sugEl.innerHTML = ''; }
+  openModal('location-modal');
+}
 function detectGPSInModal(){
   if(!navigator.geolocation){ showToast('Geolocation not supported on this device'); return; }
   showToast('Detecting location…');
@@ -5608,9 +5634,9 @@ function renderVisaRequirement(){
 }
 
 function openPaywall(reason){
-  const titles={visa:'Visa Limit Reached',passport:'Multiple Passports',ads:'Remove Ads',info:'VisaFlow Premium',oturum:'Residency Tracking','visa-check':'Visa Check',export:'Export History',residency:'Residency Permit Tracker',schengen:'Schengen 90/180 Tracker'};
-  const subs={visa:'Free plan allows up to 2 active visas. Upgrade to track unlimited visas.',passport:'Free plan supports 1 passport. Upgrade for dual citizenship (up to 2 passports).',ads:'Remove all sponsored content with Premium.',info:'Unlock the full VisaFlow experience.',oturum:'Track residency permits and annual day requirements with Premium.','visa-check':'See instant entry requirements for your passport — visa type, max stay, and more. Available with Premium.',export:'Export your travel history as CSV or PDF. Available with Premium.',residency:'Track residency permits and minimum annual stay requirements. Available with Premium.',schengen:'Calculate remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.'};
-  document.getElementById('pw-title').textContent=titles[reason]||'VisaFlow Premium';
+  const titles={visa:'Visa Limit Reached',passport:'Multiple Passports',ads:'Remove Ads',info:'Viflo Premium',oturum:'Residency Tracking','visa-check':'Visa Check',export:'Export History',residency:'Residency Permit Tracker',schengen:'Schengen 90/180 Tracker'};
+  const subs={visa:'Free plan allows up to 2 active visas. Upgrade to track unlimited visas.',passport:'Free plan supports 1 passport. Upgrade for dual citizenship (up to 2 passports).',ads:'Remove all sponsored content with Premium.',info:'Unlock the full Viflo experience.',oturum:'Track residency permits and annual day requirements with Premium.','visa-check':'See instant entry requirements for your passport — visa type, max stay, and more. Available with Premium.',export:'Export your travel history as CSV or PDF. Available with Premium.',residency:'Track residency permits and minimum annual stay requirements. Available with Premium.',schengen:'Calculate remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.'};
+  document.getElementById('pw-title').textContent=titles[reason]||'Viflo Premium';
   document.getElementById('pw-subtitle').textContent=subs[reason]||'Upgrade to unlock all features.';
   openModal('paywall-modal');
 }
@@ -5628,8 +5654,8 @@ function submitContact(){
   if(!email.includes('@')){ showToast('Please enter a valid email'); return; }
   // Build mailto link as fallback (no backend yet)
   const body=encodeURIComponent('Name: '+name+'\n\n'+message);
-  const subj=encodeURIComponent('[VisaFlow] '+(subject||'Message'));
-  window.location.href='mailto:hello@visaflow.app?subject='+subj+'&body='+body;
+  const subj=encodeURIComponent('[Viflo] '+(subject||'Message'));
+  window.location.href='mailto:hello@viflo.app?subject='+subj+'&body='+body;
   closeModal('contact-modal');
   ['contact-name','contact-email','contact-message'].forEach(function(i){document.getElementById(i).value='';});
   document.getElementById('contact-subject').value='';
@@ -5671,7 +5697,7 @@ function exportCSV(){
   const blob = new Blob([csv], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'visaflow-travel-history.csv'; a.click();
+  a.href = url; a.download = 'viflo-travel-history.csv'; a.click();
   URL.revokeObjectURL(url);
   closeModal('export-modal');
   showToast('CSV Exported');
@@ -5693,7 +5719,7 @@ function exportPDF(){
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.text("VisaFlow — Travel & Visa Compliance Report", 14, 18);
+  doc.text("Viflo — Travel & Visa Compliance Report", 14, 18);
   
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
@@ -5749,7 +5775,7 @@ function exportPDF(){
     });
   }
   
-  doc.save("VisaFlow_Travel_Report_" + new Date().toISOString().slice(0,10) + ".pdf");
+  doc.save("Viflo_Travel_Report_" + new Date().toISOString().slice(0,10) + ".pdf");
   closeModal('export-modal');
   showToast('Official PDF Report Exported!');
 }
@@ -6330,7 +6356,7 @@ function openAdminPanel() {
   }
   
   const pin = prompt('Enter Admin Access PIN (Default: 1923):');
-  if (pin === '1923' || pin === 'visaflow2026' || pin === 'admin') {
+  if (pin === '1923' || pin === 'viflo2026' || pin === 'admin') {
     window.isAdminUnlocked = true;
     openModal('admin-panel-modal');
     refreshAdminData();
@@ -7072,7 +7098,7 @@ function renderAdminPromos(promos) {
   
   const defaults = [
     { code: 'GIFT1MONTH', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
-    { code: 'VISAFLOW2026', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
+    { code: 'VIFLO2026', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true },
     { code: 'VIPGIFT', durationDays: 30, maxUses: 'Unlimited', usedCount: 'Built-in', isDefault: true }
   ];
 
@@ -7156,7 +7182,7 @@ async function redeemPromoCode() {
     return;
   }
 
-  const validCodes = ['GIFT1MONTH', 'VISAFLOW2026', 'VIPGIFT', 'GIFT30', 'PREMIUM1M'];
+  const validCodes = ['GIFT1MONTH', 'VIFLO2026', 'VIPGIFT', 'GIFT30', 'PREMIUM1M'];
   if (validCodes.includes(code) || code.startsWith('GIFT') || code.startsWith('FREE') || code.startsWith('PROMO')) {
     state.user.isPremium = true;
     save();
@@ -7467,7 +7493,7 @@ function renderFootprintCard() {
                   '<div style="font-size:8px; color:rgba(255,255,255,0.9); font-weight:600">Travel Footprint</div>' +
                 '</div>' +
               '</div>' +
-              '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); padding:3px 10px; border-radius:14px; font-size:9.5px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">VisaFlow </div>' +
+              '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); padding:3px 10px; border-radius:14px; font-size:9.5px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">Viflo </div>' +
             '</div>' +
           '</div>' +
 
@@ -7527,7 +7553,7 @@ function shareFootprintNative() {
           navigator.share({
             files: [file],
             title: name + "'s " + periodTitle,
-            text: "Check out my Travel Story on VisaFlow"
+            text: "Check out my Travel Story on Viflo"
           }).catch(function(err) {
             console.log("Share dismissed", err);
           });
@@ -7535,8 +7561,8 @@ function shareFootprintNative() {
           // Standard text/link share fallback + auto-download image for desktop
           navigator.share({
             title: name + "'s " + periodTitle,
-            text: " Check out my Travel Story on VisaFlow",
-            url: "https://visaflow.app"
+            text: " Check out my Travel Story on Viflo",
+            url: "https://viflo.app"
           }).catch(function() {});
           downloadFootprintImage();
         } else {
@@ -8211,7 +8237,7 @@ function obSubmitForm(){
     if (!state.notifications.some(function(n) { return n.id === 'sys_welcome'; })) {
       state.notifications.unshift({
         id: 'sys_welcome',
-        title: 'Welcome to VisaFlow, ' + userName + '!',
+        title: 'Welcome to Viflo, ' + userName + '!',
         body: 'Welcome aboard! Keep track of your visas, passport expiry dates, and 90/180-day stay limits effortlessly. Add your first visa to get started.',
         type: 'system',
         icon: 'plane',
@@ -8229,7 +8255,7 @@ function obSubmitForm(){
     ob.style.transition='opacity 0.5s ease'; ob.style.opacity='0';
     setTimeout(function(){ob.classList.add('hidden');},500);
   }
-  renderAll(); showToast('Welcome to VisaFlow!');
+  renderAll(); showToast('Welcome to Viflo!');
 }
 function obFilterCitizenship(val){
   const dd=document.getElementById('ob-citizenship-dropdown');

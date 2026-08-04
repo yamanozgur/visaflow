@@ -1,7 +1,7 @@
 {
-  "name": "VisaFlow",
-  "short_name": "VisaFlow",
-  "description": "Smart visa and travel tracking for everyone",
+  "name": "viflo",
+  "short_name": "viflo",
+  "description": "Smart visa & travel tracking with kırlangıç freedom",
   "id": "./",
   "start_url": "./",
   "scope": "./",
