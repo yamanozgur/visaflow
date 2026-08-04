@@ -21,7 +21,9 @@
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
     getFirestore, 
-    enableIndexedDbPersistence,
+    initializeFirestore,
+    persistentLocalCache,
+    persistentMultipleTabManager,
     getDocFromServer,
     doc, 
     getDoc, 
@@ -81,15 +83,13 @@
   try {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-
-    // Enable offline persistence so local state operates even if connection to backend delays
+    let db;
     try {
-      enableIndexedDbPersistence(db).catch(err => {
-        console.warn("Firestore offline persistence fallback:", err.code);
-      });
-    } catch (pe) {
-      console.warn("IndexedDb persistence init note:", pe);
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      }, firebaseConfig.firestoreDatabaseId);
+    } catch (e) {
+      db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
     }
 
     // Validate connection to Firestore as per Firebase skill guidelines
@@ -104,7 +104,7 @@
         ]);
       } catch (error) {
         if (error instanceof Error) {
-          console.warn("Firestore connection status:", error.message);
+          console.log("Firestore connection status:", error.message);
         }
       }
     }
@@ -449,8 +449,12 @@
         const modalEmail = (document.getElementById('auth-email') ? document.getElementById('auth-email').value : '').trim();
         let defaultEmail = (obEmail || modalEmail).toLowerCase().trim();
         if (!defaultEmail) {
-          const randId = Math.floor(1000 + Math.random() * 9000);
-          defaultEmail = 'google.user.' + randId + '@gmail.com';
+          const userTypedEmail = prompt("Firebase Önizleme ortamında (unauthorized domain) Google Pop-up kısıtlı olduğu için e-posta adresinizi girin:", "yamanozgur@gmail.com");
+          if (userTypedEmail && userTypedEmail.includes('@')) {
+            defaultEmail = userTypedEmail.trim().toLowerCase();
+          } else {
+            defaultEmail = 'yamanozgur@gmail.com';
+          }
         }
         
         const googleName = (document.getElementById('ob-name') ? document.getElementById('ob-name').value : '').trim() || (defaultEmail.split('@')[0] || 'Google Explorer');
@@ -2006,6 +2010,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Unlimited Visas &amp; Passports</strong></span></div>
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Residency Permit Tracker</strong> with annual day counter</span></div>
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Schengen 90/180 Calculator</strong></span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Google &amp; Apple Calendar Sync</strong> (.ics export)</span></div>
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Ad-Free</strong> experience</span></div>
       <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Smart Notifications</strong> before limits</span></div>
     </div>
@@ -3110,6 +3115,29 @@ function renderUpcomingCountdown(){
     '</div>';
 }
 
+function openVisaCheckTab(destCountry){
+  showPage('visas', 'check');
+  if(destCountry){
+    setTimeout(function(){
+      var inp = document.getElementById('vc-destination');
+      if(inp){
+        inp.value = destCountry;
+        runVisaCheck();
+      }
+    }, 50);
+  }
+}
+
+function scrollToSchengenSection(){
+  showPage('home');
+  setTimeout(function(){
+    var sec = document.getElementById('schengen-tracker-section');
+    if(sec){
+      sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 50);
+}
+
 function renderSmartInsights(){
   var el = document.getElementById('smart-insights-section');
   if(!el) return;
@@ -3124,7 +3152,7 @@ function renderSmartInsights(){
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/></svg>',
       title: pName + ' Passport Mobility',
       body: 'Your ' + pName + ' passport grants visa-free access to top destinations like ' + popularVF.slice(0, 4).join(', ') + '. Check full visa rules in 1-tap.',
-      action: 'showPage("visas"); setVisaSubTab("check")',
+      action: 'openVisaCheckTab()',
       actionText: 'Check Visa Rules ➔'
     });
   }
@@ -3137,8 +3165,8 @@ function renderSmartInsights(){
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
       title: 'Schengen Rolling Window Status',
       body: 'You have used ' + schUsed + ' of 90 Schengen days. You have <strong>' + schLeft + ' safe days</strong> available in your current rolling 180-day window.',
-      action: 'showPage("home")',
-      actionText: 'View 90/180 Details'
+      action: 'scrollToSchengenSection()',
+      actionText: 'View 90/180 Details ➔'
     });
   }
 
@@ -3162,7 +3190,7 @@ function renderSmartInsights(){
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
         title: topC + ' Stay & Tax Residency Watch',
         body: 'You have logged <strong>' + daysSpent + ' days</strong> in ' + topC + ' in ' + currentYear + '. You have <strong>' + taxRem + ' days remaining</strong> before reaching the standard 183-day physical presence tax residency threshold.',
-        action: 'showPage("history")',
+        action: "showPage('history')",
         actionText: 'View Travel History ➔'
       });
     }
@@ -3177,13 +3205,14 @@ function renderSmartInsights(){
              '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">';
 
   insights.forEach(function(item){
+    var safeAction = item.action ? item.action.replace(/"/g, '&quot;') : '';
     html += '<div class="card" style="padding:14px 16px;border-radius:16px;background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow-sm)">'+
       '<div style="display:flex;align-items:flex-start;gap:12px">'+
         '<div style="font-size:24px;line-height:1;padding:8px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">'+item.icon+'</div>'+
         '<div style="flex:1">'+
           '<div style="font-size:14px;font-weight:800;color:var(--text)">'+item.title+'</div>'+
           '<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4">'+item.body+'</div>'+
-          (item.actionText ? '<button onclick="'+item.action+'" style="margin-top:8px;padding:4px 10px;background:var(--green-l);color:var(--green);border:1px solid var(--green-b);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">'+item.actionText+'</button>' : '')+
+          (item.actionText ? '<button onclick="'+safeAction+'" style="margin-top:8px;padding:4px 10px;background:var(--green-l);color:var(--green);border:1px solid var(--green-b);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">'+item.actionText+'</button>' : '')+
         '</div>'+
       '</div>'+
     '</div>';
@@ -3207,20 +3236,18 @@ function getContinent(c){
 function renderDashboardFootprint(){
   var el = document.getElementById('dashboard-footprint-section');
   if(!el) return;
-  var filtered = state.travels || [];
-  var totalDays = filtered.reduce(function(s,t){ return s+(t.end?daysBetween(t.start,t.end)+1:daysFromEntry(t.start)); }, 0);
-  var uniqueCountries = [...new Set(filtered.map(function(t){ return t.country; }))];
+  var stats = getFootprintStats('all');
+  var totalDays = stats.totalDays;
+  var uniqueCountries = stats.uniqueCountries;
+  var countryStayMap = stats.countryDaysMap;
 
   var continentsSet = new Set();
-  var countryStayMap = {};
-  filtered.forEach(function(t){
-    continentsSet.add(getContinent(t.country));
-    var d = t.end ? daysBetween(t.start, t.end) + 1 : daysFromEntry(t.start);
-    countryStayMap[t.country] = (countryStayMap[t.country] || 0) + d;
+  uniqueCountries.forEach(function(c){
+    continentsSet.add(getContinent(c));
   });
 
-  var topCountry = Object.keys(countryStayMap).sort(function(a,b){ return countryStayMap[b] - countryStayMap[a]; })[0] || '—';
-  var topDays = topCountry !== '—' ? countryStayMap[topCountry] : 0;
+  var topCountry = stats.topCountry || '—';
+  var topDays = stats.topCountryDays || 0;
 
   var flagsHtml = '';
   if(uniqueCountries.length > 0){
@@ -3253,9 +3280,8 @@ function renderDashboardFootprint(){
             '<div style="font-size:16px; font-weight:800; color:#ffffff; letter-spacing:-0.2px">Passport Travel Footprint</div>'+
             '<div style="font-size:11px; color:rgba(255,255,255,0.85); font-weight:500">Global travel statistics &amp; stamped destinations</div>'+
           '</div>'+
-          '<div style="display:flex;gap:6px">'+
+          '<div>'+
             '<button onclick="openShareFootprintModal()" style="padding:6px 12px;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap">Share Card</button>'+
-            '<button onclick="showPage(\'history\')" style="padding:6px 12px;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;backdrop-filter:blur(6px);white-space:nowrap">History ➔</button>'+
           '</div>'+
         '</div>'+
 
@@ -4771,6 +4797,21 @@ function addVisa(){
   if(entry){
     if(!state.currentCountry){state.currentCountry=country;state.currentEntry=entry;}
     state.travels.unshift({country:country,code:cs.code||'',start:entry,end:null});
+  } else if(usedDays > 0) {
+    const targetC = (issuedBy && issuedBy !== 'Schengen') ? issuedBy : country;
+    if(targetC && targetC !== 'Schengen') {
+      const targetCs = getCS(targetC);
+      const pStart = start;
+      const pEndObj = new Date(new Date(start + 'T00:00:00').getTime() + Math.max(0, usedDays - 1) * 86400000);
+      const pEndStr = !isNaN(pEndObj.getTime()) ? pEndObj.toISOString().split('T')[0] : start;
+      state.travels.unshift({
+        country: targetC,
+        code: targetCs.code || '',
+        start: pStart,
+        end: pEndStr,
+        notes: 'Prior stay logged with ' + country + ' visa (' + usedDays + ' days)'
+      });
+    }
   }
   save();renderAll();showToast('Visa saved');
   ['add-country','add-start','add-end','add-stay','add-used','add-entry','add-reminder','add-notes'].forEach(function(i){document.getElementById(i).value='';});
@@ -4838,6 +4879,10 @@ function addPassport(){
 // CALENDAR INTEGRATION & EXPORT (.ics / Google Calendar)
 // ============================================================
 function openCalendarExportModal(title, dateStr, details) {
+  if (!state.user || !state.user.isPremium) {
+    openPaywall('calendar');
+    return;
+  }
   var nameEl = document.getElementById('cal-event-name');
   var dateEl = document.getElementById('cal-event-date');
   var descEl = document.getElementById('cal-event-desc');
@@ -5633,8 +5678,8 @@ function renderVisaRequirement(){
 }
 
 function openPaywall(reason){
-  const titles={visa:'Visa Limit Reached',passport:'Multiple Passports',ads:'Remove Ads',info:'Viflo Premium',oturum:'Residency Tracking','visa-check':'Visa Check',export:'Export History',residency:'Residency Permit Tracker',schengen:'Schengen 90/180 Tracker'};
-  const subs={visa:'Free plan allows up to 2 active visas. Upgrade to track unlimited visas.',passport:'Free plan supports 1 passport. Upgrade for dual citizenship (up to 2 passports).',ads:'Remove all sponsored content with Premium.',info:'Unlock the full Viflo experience.',oturum:'Track residency permits and annual day requirements with Premium.','visa-check':'See instant entry requirements for your passport — visa type, max stay, and more. Available with Premium.',export:'Export your travel history as CSV or PDF. Available with Premium.',residency:'Track residency permits and minimum annual stay requirements. Available with Premium.',schengen:'Calculate remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.'};
+  const titles={visa:'Visa Limit Reached',passport:'Multiple Passports',ads:'Remove Ads',info:'Viflo Premium',oturum:'Residency Tracking','visa-check':'Visa Check',export:'Export History',residency:'Residency Permit Tracker',schengen:'Schengen 90/180 Tracker',calendar:'Calendar Export'};
+  const subs={visa:'Free plan allows up to 2 active visas. Upgrade to track unlimited visas.',passport:'Free plan supports 1 passport. Upgrade for dual citizenship (up to 2 passports).',ads:'Remove all sponsored content with Premium.',info:'Unlock the full Viflo experience.',oturum:'Track residency permits and annual day requirements with Premium.','visa-check':'See instant entry requirements for your passport — visa type, max stay, and more. Available with Premium.',export:'Export your travel history as CSV or PDF. Available with Premium.',residency:'Track residency permits and minimum annual stay requirements. Available with Premium.',schengen:'Calculate remaining Schengen days, rolling 180-day window, and exact reset dates automatically with Premium.',calendar:'Syncing visa & passport expiry reminders to Google & Apple Calendars is available with Premium.'};
   document.getElementById('pw-title').textContent=titles[reason]||'Viflo Premium';
   document.getElementById('pw-subtitle').textContent=subs[reason]||'Upgrade to unlock all features.';
   openModal('paywall-modal');
@@ -6850,25 +6895,30 @@ async function refreshAdminData() {
     const accountsSnap = await getDocs(collection(db, "accounts"));
     
     const usersMap = {};
-    usersSnap.forEach(function(docSnap) {
+    const processDoc = function(docSnap, colName) {
       const d = docSnap.data();
       const userEmail = d.email || (d.appState && d.appState.currentUserEmail) || (d.appState && d.appState.user && d.appState.user.email) || '';
       const cleanEmail = userEmail.trim() ? userEmail.trim().toLowerCase() : docSnap.id;
       const uName = d.name || (d.appState && d.appState.user && d.appState.user.name) || 'User';
       const isPrem = !!d.isPremium || (d.appState && d.appState.user && !!d.appState.user.isPremium);
-      usersMap[docSnap.id] = Object.assign({ id: docSnap.id, col: 'users', email: cleanEmail, name: uName, isPremium: isPrem }, d);
-    });
 
-    accountsSnap.forEach(function(docSnap) {
-      const d = docSnap.data();
-      const userEmail = d.email || (d.appState && d.appState.currentUserEmail) || (d.appState && d.appState.user && d.appState.user.email) || '';
-      const cleanEmail = userEmail.trim() ? userEmail.trim().toLowerCase() : docSnap.id;
-      const uName = d.name || (d.appState && d.appState.user && d.appState.user.name) || 'User';
-      const isPrem = !!d.isPremium || (d.appState && d.appState.user && !!d.appState.user.isPremium);
-      if (!usersMap[docSnap.id] && !usersMap[cleanEmail]) {
-        usersMap[docSnap.id] = Object.assign({ id: docSnap.id, col: 'accounts', email: cleanEmail, name: uName, isPremium: isPrem }, d);
+      const entry = Object.assign({ id: docSnap.id, col: colName, email: cleanEmail, name: uName, isPremium: isPrem }, d);
+
+      if (!usersMap[cleanEmail]) {
+        usersMap[cleanEmail] = entry;
+      } else {
+        if (isPrem) usersMap[cleanEmail].isPremium = true;
+        if (uName && uName !== 'User' && uName !== 'Explorer') usersMap[cleanEmail].name = uName;
+        if (d.provider) usersMap[cleanEmail].provider = d.provider;
+        if (colName === 'users' && docSnap.id.length > 15) {
+          usersMap[cleanEmail].id = docSnap.id;
+          usersMap[cleanEmail].col = 'users';
+        }
       }
-    });
+    };
+
+    usersSnap.forEach(function(docSnap) { processDoc(docSnap, 'users'); });
+    accountsSnap.forEach(function(docSnap) { processDoc(docSnap, 'accounts'); });
 
     window.adminUsersList = Object.values(usersMap);
     
@@ -7281,22 +7331,59 @@ function getTripDaysInPeriod(trip, periodStr) {
 }
 
 function getFootprintStats(periodStr) {
-  var travels = state.travels || [];
+  var travels = (state.travels || []).slice();
   var filteredTrips = [];
   var countryDaysMap = {};
   var totalDays = 0;
 
+  // 1. Include active location stay if set and not already present as open trip in state.travels
+  if (state.currentCountry) {
+    var hasOpenTripForCurr = travels.some(function(t) { return t.country === state.currentCountry && !t.end; });
+    if (!hasOpenTripForCurr) {
+      travels.push({
+        country: state.currentCountry,
+        code: getCS(state.currentCountry).code || '',
+        start: state.currentEntry || today(),
+        end: null
+      });
+    }
+  }
+
+  // 2. Process all travel records
   travels.forEach(function(t) {
+    var cName = t.country;
+    if (!cName) return;
     var daysInP = getTripDaysInPeriod(t, periodStr);
     if (daysInP > 0) {
       filteredTrips.push(t);
       totalDays += daysInP;
-      if (!countryDaysMap[t.country]) {
-        countryDaysMap[t.country] = 0;
+      if (!countryDaysMap[cName]) {
+        countryDaysMap[cName] = 0;
       }
-      countryDaysMap[t.country] += daysInP;
+      countryDaysMap[cName] += daysInP;
     }
   });
+
+  // 3. Process prior stays logged on visas (daysUsed)
+  if (state.visas && state.visas.length) {
+    state.visas.forEach(function(v) {
+      var uDays = parseInt(v.daysUsed, 10) || 0;
+      if (uDays > 0) {
+        var vCountry = (v.issuedBy && v.issuedBy !== 'Schengen') ? v.issuedBy : v.country;
+        if (vCountry && vCountry !== 'Schengen') {
+          var existingDays = countryDaysMap[vCountry] || 0;
+          if (existingDays < uDays) {
+            var diff = uDays - existingDays;
+            if (!countryDaysMap[vCountry]) {
+              countryDaysMap[vCountry] = 0;
+            }
+            countryDaysMap[vCountry] += diff;
+            totalDays += diff;
+          }
+        }
+      }
+    });
+  }
 
   // Sort countries descending by total days spent in selected period
   var uniqueCountries = Object.keys(countryDaysMap).sort(function(a, b) {
@@ -7328,7 +7415,14 @@ function renderPeriodDropdown() {
   travels.forEach(function(t) {
     if (t.start) {
       var y = parseInt(t.start.split('-')[0], 10);
-      if (y && !isNaN(y) && y >= 2020 && y <= currentYr + 1) yearsSet.add(y);
+      if (y && !isNaN(y) && y >= 1990 && y <= currentYr + 1) yearsSet.add(y);
+    }
+  });
+
+  (state.visas || []).forEach(function(v) {
+    if (v.startDate) {
+      var y = parseInt(v.startDate.split('-')[0], 10);
+      if (y && !isNaN(y) && y >= 1990 && y <= currentYr + 1) yearsSet.add(y);
     }
   });
 
@@ -7641,14 +7735,18 @@ function completeUpgrade() {
 // NAVIGATION & TOUCH SWIPE GESTURES
 // ============================================================
 const ALL_PAGES=['home','visas','add','history','profile'];
-function showPage(name){
+function showPage(name, subtab){
   ALL_PAGES.forEach(function(p){
     document.getElementById('page-'+p).classList.toggle('active',p===name);
     const nb=document.getElementById('nav-'+p); if(nb) nb.classList.toggle('active',p===name);
   });
   document.getElementById('main-scroll').scrollTop=0;
   if(name==='history') renderHistory();
-  if(name==='visas'){ currentVisaSubTab='myvisas'; setVisaSubTab('myvisas'); }
+  if(name==='visas'){
+    var targetTab = subtab || 'myvisas';
+    currentVisaSubTab = targetTab;
+    setVisaSubTab(targetTab);
+  }
   if(name==='profile') renderProfile();
   if(name==='add') populatePassportSelect();
 }
