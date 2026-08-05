@@ -86,7 +86,8 @@
     let db;
     try {
       db = initializeFirestore(app, {
-        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+        experimentalAutoDetectLongPolling: true
       }, firebaseConfig.firestoreDatabaseId);
     } catch (e) {
       db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -1825,14 +1826,18 @@ input:checked+.slider::before{transform:translateX(20px);}
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Product Ecosystem</div>
       <div style="display:flex;gap:10px">
         <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg></div>
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;overflow:hidden">
+            <img src="logo.svg" style="width:24px;height:24px;object-fit:contain" alt="Viflo Logo" id="about-viflo-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+            <svg style="display:none" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg>
+          </div>
           <div style="font-size:12px;font-weight:800;color:var(--text)">Viflo</div>
-          <div style="font-size:10px;color:var(--muted)">Visa &amp; Stay Tracker</div>
+          <div style="font-size:10px;color:var(--muted)">Visa &amp; Residency Tracker</div>
         </div>
         <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/></svg></div>
-          <div style="font-size:12px;font-weight:800;color:var(--text)">VibeSpot</div>
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <div style="font-size:12px;font-weight:800;color:var(--text)">VibeRoutes</div>
           <div style="font-size:10px;color:var(--muted)">Travel Discovery</div>
+          <div style="display:inline-block;margin-top:6px;padding:2px 8px;background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:9px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase">Coming Soon</div>
         </div>
       </div>
     </div>
@@ -2007,29 +2012,44 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-title" id="pw-title">Unlock Full Viflo</div>
     <div class="modal-sub" id="pw-subtitle">Try all Premium features free for 7 days. Cancel anytime before trial ends.</div>
     <div class="paywall-features">
-      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Unlimited Visas &amp; Passports</strong></span></div>
-      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Residency Permit Tracker</strong> with annual day counter</span></div>
-      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Schengen 90/180 Calculator</strong></span></div>
-      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Google &amp; Apple Calendar Sync</strong> (.ics export)</span></div>
-      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Ad-Free</strong> experience</span></div>
-      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Smart Notifications</strong> before limits</span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Unlimited Passports, Visas &amp; Residencies</strong></span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Advanced Schengen 90/180 &amp; Safe Return Calculator</strong></span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>183-Day Tax Residency Watch &amp; Stay Monitor</strong></span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Google &amp; Apple Calendar Sync</strong> (.ics auto-export)</span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Full Cloud Sync</strong> across all devices (Firebase)</span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>PDF/CSV Export</strong> &amp; Social Footprint Card</span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>Smart Reminders</strong> before visa &amp; stay limits expire</span></div>
+      <div class="pw-feature-item"><span class="pw-feature-icon">✓</span><span><strong>100% Ad-Free</strong> premium experience</span></div>
     </div>
-    <div class="paywall-price-box" style="margin-bottom:12px">
+    <div class="paywall-price-box" style="margin-bottom:12px;padding:12px">
       <div class="paywall-price-title" style="margin-bottom:8px">Select Your Plan (7-Day Free Trial Included)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+      
+      <!-- Subscription Plans Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div style="border:1.5px solid var(--border);border-radius:12px;padding:10px;text-align:center;background:var(--bg2)">
           <div style="font-size:11px;font-weight:700;color:var(--muted)">MONTHLY</div>
-          <div style="font-size:16px;font-weight:800;color:var(--text);margin:2px 0">$4.99<span style="font-size:11px;font-weight:400;color:var(--muted)">/mo</span></div>
+          <div style="font-size:16px;font-weight:800;color:var(--text);margin:2px 0">$3.99<span style="font-size:11px;font-weight:400;color:var(--muted)">/mo</span></div>
           <div style="font-size:10px;color:var(--muted)">7 days free trial</div>
         </div>
         <div style="border:2px solid var(--green);border-radius:12px;padding:10px;text-align:center;background:var(--green-l);position:relative">
-          <div style="position:absolute;top:-8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px">SAVE 25%</div>
-          <div style="font-size:11px;font-weight:700;color:var(--green)">ANNUAL</div>
-          <div style="font-size:16px;font-weight:800;color:var(--green);margin:2px 0">$44.99<span style="font-size:11px;font-weight:400;color:var(--green)">/yr</span></div>
-          <div style="font-size:10px;color:var(--green);font-weight:600">~$3.75/month</div>
+          <div style="position:absolute;top:-8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px">LAUNCH 50% OFF</div>
+          <div style="font-size:11px;font-weight:700;color:var(--green)">ANNUAL (LAUNCH PROMO)</div>
+          <div style="font-size:16px;font-weight:800;color:var(--green);margin:2px 0">$19.99<span style="font-size:11px;font-weight:400;color:var(--green)">/yr</span> <span style="font-size:11px;text-decoration:line-through;color:var(--muted);font-weight:400">$39.99</span></div>
+          <div style="font-size:10px;color:var(--green);font-weight:600">~$1.66/month · 7 days free</div>
+          <div style="font-size:9.5px;color:#D97706;font-weight:700;margin-top:3px;background:rgba(245,158,11,0.12);padding:2px 6px;border-radius:6px;display:inline-block">⏳ Offer ends Sept 30, 2026</div>
         </div>
       </div>
-      <div style="font-size:11.5px;font-weight:700;color:var(--green);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px">
+
+      <!-- Founder Lifetime Pass Banner -->
+      <div style="border:1.5px dashed #F59E0B;border-radius:12px;padding:10px 12px;background:rgba(245,158,11,0.08);text-align:center;position:relative">
+        <div style="display:inline-block;background:linear-gradient(135deg,#F59E0B 0%,#D97706 100%);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">
+          ⚡ FOUNDER PASS (First 200 Users Only)
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--text)">$49.99 <span style="font-size:11px;font-weight:600;color:var(--text2)">· One-Time Payment</span></div>
+        <div style="font-size:10.5px;color:var(--muted);margin-top:2px">Pay once, own forever. No recurring fees or subscriptions.</div>
+      </div>
+
+      <div style="font-size:11.5px;font-weight:700;color:var(--green);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:4px">
         <span>7 Days $0.00 · Cancel anytime in 1-click</span>
       </div>
     </div>
@@ -2858,6 +2878,7 @@ function loadCountryBackground(bgId, code) {
         bg.style.backgroundSize = 'cover';
         bg.style.backgroundPosition = 'center';
         bg.style.backgroundRepeat = 'no-repeat';
+        bg.style.filter = 'brightness(1.18) contrast(1.02)';
       }
     };
     img.onerror = () => {
@@ -3530,7 +3551,7 @@ function renderCurrentLocation(){
       '<div class="section-title">Current Location</div>'+
       '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:180px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card-home">'+
         '<div id="loc-bg-home" style="position:absolute;inset:0;background:linear-gradient('+homeGrad+');transition:opacity 0.5s;"></div>'+
-        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.55) 100%);z-index:1;"></div>'+
+        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.02) 0%,rgba(0,0,0,0.28) 100%);z-index:1;"></div>'+
         '<div style="position:relative;z-index:2;padding:14px 16px;display:flex;flex-direction:column;min-height:180px;">'+
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
             '<div style="display:flex;align-items:center;gap:10px">'+
@@ -3629,7 +3650,7 @@ function renderCurrentLocation(){
     '<div class="section-title">Current Location</div>'+
     '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:210px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card">'+
       '<div id="loc-bg" style="position:absolute;inset:0;background:linear-gradient('+grad+');transition:opacity 0.5s;"></div>'+
-      '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.48) 100%);z-index:1;"></div>'+
+      '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.02) 0%,rgba(0,0,0,0.26) 100%);z-index:1;"></div>'+
       '<div style="position:relative;z-index:2;padding:14px 16px;display:flex;flex-direction:column;min-height:210px;">'+
 
         /* ── TOP ROW: flag + name + change ── */
@@ -5689,21 +5710,40 @@ function simulateUpgrade(){ closeModal('paywall-modal'); showToast("You'll be no
 // ============================================================
 // CONTACT
 // ============================================================
-function submitContact(){
+async function submitContact(){
   const name=document.getElementById('contact-name').value.trim();
   const email=document.getElementById('contact-email').value.trim();
   const subject=document.getElementById('contact-subject').value;
   const message=document.getElementById('contact-message').value.trim();
   if(!name||!email||!message){ showToast('Please fill in all fields'); return; }
   if(!email.includes('@')){ showToast('Please enter a valid email'); return; }
-  // Build mailto link as fallback (no backend yet)
-  const body=encodeURIComponent('Name: '+name+'\n\n'+message);
-  const subj=encodeURIComponent('[Viflo] '+(subject||'Message'));
-  window.location.href='mailto:hello@viflo.app?subject='+subj+'&body='+body;
+
+  // Save to Firebase Firestore if available
+  if (window.firebaseServices) {
+    try {
+      const { db, collection, addDoc } = window.firebaseServices;
+      await addDoc(collection(db, "contact_messages"), {
+        name: name,
+        email: email,
+        subject: subject || 'General',
+        message: message,
+        createdAt: new Date().toISOString(),
+        status: 'unread'
+      });
+    } catch(e) {
+      console.warn("Could not save message to Firestore:", e);
+    }
+  }
+
+  // Build mailto link to yamanozgur@gmail.com
+  const body=encodeURIComponent('Name: '+name+'\nEmail: '+email+'\n\n'+message);
+  const subj=encodeURIComponent('[Viflo Contact] '+(subject||'Message'));
+  window.location.href='mailto:yamanozgur@gmail.com?subject='+subj+'&body='+body;
+
   closeModal('contact-modal');
   ['contact-name','contact-email','contact-message'].forEach(function(i){document.getElementById(i).value='';});
   document.getElementById('contact-subject').value='';
-  showToast('Opening your email client…');
+  showToast('Message sent & opening email client…');
 }
 
 // ============================================================
@@ -7364,27 +7404,6 @@ function getFootprintStats(periodStr) {
     }
   });
 
-  // 3. Process prior stays logged on visas (daysUsed)
-  if (state.visas && state.visas.length) {
-    state.visas.forEach(function(v) {
-      var uDays = parseInt(v.daysUsed, 10) || 0;
-      if (uDays > 0) {
-        var vCountry = (v.issuedBy && v.issuedBy !== 'Schengen') ? v.issuedBy : v.country;
-        if (vCountry && vCountry !== 'Schengen') {
-          var existingDays = countryDaysMap[vCountry] || 0;
-          if (existingDays < uDays) {
-            var diff = uDays - existingDays;
-            if (!countryDaysMap[vCountry]) {
-              countryDaysMap[vCountry] = 0;
-            }
-            countryDaysMap[vCountry] += diff;
-            totalDays += diff;
-          }
-        }
-      }
-    });
-  }
-
   // Sort countries descending by total days spent in selected period
   var uniqueCountries = Object.keys(countryDaysMap).sort(function(a, b) {
     if (countryDaysMap[b] !== countryDaysMap[a]) {
@@ -7415,13 +7434,6 @@ function renderPeriodDropdown() {
   travels.forEach(function(t) {
     if (t.start) {
       var y = parseInt(t.start.split('-')[0], 10);
-      if (y && !isNaN(y) && y >= 1990 && y <= currentYr + 1) yearsSet.add(y);
-    }
-  });
-
-  (state.visas || []).forEach(function(v) {
-    if (v.startDate) {
-      var y = parseInt(v.startDate.split('-')[0], 10);
       if (y && !isNaN(y) && y >= 1990 && y <= currentYr + 1) yearsSet.add(y);
     }
   });
@@ -7472,6 +7484,7 @@ function renderFootprintCard() {
   var topCountryName = '';
   var categorySubtitle = '';
   var bgPhotoUrl = '';
+  var topCountryDaysText = '';
 
   if (hasNoTravels) {
     categorySubtitle = 'READY TO EXPLORE';
@@ -7480,6 +7493,9 @@ function renderFootprintCard() {
   } else {
     topCountryName = stats.topCountry || stats.uniqueCountries[0];
     categorySubtitle = 'TOP DESTINATION';
+    if (stats.topCountryDays > 0) {
+      topCountryDaysText = '📍 ' + stats.topCountryDays + (stats.topCountryDays === 1 ? ' Day Stayed' : ' Days Stayed');
+    }
     var topCs = getCS(topCountryName);
     bgPhotoUrl = (topCs && topCs.code) ? 
       'https://raw.githubusercontent.com/yamanozgur/visaflow/main/' + topCs.code + '.webp' : 
@@ -7514,9 +7530,11 @@ function renderFootprintCard() {
   var cardHeight = '533px'; // Fixed 9:16 Aspect Ratio for Instagram / TikTok Stories
 
   wrapper.innerHTML = 
-    '<div id="footprint-card-render" style="width:' + cardWidth + '; height:' + cardHeight + '; position:relative; overflow:hidden; border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, serif; color:#ffffff; text-align:center; background:url(\'' + bgPhotoUrl + '\') center/cover no-repeat;">' +
-      '<!-- Minimal Shadow Overlay for Background Photo -->' +
-      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.55) 100%); z-index:0"></div>' +
+    '<div id="footprint-card-render" style="width:' + cardWidth + '; height:' + cardHeight + '; position:relative; overflow:hidden; border-radius:22px; box-shadow:0 20px 50px rgba(0,0,0,0.5); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, serif; color:#ffffff; text-align:center;">' +
+      '<!-- Brightened Background Photo Layer -->' +
+      '<div style="position:absolute; inset:0; background:url(\'' + bgPhotoUrl + '\') center/cover no-repeat; filter:brightness(1.18) contrast(1.02); z-index:0"></div>' +
+      '<!-- Lightened Gradient Overlay for High Clarity -->' +
+      '<div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.30) 100%); z-index:0"></div>' +
       
       '<!-- 9:16 Story Poster Container -->' +
       '<div style="position:relative; z-index:1; height:100%; box-sizing:border-box; padding:18px 14px; display:flex; flex-direction:column; justify-content:space-between">' +
@@ -7537,9 +7555,15 @@ function renderFootprintCard() {
             '</div>' +
 
             '<!-- Main Serif Destination Headline -->' +
-            '<div style="font-family: Georgia, \'Playfair Display\', serif; font-size:24px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:#ffffff; text-shadow:0 2px 20px rgba(0,0,0,0.95); margin-bottom:4px; line-height:1.15">' +
+            '<div style="font-family: Georgia, \'Playfair Display\', serif; font-size:24px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:#ffffff; text-shadow:0 2px 20px rgba(0,0,0,0.95); margin-bottom:2px; line-height:1.15">' +
               topCountryName +
             '</div>' +
+
+            (topCountryDaysText ? 
+              '<div style="font-size:11px; font-weight:800; letter-spacing:1px; color:#A7F3D0; text-shadow:0 1px 4px rgba(0,0,0,0.9); margin-bottom:4px">' +
+                topCountryDaysText +
+              '</div>' : ''
+            ) +
           '</div>' +
 
           (hasNoTravels ? 
@@ -7586,7 +7610,9 @@ function renderFootprintCard() {
                   '<div style="font-size:8px; color:rgba(255,255,255,0.9); font-weight:600">Travel Footprint</div>' +
                 '</div>' +
               '</div>' +
-              '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.6); padding:3px 10px; border-radius:14px; font-size:9.5px; font-weight:800; color:#ffffff; text-shadow:0 1px 4px rgba(0,0,0,0.9)">Viflo </div>' +
+              '<div style="display:flex; align-items:center; justify-content:center; padding:2px 4px">' +
+                '<img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/viflo_white_vt.png" alt="viflo logo" style="height:22px; max-width:90px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6)); display:block;" crossOrigin="anonymous">' +
+              '</div>' +
             '</div>' +
           '</div>' +
 
@@ -7604,8 +7630,8 @@ function downloadFootprintImage() {
   var card = document.getElementById('footprint-card-render');
   if (!card) return;
   if (typeof html2canvas !== 'undefined') {
-    showToast("Generating story image...");
-    html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
+    showToast("Generating story image (1080x1920)...");
+    html2canvas(card, { scale: 3.6, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
       var link = document.createElement('a');
       var name = state.user ? (state.user.name || 'Nomad') : 'Nomad';
       link.download = name.replace(/\s+/g, '_') + '_Story_' + fpSelectedPeriod + '.png';
@@ -7633,7 +7659,7 @@ function shareFootprintNative() {
   showToast("Preparing story image for share...");
 
   if (typeof html2canvas !== 'undefined') {
-    html2canvas(card, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
+    html2canvas(card, { scale: 3.6, useCORS: true, allowTaint: true, backgroundColor: null }).then(function(canvas) {
       canvas.toBlob(function(blob) {
         if (!blob) {
           downloadFootprintImage();
