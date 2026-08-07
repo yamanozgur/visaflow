@@ -611,6 +611,8 @@
     const { auth, db, doc, setDoc } = window.firebaseServices;
     const cleanState = window.safeCloneState(appState || window.state);
     const sanitizedState = window.sanitizeForFirestore(cleanState);
+    const nowIso = new Date().toISOString();
+    const activeSec = cleanState.activeTimeSeconds || (window.state ? window.state.activeTimeSeconds : 0) || 0;
     
     if (auth.currentUser) {
       const userDocRef = doc(db, "users", auth.currentUser.uid);
@@ -618,7 +620,9 @@
         email: auth.currentUser.email || '',
         name: cleanState.user ? (cleanState.user.name || '') : '',
         isPremium: cleanState.user ? !!cleanState.user.isPremium : false,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
+        lastActiveAt: nowIso,
+        activeTimeSeconds: activeSec,
         appState: sanitizedState
       });
       await setDoc(userDocRef, payload, { merge: true });
@@ -629,7 +633,9 @@
         email: window.currentCloudAccount.email || '',
         name: cleanState.user ? (cleanState.user.name || '') : '',
         isPremium: cleanState.user ? !!cleanState.user.isPremium : false,
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowIso,
+        lastActiveAt: nowIso,
+        activeTimeSeconds: activeSec,
         appState: sanitizedState
       });
       await setDoc(accountDocRef, payload, { merge: true });
@@ -7050,6 +7056,30 @@ async function refreshAdminData() {
   }
 }
 
+function formatActiveTime(sec) {
+  if (!sec || sec < 60) return '< 1 dk';
+  const mins = Math.floor(sec / 60);
+  if (mins < 60) return mins + ' dk';
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return hours + ' sa ' + (remMins > 0 ? remMins + ' dk' : '');
+}
+
+function formatRelativeTime(isoStr) {
+  if (!isoStr) return 'N/A';
+  const date = new Date(isoStr);
+  if (isNaN(date.getTime())) return 'N/A';
+  const diffMs = Date.now() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Az önce';
+  if (diffMins < 60) return diffMins + ' dk önce';
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return diffHours + ' sa önce';
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return diffDays + ' gün önce';
+  return date.toLocaleDateString();
+}
+
 function renderAdminUsers(users) {
   const el = document.getElementById('admin-users-list');
   if (!el) return;
@@ -7064,6 +7094,9 @@ function renderAdminUsers(users) {
     const email = u.email || u.id;
     const dateStr = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : 'N/A';
     
+    const activeSec = u.activeTimeSeconds || (u.appState && u.appState.activeTimeSeconds) || 0;
+    const lastActiveIso = u.lastActiveAt || u.updatedAt || (u.appState && u.appState.lastActiveAt) || '';
+
     let providerBadge = '';
     if (u.id.startsWith('google_') || u.authProvider === 'google') {
       providerBadge = '<span style="font-size:10px; font-weight:700; background:#4285F4; color:#fff; padding:2px 6px; border-radius:6px; margin-left:6px">Google</span>';
@@ -7077,7 +7110,11 @@ function renderAdminUsers(users) {
       '<div style="display:flex; justify-content:space-between; align-items:flex-start">'+
         '<div>'+
           '<div style="font-size:13px; font-weight:700; color:var(--text); word-break:break-all; display:flex; align-items:center">'+email+providerBadge+'</div>'+
-          '<div style="font-size:11px; color:var(--muted); margin-top:2px">'+name+' · Updated: '+dateStr+'</div>'+
+          '<div style="font-size:11px; color:var(--muted); margin-top:2px">'+name+' · Kayıt/Güncelleme: '+dateStr+'</div>'+
+          '<div style="font-size:11px; color:var(--text); margin-top:4px; display:flex; gap:10px; flex-wrap:wrap">'+
+            '<span>⏱️ Toplam Süre: <b>'+formatActiveTime(activeSec)+'</b></span>'+
+            '<span>🟢 Son Aktif: <b>'+formatRelativeTime(lastActiveIso)+'</b></span>'+
+          '</div>'+
         '</div>'+
         '<span style="font-size:11px; font-weight:800; padding:3px 8px; border-radius:12px; background:'+(isPrem ? 'var(--orange-l)' : 'var(--bg3)')+'; color:'+(isPrem ? 'var(--orange)' : 'var(--muted)')+'; border:1px solid '+(isPrem ? 'var(--orange-b)' : 'var(--border)')+'">'+
           (isPrem ? '⭐ PREMIUM' : '🆓 FREE')+
@@ -8514,6 +8551,24 @@ updateClock();
 setInterval(updateClock,10000);
 // Check for border crossing on startup (silent if permission already granted)
 setTimeout(checkBorderOnStartup, 2000);
+
+// Session duration & activity tracker
+setInterval(function() {
+  if (!document.hidden) {
+    if (!window.state) window.state = {};
+    window.state.activeTimeSeconds = (window.state.activeTimeSeconds || 0) + 10;
+    window.state.lastActiveAt = new Date().toISOString();
+  }
+}, 10000);
+
+// Sync session time to Cloud every 60 seconds
+setInterval(function() {
+  if (!document.hidden && (window.firebaseServices || window.currentCloudAccount)) {
+    if (typeof window.saveStateToCloud === 'function') {
+      window.saveStateToCloud();
+    }
+  }
+}, 60000);
 
 // Register Service Worker for PWA with automatic update detection
 if('serviceWorker' in navigator){

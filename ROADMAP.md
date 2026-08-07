@@ -56,3 +56,10 @@
   - Reklam bantlarından biri veya uygulama içi keşfet bölümüne yerleştirilecek özel sponsor kartı doğrudan kendi projemiz olan **Viberoutes** tanıtımına ayrılacak.
 - **Durum:** Yapılacaklar Listesine Eklendi (Backlog)
 
+### 6. Gelişmiş Kullanıcı Davranış Analitiği & Etkinlik Takibi (GA4 / Mixpanel Event Tracking)
+- **Problem:** Kullanıcıların hangi ekranlarda ne kadar süre vakit geçirdiğini, hangi butonlara ve vize hesaplama özelliklerine tıkladığını ve ödeme/paywall ekranlarındaki dönüşüm oranlarını detaylı huni (funnel) şeklinde izlemek.
+- **Çözüm:**
+  1. Google Analytics 4 (GA4) veya Mixpanel SDK entegrasyonu ile event tracking kurulması (Paywall Impression, Add Visa Click, Export PDF/CSV Event, Calendar Sync Event).
+  2. Kullanıcı segmentlerine (Free vs. Premium, Android vs. iOS PWA) göre ortalama oturum süresi ve aktiflik oranlarının analizi.
+- **Durum:** Yapılacaklar Listesine Eklendi (Backlog)
+
