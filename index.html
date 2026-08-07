@@ -733,7 +733,7 @@
 <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yamanozgur/visaflow/main/favicon.png">
 <!-- Open Graph -->
 <meta name="description" content="Smart visa and travel tracking for digital nomads">
-<meta property="og:title" content="viflo — Freedom to Wander">
+<meta property="og:title" content="viflo — Visa &amp; Residency Tracker">
 <meta property="og:description" content="Smart visa and travel tracking with kırlangıç freedom">
 <meta property="og:type" content="website">
 
@@ -1241,23 +1241,21 @@ input:checked+.slider::before{transform:translateX(20px);}
 <body>
 
 <!-- APP INITIAL SPLASH / LOADING SCREEN -->
-<div id="app-splash" style="position:fixed; inset:0; z-index:999999; background:linear-gradient(135deg, var(--green) 0%, #00C49A 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; max-width:430px; margin:0 auto; transition:opacity 0.4s ease, visibility 0.4s ease;">
+<div id="app-splash" style="position:fixed; inset:0; z-index:999999; background:#ffffff; display:flex; flex-direction:column; align-items:center; justify-content:center; max-width:430px; margin:0 auto; transition:opacity 0.4s ease, visibility 0.4s ease;">
   <div style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <div style="width:140px; height:140px; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 12px 28px rgba(0,0,0,0.2));">
-      <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/logo.png" alt="viflo logo" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
-      <div style="display:none; width:84px; height:84px; border-radius:22px; background:rgba(255,255,255,0.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1.5px solid rgba(255,255,255,0.35); align-items:center; justify-content:center; color:#ffffff; box-shadow:0 14px 32px rgba(0,0,0,0.15);">
+    <div style="width:180px; height:180px; display:flex; align-items:center; justify-content:center;">
+      <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/vf_logo.png" alt="viflo logo" style="width:100%; height:100%; object-fit:contain; display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
+      <div style="display:none; width:84px; height:84px; border-radius:22px; background:var(--bg2); border:1.5px solid var(--border); align-items:center; justify-content:center; color:var(--green); box-shadow:0 14px 32px rgba(0,0,0,0.1);">
         <svg width="50" height="50" viewBox="0 0 32 32" fill="currentColor">
           <path d="M30 4C22.5 6.2 17.5 11.2 13.5 17.2C11 21 9 25.2 6.5 28.7C5.8 29.7 4.5 29.7 4 28.7C3.5 27.7 4.3 26.2 5.3 24.7C7.5 21.2 9 16.2 6.5 13.2C4.3 10.5 1.5 9.2 1.5 9.2C6 10.2 10 9.2 13.5 6.7C17.5 3.7 22.5 2.2 30 4Z"/>
         </svg>
       </div>
     </div>
-    <div style="font-size:36px; font-weight:900; letter-spacing:-1.2px; color:#ffffff; margin-top:10px;">viflo</div>
-    <div style="font-size:12px; font-weight:700; color:rgba(255,255,255,0.85); letter-spacing:2px; text-transform:uppercase; margin-top:2px;">Travel &amp; Visa Freedom</div>
   </div>
   <div style="margin-top:28px; display:flex; align-items:center; gap:8px;">
-    <div style="width:9px; height:9px; border-radius:50%; background:#ffffff; animation: splashPulse 1.2s infinite ease-in-out;"></div>
-    <div style="width:9px; height:9px; border-radius:50%; background:#ffffff; animation: splashPulse 1.2s infinite ease-in-out 0.2s;"></div>
-    <div style="width:9px; height:9px; border-radius:50%; background:#ffffff; animation: splashPulse 1.2s infinite ease-in-out 0.4s;"></div>
+    <div style="width:9px; height:9px; border-radius:50%; background:var(--green); animation: splashPulse 1.2s infinite ease-in-out;"></div>
+    <div style="width:9px; height:9px; border-radius:50%; background:var(--green); animation: splashPulse 1.2s infinite ease-in-out 0.2s;"></div>
+    <div style="width:9px; height:9px; border-radius:50%; background:var(--green); animation: splashPulse 1.2s infinite ease-in-out 0.4s;"></div>
   </div>
 </div>
 
@@ -1265,17 +1263,15 @@ input:checked+.slider::before{transform:translateX(20px);}
 <div id="onboarding" class="ob-full-bg">
   <div class="ob-slides">
     <div class="ob-slide active" id="ob-slide-0">
-      <div style="width:240px;margin:0 auto;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
-        <div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 10px 24px rgba(0,0,0,0.15));">
-          <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/logo.png" alt="viflo logo" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
+      <div style="width:220px;margin:0 auto;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;">
+          <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/vf_logo.png" alt="viflo logo" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
           <div style="display:none;width:90px;height:90px;border-radius:24px;background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%);align-items:center;justify-content:center;color:#ffffff;box-shadow:0 12px 30px rgba(0,196,154,0.35);">
             <svg width="54" height="54" viewBox="0 0 32 32" fill="currentColor">
               <path d="M30 4C22.5 6.2 17.5 11.2 13.5 17.2C11 21 9 25.2 6.5 28.7C5.8 29.7 4.5 29.7 4 28.7C3.5 27.7 4.3 26.2 5.3 24.7C7.5 21.2 9 16.2 6.5 13.2C4.3 10.5 1.5 9.2 1.5 9.2C6 10.2 10 9.2 13.5 6.7C17.5 3.7 22.5 2.2 30 4Z"/>
             </svg>
           </div>
         </div>
-        <div style="font-size:36px;font-weight:900;letter-spacing:-1.2px;color:var(--text);margin-top:2px;">viflo</div>
-        <div style="font-size:13px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;">Freedom to Wander</div>
       </div>
     </div>
     <div class="ob-slide" id="ob-slide-1">
@@ -1310,8 +1306,8 @@ input:checked+.slider::before{transform:translateX(20px);}
         </div>
 
         <div style="display:flex;background:var(--bg2);padding:3px;border-radius:12px;margin-bottom:16px;">
-          <button id="ob-auth-tab-register" onclick="setObAuthTab('register')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:var(--card);color:var(--green);box-shadow:var(--shadow-sm);transition:all 0.2s;">Register</button>
-          <button id="ob-auth-tab-login" onclick="setObAuthTab('login')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.2s;">Sign In</button>
+          <button id="ob-auth-tab-login" onclick="setObAuthTab('login')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:var(--card);color:var(--green);box-shadow:var(--shadow-sm);transition:all 0.2s;">Sign In</button>
+          <button id="ob-auth-tab-register" onclick="setObAuthTab('register')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.2s;">Register</button>
         </div>
 
         <div id="ob-auth-fields">
@@ -1319,12 +1315,12 @@ input:checked+.slider::before{transform:translateX(20px);}
           <input class="form-input" id="ob-auth-email" type="email" placeholder="name@example.com" autocomplete="email">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
             <label class="form-label" style="margin-bottom:0">Password</label>
-            <a href="#" id="ob-auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px; display:none;">Forgot Password?</a>
+            <a href="#" id="ob-auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px; display:inline-block;">Forgot Password?</a>
           </div>
-          <input class="form-input" id="ob-auth-password" type="password" placeholder="••••••••" autocomplete="new-password">
+          <input class="form-input" id="ob-auth-password" type="password" placeholder="••••••••" autocomplete="current-password">
         </div>
 
-        <button class="submit-btn" id="ob-auth-submit-btn" onclick="submitObAuth()" style="margin-top:16px;">Create Cloud Account</button>
+        <button class="submit-btn" id="ob-auth-submit-btn" onclick="submitObAuth()" style="margin-top:16px;">Sign In to Cloud</button>
         
         <div style="display:flex;align-items:center;margin:14px 0;gap:8px;">
           <div style="flex:1;height:1px;background:var(--border)"></div>
@@ -1825,17 +1821,12 @@ input:checked+.slider::before{transform:translateX(20px);}
       
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Product Ecosystem</div>
       <div style="display:flex;gap:10px">
-        <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;overflow:hidden">
-            <img src="logo.svg" style="width:24px;height:24px;object-fit:contain" alt="Viflo Logo" id="about-viflo-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
-            <svg style="display:none" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C20 7 20 5.5 19 4.5s-2.5-1-3 0L12.5 8 4.3 6.2c-.5-.1-.9.1-1.1.5l-.3.6c-.2.5 0 1 .4 1.3L8 12.5l-3.5 3.5-2.2-.7c-.4-.1-.8.1-1 .4l-.3.5c-.2.4 0 .9.3 1.2l3.3 3.3c.3.3.8.5 1.2.3l.5-.3c.3-.2.5-.6.4-1l-.7-2.2 3.5-3.5 3.9 4.7c.3.4.8.6 1.3.4l.6-.3c.4-.2.6-.6.5-1.1z"/></svg>
-          </div>
-          <div style="font-size:12px;font-weight:800;color:var(--text)">Viflo</div>
+        <div style="flex:1;background:var(--card);padding:14px 10px;border-radius:12px;border:1px solid var(--border);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/viflo_green.png" style="height:44px;max-width:110px;object-fit:contain;display:block;margin:0 auto 4px;" alt="Viflo Logo" id="about-viflo-logo" />
           <div style="font-size:10px;color:var(--muted)">Visa &amp; Residency Tracker</div>
         </div>
-        <div style="flex:1;background:var(--card);padding:12px 10px;border-radius:12px;border:1px solid var(--border);text-align:center">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/><circle cx="12" cy="12" r="9"/></svg></div>
-          <div style="font-size:12px;font-weight:800;color:var(--text)">VibeRoutes</div>
+        <div style="flex:1;background:var(--card);padding:14px 10px;border-radius:12px;border:1px solid var(--border);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <img src="https://raw.githubusercontent.com/yamanozgur/visaflow/main/vr.png" style="height:44px;max-width:110px;object-fit:contain;display:block;margin:0 auto 4px;" alt="VibeRoutes Logo" id="about-vr-logo" />
           <div style="font-size:10px;color:var(--muted)">Travel Discovery</div>
           <div style="display:inline-block;margin-top:6px;padding:2px 8px;background:rgba(245,158,11,0.12);color:#d97706;border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:9px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase">Coming Soon</div>
         </div>
@@ -2238,6 +2229,33 @@ input:checked+.slider::before{transform:translateX(20px);}
       </button>
     </div>
     <button class="secondary-btn" onclick="closeModal('share-footprint-modal')" style="margin-top:10px">Close</button>
+  </div>
+</div>
+
+<!-- SMART TRAVEL INSIGHTS MODAL -->
+<div class="modal-overlay" id="smart-insights-modal">
+  <div class="modal" style="max-width:500px; width:95%; max-height:85vh; display:flex; flex-direction:column; padding:20px;">
+    <div class="modal-handle"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 3px 10px rgba(0,168,132,0.25)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+        <div>
+          <div class="modal-title" style="margin:0; text-align:left; font-size:16px;">Smart Travel Insights</div>
+          <div style="font-size:11px; color:var(--muted)">Personalized mobility &amp; visa recommendations</div>
+        </div>
+      </div>
+      <button style="background:var(--bg3); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--text)" onclick="closeModal('smart-insights-modal')">✕</button>
+    </div>
+
+    <!-- Insights List Container -->
+    <div id="smart-insights-modal-container" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:2px">
+      <!-- Dynamically populated -->
+    </div>
+    <button class="secondary-btn" onclick="closeModal('smart-insights-modal')" style="margin-top:14px">Close</button>
   </div>
 </div>
 
@@ -3159,10 +3177,7 @@ function scrollToSchengenSection(){
   }, 50);
 }
 
-function renderSmartInsights(){
-  var el = document.getElementById('smart-insights-section');
-  if(!el) return;
-
+function getSmartInsightsList(){
   var insights = [];
 
   // 1. Passport Strength & Visa Free Tips
@@ -3173,7 +3188,7 @@ function renderSmartInsights(){
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h10"/></svg>',
       title: pName + ' Passport Mobility',
       body: 'Your ' + pName + ' passport grants visa-free access to top destinations like ' + popularVF.slice(0, 4).join(', ') + '. Check full visa rules in 1-tap.',
-      action: 'openVisaCheckTab()',
+      action: 'closeModal("smart-insights-modal"); openVisaCheckTab();',
       actionText: 'Check Visa Rules ➔'
     });
   }
@@ -3186,7 +3201,7 @@ function renderSmartInsights(){
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
       title: 'Schengen Rolling Window Status',
       body: 'You have used ' + schUsed + ' of 90 Schengen days. You have <strong>' + schLeft + ' safe days</strong> available in your current rolling 180-day window.',
-      action: 'scrollToSchengenSection()',
+      action: 'closeModal("smart-insights-modal"); scrollToSchengenSection();',
       actionText: 'View 90/180 Details ➔'
     });
   }
@@ -3211,36 +3226,68 @@ function renderSmartInsights(){
         icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
         title: topC + ' Stay & Tax Residency Watch',
         body: 'You have logged <strong>' + daysSpent + ' days</strong> in ' + topC + ' in ' + currentYear + '. You have <strong>' + taxRem + ' days remaining</strong> before reaching the standard 183-day physical presence tax residency threshold.',
-        action: "showPage('history')",
+        action: 'closeModal("smart-insights-modal"); showPage("history");',
         actionText: 'View Travel History ➔'
       });
     }
   }
 
+  return insights;
+}
+
+function renderSmartInsights(){
+  var el = document.getElementById('smart-insights-section');
+  if(!el) return;
+
+  var insights = getSmartInsightsList();
   if(!insights.length) {
     el.innerHTML = '';
     return;
   }
 
-  var html = '<div class="section-title">Smart Travel Insights &amp; Recommendations</div>'+
-             '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">';
+  var countText = insights.length + ' Insight' + (insights.length > 1 ? 's' : '');
+
+  el.innerHTML =
+    '<div class="section-title">Smart Travel Insights &amp; Recommendations</div>' +
+    '<div class="card" style="cursor:pointer; padding:14px 16px; margin-bottom:16px" onclick="openSmartInsightsModal()">' +
+      '<div style="display:flex; align-items:center; gap:12px">' +
+        '<div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 3px 10px rgba(0,168,132,0.22)">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>' +
+          '</svg>' +
+        '</div>' +
+        '<div style="flex:1; min-width:0">' +
+          '<div style="font-size:13.5px; font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Smart Travel Insights</div>' +
+          '<div style="font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Passport mobility, Schengen &amp; tax rules</div>' +
+        '</div>' +
+        '<div style="font-size:11px; font-weight:700; color:var(--green); background:var(--green-l); padding:4px 10px; border-radius:20px; white-space:nowrap; border:1px solid var(--green-b); flex-shrink:0">' +
+          countText +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function openSmartInsightsModal(){
+  var container = document.getElementById('smart-insights-modal-container');
+  if(!container) return;
+
+  var insights = getSmartInsightsList();
+  var html = '';
 
   insights.forEach(function(item){
     var safeAction = item.action ? item.action.replace(/"/g, '&quot;') : '';
-    html += '<div class="card" style="padding:14px 16px;border-radius:16px;background:var(--card);border:1.5px solid var(--border);box-shadow:var(--shadow-sm)">'+
-      '<div style="display:flex;align-items:flex-start;gap:12px">'+
-        '<div style="font-size:24px;line-height:1;padding:8px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">'+item.icon+'</div>'+
-        '<div style="flex:1">'+
-          '<div style="font-size:14px;font-weight:800;color:var(--text)">'+item.title+'</div>'+
-          '<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.4">'+item.body+'</div>'+
-          (item.actionText ? '<button onclick="'+safeAction+'" style="margin-top:8px;padding:4px 10px;background:var(--green-l);color:var(--green);border:1px solid var(--green-b);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">'+item.actionText+'</button>' : '')+
-        '</div>'+
-      '</div>'+
+    html += '<div class="card" style="padding:14px 16px; border-radius:16px; background:var(--card); border:1.5px solid var(--border); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:10px">' +
+      '<div style="display:flex; align-items:center; gap:10px">' +
+        '<div style="font-size:18px; line-height:1; padding:7px; background:var(--bg2); border-radius:10px; border:1px solid var(--border); flex-shrink:0; color:var(--green)">' + item.icon + '</div>' +
+        '<div style="font-size:14px; font-weight:800; color:var(--text); line-height:1.25">' + item.title + '</div>' +
+      '</div>' +
+      '<div style="font-size:12px; color:var(--muted); line-height:1.45">' + item.body + '</div>' +
+      (item.actionText ? '<div><button onclick="' + safeAction + '" style="width:100%; padding:8px 12px; background:var(--green-l); color:var(--green); border:1px solid var(--green-b); border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center">' + item.actionText + '</button></div>' : '') +
     '</div>';
   });
 
-  html += '</div>';
-  el.innerHTML = html;
+  container.innerHTML = html;
+  openModal('smart-insights-modal');
 }
 
 function getContinent(c){
@@ -6023,7 +6070,10 @@ function toggleAuthTab(tab) {
     regFields.style.display = 'none';
     if (forgotLink) forgotLink.style.display = 'inline';
     submitBtn.textContent = 'Sign In';
-    if (pwdInput) pwdInput.setAttribute('autocomplete', 'current-password');
+    if (pwdInput) {
+      pwdInput.setAttribute('autocomplete', 'current-password');
+      pwdInput.value = '';
+    }
   } else {
     tabLogin.style.color = 'var(--muted)';
     tabLogin.style.borderBottomColor = 'transparent';
@@ -6032,7 +6082,10 @@ function toggleAuthTab(tab) {
     regFields.style.display = 'block';
     if (forgotLink) forgotLink.style.display = 'none';
     submitBtn.textContent = 'Create Account';
-    if (pwdInput) pwdInput.setAttribute('autocomplete', 'new-password');
+    if (pwdInput) {
+      pwdInput.setAttribute('autocomplete', 'new-password');
+      pwdInput.value = '';
+    }
   }
 }
 
@@ -6937,8 +6990,16 @@ async function refreshAdminData() {
     const usersMap = {};
     const processDoc = function(docSnap, colName) {
       const d = docSnap.data();
-      const userEmail = d.email || (d.appState && d.appState.currentUserEmail) || (d.appState && d.appState.user && d.appState.user.email) || '';
-      const cleanEmail = userEmail.trim() ? userEmail.trim().toLowerCase() : docSnap.id;
+      let userEmail = d.email || (d.appState && d.appState.currentUserEmail) || (d.appState && d.appState.user && d.appState.user.email) || '';
+      if (!userEmail || !userEmail.includes('@')) {
+        let raw = userEmail || docSnap.id;
+        if (raw.includes('_') && !raw.includes('@')) {
+          userEmail = raw.replace(/_([a-zA-Z0-9-]+)_([a-zA-Z0-9]+)$/, '@$1.$2');
+        } else {
+          userEmail = raw;
+        }
+      }
+      const cleanEmail = userEmail.trim().toLowerCase();
       const uName = d.name || (d.appState && d.appState.user && d.appState.user.name) || 'User';
       const isPrem = !!d.isPremium || (d.appState && d.appState.user && !!d.appState.user.isPremium);
 
@@ -7851,7 +7912,7 @@ function showToast(msg){
 let obCurrent=0;
 const OB_TOTAL=6;
 
-let obAuthTab = 'register';
+let obAuthTab = 'login';
 function setObAuthTab(tab) {
   obAuthTab = tab;
   const tabReg = document.getElementById('ob-auth-tab-register');
@@ -7864,31 +7925,29 @@ function setObAuthTab(tab) {
   const pwdInput = document.getElementById('ob-auth-password');
 
   if (tab === 'login') {
-    tabReg.style.background = 'transparent';
-    tabReg.style.color = 'var(--muted)';
-    tabReg.style.boxShadow = 'none';
-    tabLog.style.background = 'var(--card)';
-    tabLog.style.color = 'var(--green)';
-    tabLog.style.boxShadow = 'var(--shadow-sm)';
-    submitBtn.textContent = 'Sign In to Cloud';
-    title.textContent = 'Welcome Back!';
-    sub.textContent = 'Sign in to sync your existing data from the cloud.';
+    if (tabReg) { tabReg.style.background = 'transparent'; tabReg.style.color = 'var(--muted)'; tabReg.style.boxShadow = 'none'; }
+    if (tabLog) { tabLog.style.background = 'var(--card)'; tabLog.style.color = 'var(--green)'; tabLog.style.boxShadow = 'var(--shadow-sm)'; }
+    if (submitBtn) submitBtn.textContent = 'Sign In to Cloud';
+    if (title) title.textContent = 'Welcome Back!';
+    if (sub) sub.textContent = 'Sign in to sync your existing data from the cloud.';
     if (forgotLink) forgotLink.style.display = 'inline-block';
     if (forgotContainer) forgotContainer.style.display = 'block';
-    if (pwdInput) pwdInput.setAttribute('autocomplete', 'current-password');
+    if (pwdInput) {
+      pwdInput.setAttribute('autocomplete', 'current-password');
+      pwdInput.value = '';
+    }
   } else {
-    tabLog.style.background = 'transparent';
-    tabLog.style.color = 'var(--muted)';
-    tabLog.style.boxShadow = 'none';
-    tabReg.style.background = 'var(--card)';
-    tabReg.style.color = 'var(--green)';
-    tabReg.style.boxShadow = 'var(--shadow-sm)';
-    submitBtn.textContent = 'Create Cloud Account';
-    title.textContent = 'Secure Cloud Backup';
-    sub.textContent = 'Optional: Create an account to securely save your travel history, active visas and get multi-device synchronization.';
+    if (tabLog) { tabLog.style.background = 'transparent'; tabLog.style.color = 'var(--muted)'; tabLog.style.boxShadow = 'none'; }
+    if (tabReg) { tabReg.style.background = 'var(--card)'; tabReg.style.color = 'var(--green)'; tabReg.style.boxShadow = 'var(--shadow-sm)'; }
+    if (submitBtn) submitBtn.textContent = 'Create Cloud Account';
+    if (title) title.textContent = 'Secure Cloud Backup';
+    if (sub) sub.textContent = 'Optional: Create an account to securely save your travel history, active visas and get multi-device synchronization.';
     if (forgotLink) forgotLink.style.display = 'none';
     if (forgotContainer) forgotContainer.style.display = 'none';
-    if (pwdInput) pwdInput.setAttribute('autocomplete', 'new-password');
+    if (pwdInput) {
+      pwdInput.setAttribute('autocomplete', 'new-password');
+      pwdInput.value = '';
+    }
   }
 }
 
@@ -8337,7 +8396,7 @@ function obGoTo(idx){
     btn.textContent=obCurrent===0 ? 'Get Started ➔' : 'Next ➔';
     skip.style.display='block';
     skip.textContent='Sign In / Register ➔';
-    skip.onclick=function(){ obGoTo(4); };
+    skip.onclick=function(){ setObAuthTab('login'); obGoTo(4); };
     btn.disabled=false;
   }
 }
