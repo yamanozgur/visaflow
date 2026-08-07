@@ -1323,7 +1323,12 @@ input:checked+.slider::before{transform:translateX(20px);}
             <label class="form-label" style="margin-bottom:0">Password</label>
             <a href="#" id="ob-auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px; display:inline-block;">Forgot Password?</a>
           </div>
-          <input class="form-input" id="ob-auth-password" type="password" placeholder="••••••••" autocomplete="current-password">
+          <div style="position:relative; width:100%;">
+            <input class="form-input" id="ob-auth-password" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:38px;">
+            <button type="button" id="ob-auth-pwd-toggle" onclick="togglePasswordVisibility('ob-auth-password', 'ob-auth-pwd-toggle')" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; z-index:2;" title="Toggle Password Visibility">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
 
         <button class="submit-btn" id="ob-auth-submit-btn" onclick="submitObAuth()" style="margin-top:16px;">Sign In to Cloud</button>
@@ -2089,7 +2094,12 @@ input:checked+.slider::before{transform:translateX(20px);}
           <label class="form-label" style="margin-bottom:0">Password</label>
           <a href="#" id="auth-forgot-password-link" onclick="handleForgotPassword(event)" style="font-size:12px; font-weight:700; color:var(--green); text-decoration:none; background:var(--green-l); padding:2px 8px; border-radius:6px;"> Forgot Password?</a>
         </div>
-        <input class="form-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+        <div style="position:relative; width:100%;">
+          <input class="form-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" style="padding-right:38px;">
+          <button type="button" id="auth-pwd-toggle" onclick="togglePasswordVisibility('auth-password', 'auth-pwd-toggle')" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center; z-index:2;" title="Toggle Password Visibility">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -2509,6 +2519,8 @@ const COUNTRIES = {
   'Belarus':       {bg:'#FFF0F0',border:'#FFCDD2',accent:'#1B5E20',code:'by'},
   'Russia':        {bg:'#FFF0F0',border:'#FFCDD2',accent:'#1565C0',code:'ru'},
   'Turkey':        {bg:'#FFF0F0',border:'#FFCDD2',accent:'#C62828',code:'tr'},
+  'Turkiye':       {bg:'#FFF0F0',border:'#FFCDD2',accent:'#C62828',code:'tr'},
+  'Türkiye':       {bg:'#FFF0F0',border:'#FFCDD2',accent:'#C62828',code:'tr'},
   'Cyprus':        {bg:'#FFF8E1',border:'#FFE082',accent:'#BF360C',code:'cy'},
   'Georgia':       {bg:'#FFF0F0',border:'#FFCDD2',accent:'#C62828',code:'ge'},
   'Armenia':       {bg:'#FFF0F0',border:'#FFCDD2',accent:'#1A237E',code:'am'},
@@ -2862,9 +2874,15 @@ function isSchengen(c){
   });
 }
 function getCS(country){
+  if(!country) return {bg:'#F5F7FA',border:'#E8ECF2',accent:'#8898AA',code:null};
   if(COUNTRIES[country]) return COUNTRIES[country];
-  for(const [k,v] of Object.entries(COUNTRIES))
-    if(country.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(country.toLowerCase())) return v;
+  var norm = typeof normalizeCountryName === 'function' ? normalizeCountryName(country) : country;
+  if(norm && COUNTRIES[norm]) return COUNTRIES[norm];
+  var cLow = country.toLowerCase().trim();
+  for(const [k,v] of Object.entries(COUNTRIES)){
+    var kLow = k.toLowerCase();
+    if(kLow === cLow || cLow.includes(kLow) || kLow.includes(cLow)) return v;
+  }
   return {bg:'#F5F7FA',border:'#E8ECF2',accent:'#8898AA',code:null};
 }
 function getFlagEmoji(code) {
@@ -5321,6 +5339,92 @@ function renderProfile(){
 
 }
 
+function normalizeCountryName(c) {
+  if (!c || typeof c !== 'string') return '';
+  var clean = c.trim();
+  var cLow = clean.toLowerCase();
+
+  if (cLow === 'united states of america' || cLow === 'usa' || cLow === 'u.s.a.' || cLow === 'us') return 'United States';
+  if (cLow === 'united kingdom' || cLow === 'uk' || cLow === 'great britain' || cLow === 'england') return 'United Kingdom';
+  if (cLow === 'viet nam') return 'Vietnam';
+  if (cLow === 'türkiye' || cLow === 'turkey') return 'Turkey';
+  if (cLow === 'the netherlands') return 'Netherlands';
+  if (cLow === 'czech republic' || cLow === 'czechia') return 'Czech Republic';
+  if (cLow === 'russian federation' || cLow === 'russia') return 'Russia';
+  if (cLow === 'korea, republic of' || cLow === 'south korea') return 'South Korea';
+  if (cLow === 'uae' || cLow === 'united arab emirates') return 'United Arab Emirates';
+
+  if (typeof COUNTRY_NAME_MAP !== 'undefined' && COUNTRY_NAME_MAP[cLow]) {
+    return COUNTRY_NAME_MAP[cLow];
+  }
+
+  if (typeof COUNTRIES !== 'undefined') {
+    if (COUNTRIES[clean]) return clean;
+    for (var k in COUNTRIES) {
+      if (k.toLowerCase() === cLow) return k;
+    }
+  }
+
+  return clean;
+}
+
+async function fetchCountryFromCoords(lat, lon) {
+  // 1. BigDataCloud API (Free, fast, CORS enabled for client-side JS)
+  try {
+    const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=en');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.countryName) return data.countryName;
+    }
+  } catch (e) {
+    console.warn('BigDataCloud geocode error', e);
+  }
+
+  // 2. OpenStreetMap Nominatim
+  try {
+    const res = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&accept-language=en');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.address && data.address.country) return data.address.country;
+    }
+  } catch (e) {
+    console.warn('Nominatim geocode error', e);
+  }
+
+  // 3. Geocode.maps.co
+  try {
+    const res = await fetch('https://geocode.maps.co/reverse?lat=' + lat + '&lon=' + lon);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.address && data.address.country) return data.address.country;
+    }
+  } catch (e) {
+    console.warn('Geocode.maps.co error', e);
+  }
+
+  return null;
+}
+
+async function fetchCountryFromIP() {
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.country_name) return data.country_name;
+    }
+  } catch (e) {}
+
+  try {
+    const res = await fetch('https://ipwho.is/');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && data.country) return data.country;
+    }
+  } catch (e) {}
+
+  return null;
+}
+
 function checkBorderOnStartup(){
   if(!navigator.geolocation) return;
   if(navigator.permissions){
@@ -5328,28 +5432,21 @@ function checkBorderOnStartup(){
       if(p.state==='granted'){
         detectBorderCrossing();
       }
-      // If 'prompt' or 'denied' — don't ask on startup, user can use GPS button in location modal
     });
   } else {
-    // Fallback: try silently, ignore errors
     detectBorderCrossing();
   }
 }
 
 function detectBorderCrossing(){
-  navigator.geolocation.getCurrentPosition(function(pos){
-    fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=en')
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        var detected = d.address && d.address.country;
-        if(!detected) return;
-        detected = normalizeCountryName(detected);
-        // Only show banner if different from current
-        if(detected === state.currentCountry) return;
-        showBorderBanner(detected);
-      })
-      .catch(function(){});
-  }, function(){}, {timeout:8000, maximumAge:300000});
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async function(pos){
+    var detected = await fetchCountryFromCoords(pos.coords.latitude, pos.coords.longitude);
+    if(!detected) return;
+    detected = normalizeCountryName(detected);
+    if(!detected || detected === state.currentCountry) return;
+    showBorderBanner(detected);
+  }, function(){}, {timeout:10000, maximumAge:300000});
 }
 
 function showBorderBanner(country){
@@ -5461,53 +5558,57 @@ function openLocationModal(){
   if(sugEl) { sugEl.style.display = 'none'; sugEl.innerHTML = ''; }
   openModal('location-modal');
 }
-function detectGPSInModal(){
-  if(!navigator.geolocation){ showToast('Geolocation not supported on this device'); return; }
+async function handleDetectGPSLocation() {
   showToast('Detecting location…');
-  navigator.geolocation.getCurrentPosition(
-    function(pos){
-      fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json&accept-language=en')
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-          var country = d.address && d.address.country;
-          if(country){
-            country = normalizeCountryName(country);
-            document.getElementById('loc-country').value = country;
-            renderLocSuggestions('');
-            showToast(country+' detected');
-          } else {
-            showToast('Could not determine country');
-          }
-        })
-        .catch(function(){ showToast('Network error — try manually'); });
-    },
-    function(err){
-      if(err.code === 1){
-        // Permission denied — guide user
+  let country = null;
+
+  if (navigator.geolocation) {
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, maximumAge: 60000 });
+      });
+      country = await fetchCountryFromCoords(pos.coords.latitude, pos.coords.longitude);
+    } catch (err) {
+      if (err.code === 1) {
         showToast('Location access denied');
-        setTimeout(function(){
+        setTimeout(function() {
           var el = document.getElementById('loc-country');
-          if(el) el.placeholder = 'Location denied — enter manually';
-          // Show helpful banner
+          if (el) el.placeholder = 'Location denied — enter manually';
           var modal = document.querySelector('#location-modal .modal');
           var existing = document.getElementById('gps-denied-banner');
-          if(modal && !existing){
+          if (modal && !existing) {
             var banner = document.createElement('div');
             banner.id = 'gps-denied-banner';
             banner.style.cssText = 'background:var(--orange-l);border:1.5px solid var(--orange-b);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12px;color:#C0521A;line-height:1.5';
             banner.innerHTML = '<strong>Location access is blocked.</strong><br>To enable: go to your browser/phone Settings → Privacy → Location → allow for this site. Then try again.';
             var arrivalLabel = modal.querySelector('.form-label');
-            if(arrivalLabel) modal.insertBefore(banner, arrivalLabel);
+            if (arrivalLabel) modal.insertBefore(banner, arrivalLabel);
           }
         }, 300);
-      } else if(err.code === 2){
-        showToast('Location unavailable — try again');
-      } else {
-        showToast('Location request timed out');
+        return;
       }
-    },
-    {timeout:10000, maximumAge:60000}
-  );
+    }
+  }
+
+  if (!country) {
+    country = await fetchCountryFromIP();
+  }
+
+  if (country) {
+    const normCountry = normalizeCountryName(country);
+    const countryEl = document.getElementById('loc-country');
+    if (countryEl) countryEl.value = normCountry;
+    if (typeof renderLocSuggestions === 'function') renderLocSuggestions('');
+    showToast(normCountry + ' detected');
+  } else {
+    showToast('Could not determine country — please enter manually');
+  }
+}
+
+function detectGPSInModal() {
+  handleDetectGPSLocation().catch(function() {
+    showToast('Could not determine country — please enter manually');
+  });
 }
 
 function filterLocCountries(val){ renderLocSuggestions(val.toLowerCase()); }
@@ -6147,6 +6248,20 @@ async function submitPasswordResetFromModal() {
       notice.style.display = 'block';
       notice.innerHTML = '<strong>Password reset request sent to ' + email + '!</strong><br><span style="opacity:0.85">Please check your Spam/Junk folder.</span>';
     }
+  }
+}
+
+function togglePasswordVisibility(inputId, btnId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  const btn = document.getElementById(btnId);
+  if (btn) {
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    btn.innerHTML = isPassword ? 
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>' : 
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
   }
 }
 
