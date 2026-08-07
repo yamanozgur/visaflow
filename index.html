@@ -2038,14 +2038,14 @@ input:checked+.slider::before{transform:translateX(20px);}
           <div style="font-size:11px;font-weight:700;color:var(--green)">ANNUAL (LAUNCH PROMO)</div>
           <div style="font-size:16px;font-weight:800;color:var(--green);margin:2px 0">$19.99<span style="font-size:11px;font-weight:400;color:var(--green)">/yr</span> <span style="font-size:11px;text-decoration:line-through;color:var(--muted);font-weight:400">$39.99</span></div>
           <div style="font-size:10px;color:var(--green);font-weight:600">~$1.66/month · 7 days free</div>
-          <div style="font-size:9.5px;color:#D97706;font-weight:700;margin-top:3px;background:rgba(245,158,11,0.12);padding:2px 6px;border-radius:6px;display:inline-block">⏳ Offer ends Sept 30, 2026</div>
+          <div style="font-size:9.5px;color:#D97706;font-weight:700;margin-top:3px;background:rgba(245,158,11,0.12);padding:2px 6px;border-radius:6px;display:inline-block">Offer ends Sept 30, 2026</div>
         </div>
       </div>
 
       <!-- Founder Lifetime Pass Banner -->
       <div style="border:1.5px dashed #F59E0B;border-radius:12px;padding:10px 12px;background:rgba(245,158,11,0.08);text-align:center;position:relative">
         <div style="display:inline-block;background:linear-gradient(135deg,#F59E0B 0%,#D97706 100%);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">
-          ⚡ FOUNDER PASS (First 200 Users Only)
+          FOUNDER PASS (First 200 Users Only)
         </div>
         <div style="font-size:16px;font-weight:800;color:var(--text)">$49.99 <span style="font-size:11px;font-weight:600;color:var(--text2)">· One-Time Payment</span></div>
         <div style="font-size:10.5px;color:var(--muted);margin-top:2px">Pay once, own forever. No recurring fees or subscriptions.</div>
@@ -2254,9 +2254,9 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-handle"></div>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
       <div style="display:flex; align-items:center; gap:10px;">
-        <div style="width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 3px 10px rgba(0,168,132,0.25)">
+        <div style="width:40px; height:40px; border-radius:14px; background:var(--green-l); border:1.5px solid var(--green-b); display:flex; align-items:center; justify-content:center; color:var(--green); flex-shrink:0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
         </div>
         <div>
@@ -2314,7 +2314,7 @@ input:checked+.slider::before{transform:translateX(20px);}
     <div class="modal-handle"></div>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <div>
-        <div class="modal-title" style="margin:0; text-align:left;">🛡️ Admin & Mgmt Panel</div>
+        <div class="modal-title" style="margin:0; text-align:left;">Admin & Mgmt Panel</div>
         <div style="font-size:12px; color:var(--muted)">Live Firebase Cloud Management</div>
       </div>
       <button style="background:var(--bg3); border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--text)" onclick="closeModal('admin-panel-modal')">✕</button>
@@ -2322,10 +2322,10 @@ input:checked+.slider::before{transform:translateX(20px);}
 
     <!-- ADMIN TABS -->
     <div style="display:flex; gap:4px; background:var(--bg2); padding:4px; border-radius:10px; margin-bottom:14px; flex-wrap:wrap">
-      <button id="admin-tab-btn-users" class="admin-tab-btn active" onclick="switchAdminTab('users')">👥 Users (<span id="admin-user-count">0</span>)</button>
-      <button id="admin-tab-btn-promos" class="admin-tab-btn" onclick="switchAdminTab('promos')">🎁 Promos (<span id="admin-promo-count">0</span>)</button>
-      <button id="admin-tab-btn-broadcast" class="admin-tab-btn" onclick="switchAdminTab('broadcast')">📢 Broadcast</button>
-      <button id="admin-tab-btn-stats" class="admin-tab-btn" onclick="switchAdminTab('stats')">📊 Stats</button>
+      <button id="admin-tab-btn-users" class="admin-tab-btn active" onclick="switchAdminTab('users')">Users (<span id="admin-user-count">0</span>)</button>
+      <button id="admin-tab-btn-promos" class="admin-tab-btn" onclick="switchAdminTab('promos')">Promos (<span id="admin-promo-count">0</span>)</button>
+      <button id="admin-tab-btn-broadcast" class="admin-tab-btn" onclick="switchAdminTab('broadcast')">Broadcast</button>
+      <button id="admin-tab-btn-stats" class="admin-tab-btn" onclick="switchAdminTab('stats')">Stats</button>
     </div>
 
     <!-- ADMIN CONTENT CONTAINER -->
@@ -2372,7 +2372,7 @@ input:checked+.slider::before{transform:translateX(20px);}
       <!-- TAB 3: BROADCAST NOTIFICATIONS -->
       <div id="admin-tab-broadcast" class="admin-tab-content" style="display:none">
         <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:14px">
-          <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text)">Send Broadcast & Notification to Users 📢</div>
+          <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text)">Send Broadcast & Notification to Users</div>
           <div style="display:flex; flex-direction:column; gap:10px">
             <div>
               <label style="font-size:11px; font-weight:700; color:var(--muted)">Notification Title</label>
@@ -2386,17 +2386,17 @@ input:checked+.slider::before{transform:translateX(20px);}
               <div style="flex:1">
                 <label style="font-size:11px; font-weight:700; color:var(--muted)">Category / Type</label>
                 <select id="admin-broadcast-type" class="form-input" style="font-size:12px; margin-top:3px">
-                  <option value="campaign">🎁 Campaign / Offer</option>
-                  <option value="announcement">📢 System Announcement</option>
+                  <option value="campaign">Campaign / Offer</option>
+                  <option value="announcement">System Announcement</option>
                   <option value="alert">Critical Alert</option>
-                  <option value="system">ℹ️ System Info</option>
+                  <option value="system">System Info</option>
                 </select>
               </div>
               <div style="flex:1">
                 <label style="font-size:11px; font-weight:700; color:var(--muted)">Target Audience</label>
                 <select id="admin-broadcast-target" class="form-input" style="font-size:12px; margin-top:3px">
-                  <option value="all">👥 All Users</option>
-                  <option value="free">🆓 Free Users Only</option>
+                  <option value="all">All Users</option>
+                  <option value="free">Free Users Only</option>
                   <option value="premium">Premium Users Only</option>
                 </select>
               </div>
@@ -2408,16 +2408,16 @@ input:checked+.slider::before{transform:translateX(20px);}
                   <option value="">(None)</option>
                   <option value="paywall">Premium Upgrade Page</option>
                   <option value="visas">My Visas Page</option>
-                  <option value="profile">👤 Profile & Passports</option>
+                  <option value="profile">Profile & Passports</option>
                 </select>
               </div>
               <div style="flex:1">
                 <label style="font-size:11px; font-weight:700; color:var(--muted)">Button Text</label>
-                <input id="admin-broadcast-action-text" class="form-input" placeholder="e.g. View ➔" style="font-size:12px; margin-top:3px">
+                <input id="admin-broadcast-action-text" class="form-input" placeholder="e.g. View Details" style="font-size:12px; margin-top:3px">
               </div>
             </div>
             <button style="background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#fff; border:none; padding:12px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; margin-top:4px; box-shadow:0 3px 10px rgba(0,168,132,0.3)" onclick="sendAdminBroadcast()">
-              📢 Send Announcement & Add to Inbox
+              Send Announcement & Add to Inbox
             </button>
           </div>
         </div>
@@ -2920,7 +2920,7 @@ function loadCountryBackground(bgId, code) {
         bg.style.backgroundSize = 'cover';
         bg.style.backgroundPosition = 'center';
         bg.style.backgroundRepeat = 'no-repeat';
-        bg.style.filter = 'brightness(1.10)';
+        bg.style.filter = 'brightness(1.10) saturate(1.10)';
       }
     };
     img.onerror = () => {
@@ -3213,7 +3213,7 @@ function getSmartInsightsList(){
       title: pName + ' Passport Mobility',
       body: 'Your ' + pName + ' passport grants visa-free access to top destinations like ' + popularVF.slice(0, 4).join(', ') + '. Check full visa rules in 1-tap.',
       action: 'closeModal("smart-insights-modal"); openVisaCheckTab();',
-      actionText: 'Check Visa Rules ➔'
+      actionText: 'Check Visa Rules'
     });
   }
 
@@ -3226,7 +3226,7 @@ function getSmartInsightsList(){
       title: 'Schengen Rolling Window Status',
       body: 'You have used ' + schUsed + ' of 90 Schengen days. You have <strong>' + schLeft + ' safe days</strong> available in your current rolling 180-day window.',
       action: 'closeModal("smart-insights-modal"); scrollToSchengenSection();',
-      actionText: 'View 90/180 Details ➔'
+      actionText: 'View 90/180 Details'
     });
   }
 
@@ -3251,7 +3251,7 @@ function getSmartInsightsList(){
         title: topC + ' Stay & Tax Residency Watch',
         body: 'You have logged <strong>' + daysSpent + ' days</strong> in ' + topC + ' in ' + currentYear + '. You have <strong>' + taxRem + ' days remaining</strong> before reaching the standard 183-day physical presence tax residency threshold.',
         action: 'closeModal("smart-insights-modal"); showPage("history");',
-        actionText: 'View Travel History ➔'
+        actionText: 'View Travel History'
       });
     }
   }
@@ -3275,9 +3275,9 @@ function renderSmartInsights(){
     '<div class="section-title">Smart Travel Insights &amp; Recommendations</div>' +
     '<div class="card" style="cursor:pointer; padding:14px 16px; margin-bottom:16px" onclick="openSmartInsightsModal()">' +
       '<div style="display:flex; align-items:center; gap:12px">' +
-        '<div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; box-shadow:0 3px 10px rgba(0,168,132,0.22)">' +
+        '<div style="width:42px; height:42px; border-radius:14px; background:var(--green-l); border:1.5px solid var(--green-b); display:flex; align-items:center; justify-content:center; color:var(--green); flex-shrink:0">' +
           '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>' +
+            '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
           '</svg>' +
         '</div>' +
         '<div style="flex:1; min-width:0">' +
@@ -3300,13 +3300,13 @@ function openSmartInsightsModal(){
 
   insights.forEach(function(item){
     var safeAction = item.action ? item.action.replace(/"/g, '&quot;') : '';
-    html += '<div class="card" style="padding:14px 16px; border-radius:16px; background:var(--card); border:1.5px solid var(--border); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:10px">' +
+    html += '<div style="padding:16px; border-radius:16px; background:var(--card); border:1.5px solid var(--border); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:12px; margin-bottom:0;">' +
       '<div style="display:flex; align-items:center; gap:10px">' +
-        '<div style="font-size:18px; line-height:1; padding:7px; background:var(--bg2); border-radius:10px; border:1px solid var(--border); flex-shrink:0; color:var(--green)">' + item.icon + '</div>' +
+        '<div style="width:38px; height:38px; border-radius:12px; background:var(--green-l); border:1px solid var(--green-b); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--green)">' + item.icon + '</div>' +
         '<div style="font-size:14px; font-weight:800; color:var(--text); line-height:1.25">' + item.title + '</div>' +
       '</div>' +
-      '<div style="font-size:12px; color:var(--muted); line-height:1.45">' + item.body + '</div>' +
-      (item.actionText ? '<div><button onclick="' + safeAction + '" style="width:100%; padding:8px 12px; background:var(--green-l); color:var(--green); border:1px solid var(--green-b); border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; text-align:center">' + item.actionText + '</button></div>' : '') +
+      '<div style="font-size:12.5px; color:var(--muted); line-height:1.45">' + item.body + '</div>' +
+      (item.actionText ? '<div style="margin-top:2px"><button onclick="' + safeAction + '" style="width:100%; padding:10px 14px; background:linear-gradient(135deg,var(--green) 0%,#00C49A 100%); color:#ffffff; border:none; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; text-align:center; box-shadow:0 2px 8px rgba(0,168,132,0.22); display:flex; align-items:center; justify-content:center; gap:6px">' + item.actionText + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>' : '') +
     '</div>';
   });
 
@@ -3589,9 +3589,17 @@ function renderCurrentLocation(){
   // Visa status label
   var statusLabel='Visitor';
   var hasResidency=state.residencies.find(function(r){return r.country.toLowerCase()===state.currentCountry.toLowerCase();});
-  var isHomeCountry = state.passports.length > 0 && state.passports.find(function(p){
-    return p.country.toLowerCase()===state.currentCountry.toLowerCase() ||
-           normalizePassport(p.country).toLowerCase()===state.currentCountry.toLowerCase();
+  var isHomeCountry = state.passports.length > 0 && state.passports.some(function(p){
+    var pCode = (getCS(p.country) || {}).code;
+    var curCode = (getCS(state.currentCountry) || {}).code;
+    if (pCode && curCode && pCode.toLowerCase() === curCode.toLowerCase()) return true;
+    var normP = (normalizeCountryName(p.country) || '').toLowerCase();
+    var normCur = (normalizeCountryName(state.currentCountry) || '').toLowerCase();
+    if (normP && normCur && normP === normCur) return true;
+    var pLow = (p.country || '').toLowerCase().trim();
+    var cLow = (state.currentCountry || '').toLowerCase().trim();
+    return pLow === cLow || pLow.includes(cLow) || cLow.includes(pLow) ||
+           normalizePassport(p.country).toLowerCase() === cLow;
   });
   var schengenVisa=state.visas.find(function(v){return v.country==='Schengen' || isSchengen(v.country);});
   var isInSchengen=isSchengen(state.currentCountry);
@@ -3613,36 +3621,36 @@ function renderCurrentLocation(){
     }
   }
 
-  // Home country with no residency — photo card, no countdown
-  if(isHomeCountry && !hasResidency){
+  // Home country — photo card, no countdown
+  if(isHomeCountry){
     const CARD_GRADIENTS={'vn':'135deg,#C62828 0%,#7B1FA2 100%','jp':'135deg,#C62828 0%,#424242 100%','th':'135deg,#4A148C 0%,#1565C0 100%','my':'135deg,#1B5E20 0%,#0D47A1 100%','sg':'135deg,#AD1457 0%,#C62828 100%','id':'135deg,#C62828 0%,#6D4C41 100%','ph':'135deg,#1A5276 0%,#C62828 100%','tr':'135deg,#C62828 0%,#4E342E 100%','de':'135deg,#212121 0%,#C62828 100%','fr':'135deg,#1565C0 0%,#C62828 100%','it':'135deg,#1B5E20 0%,#C62828 100%','es':'135deg,#E65100 0%,#C62828 100%','pt':'135deg,#1B5E20 0%,#C62828 100%','gr':'135deg,#1565C0 0%,#1A237E 100%','nl':'135deg,#E65100 0%,#1565C0 100%','gb':'135deg,#1A237E 0%,#C62828 100%','us':'135deg,#B71C1C 0%,#1A237E 100%','au':'135deg,#1A237E 0%,#C62828 100%','ae':'135deg,#1B5E20 0%,#212121 100%','kr':'135deg,#C62828 0%,#1A237E 100%','in':'135deg,#E65100 0%,#1B5E20 100%','br':'135deg,#1B5E20 0%,#F57F17 100%','mx':'135deg,#1B5E20 0%,#C62828 100%','ca':'135deg,#C62828 0%,#B71C1C 100%','eu':'135deg,#1A237E 0%,#283593 100%'};
     const homeGrad = CARD_GRADIENTS[cs.code]||('135deg,'+cs.accent+' 0%,'+cs.accent+'88 100%');
     const homePhoto = cs.code ? 'https://raw.githubusercontent.com/yamanozgur/visaflow/main/'+cs.code+'.webp' : null;
     el.innerHTML=
       '<div class="section-title">Current Location</div>'+
-      '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:180px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card-home">'+
+      '<div style="border-radius:14px;margin-bottom:12px;overflow:hidden;position:relative;min-height:180px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card-home">'+
         '<div id="loc-bg-home" style="position:absolute;inset:0;background:linear-gradient('+homeGrad+');transition:opacity 0.5s;"></div>'+
-        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.38) 100%);z-index:1;"></div>'+
-        '<div style="position:relative;z-index:2;padding:14px 16px;display:flex;flex-direction:column;min-height:180px;">'+
+        '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.12) 0%,rgba(0,0,0,0.32) 100%);z-index:1;"></div>'+
+        '<div style="position:relative;z-index:2;padding:12px 14px;display:flex;flex-direction:column;min-height:180px;">'+
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
             '<div style="display:flex;align-items:center;gap:10px">'+
-              '<div style="width:44px;height:31px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0">'+
+              '<div style="width:40px;height:28px;border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.35);flex-shrink:0">'+
                 '<img src="https://flagcdn.com/w80/'+(cs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background=\'rgba(255,255,255,0.2)\'">'+
               '</div>'+
               '<div>'+
-                '<div style="font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.5)">'+state.currentCountry+'</div>'+
-                '<div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px">Home Country</div>'+
+                '<div style="font-size:17px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.95)">'+state.currentCountry+'</div>'+
+                '<div style="font-size:11px;color:#fff;margin-top:2px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,0.9)">Home Country</div>'+
               '</div>'+
             '</div>'+
-            '<button onclick="openLocationModal()" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap">'+
-              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>'+
+            '<button onclick="openLocationModal()" style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.35);border-radius:12px;font-size:10.5px;font-weight:700;color:#334155;cursor:pointer;white-space:nowrap">'+
+              '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>'+
               'Change'+
             '</button>'+
           '</div>'+
           '<div style="flex:1"></div>'+
-          '<div style="background:rgba(20,20,20,0.35);backdrop-filter:blur(6px);border-radius:10px;padding:12px 16px;text-align:center;">'+
-            '<div style="font-size:15px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4)">You\'re home </div>'+
-            '<div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:4px">No visa or stay limit — unlimited stay</div>'+
+          '<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:8px 12px;text-align:center;">'+
+            '<div style="font-size:14px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.5)">You\'re home </div>'+
+            '<div style="font-size:10.5px;color:rgba(255,255,255,0.95);margin-top:2px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.4)">No visa or stay limit — unlimited stay</div>'+
           '</div>'+
         '</div>'+
       '</div>';
@@ -3719,24 +3727,24 @@ function renderCurrentLocation(){
   const photoUrl=cs.code?PHOTO_BASE+cs.code+'.webp':null;
   el.innerHTML=
     '<div class="section-title">Current Location</div>'+
-    '<div style="border-radius:var(--radius);margin-bottom:12px;overflow:hidden;position:relative;min-height:210px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card">'+
+    '<div style="border-radius:14px;margin-bottom:12px;overflow:hidden;position:relative;min-height:200px;box-shadow:0 8px 32px rgba(0,0,0,0.2);border:none;" id="loc-card">'+
       '<div id="loc-bg" style="position:absolute;inset:0;background:linear-gradient('+grad+');transition:opacity 0.5s;"></div>'+
-      '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.38) 100%);z-index:1;"></div>'+
-      '<div style="position:relative;z-index:2;padding:14px 16px;display:flex;flex-direction:column;min-height:210px;">'+
+      '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.12) 0%,rgba(0,0,0,0.32) 100%);z-index:1;"></div>'+
+      '<div style="position:relative;z-index:2;padding:12px 14px;display:flex;flex-direction:column;min-height:200px;">'+
 
         /* ── TOP ROW: flag + name + change ── */
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'+
-          '<div style="display:flex;align-items:center;gap:10px">'+
-            '<div style="width:44px;height:31px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.3);flex-shrink:0">'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            '<div style="width:38px;height:26px;border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.85);box-shadow:0 2px 8px rgba(0,0,0,0.35);flex-shrink:0">'+
               '<img src="https://flagcdn.com/w80/'+(cs.code||'un')+'.png" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background=\'rgba(255,255,255,0.2)\'">'+
             '</div>'+
             '<div>'+
-              '<div style="font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.5)">'+state.currentCountry+'</div>'+
-              '<div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px;font-weight:500">'+statusLabel+'</div>'+
+              '<div style="font-size:16px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.95)">'+state.currentCountry+'</div>'+
+              '<div style="font-size:10.5px;color:#fff;margin-top:1px;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,0.9)">'+statusLabel+'</div>'+
             '</div>'+
           '</div>'+
-          '<button onclick="openLocationModal()" style="display:flex;align-items:center;gap:5px;padding:7px 12px;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap">'+
-            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>'+
+          '<button onclick="openLocationModal()" style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.35);border-radius:12px;font-size:10.5px;font-weight:700;color:#334155;cursor:pointer;white-space:nowrap">'+
+            '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>'+
             'Change'+
           '</button>'+
         '</div>'+
@@ -3747,24 +3755,24 @@ function renderCurrentLocation(){
         /* ── BOTTOM: progress left + stats right ── */
         '<div style="display:flex;align-items:flex-end;gap:8px;">'+
           '<div style="flex:1;min-width:0;">'+
-            '<div style="font-size:10px;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:1px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.6);margin-bottom:5px;">Stay Duration</div>'+
-            '<div style="background:rgba(255,255,255,0.22);border-radius:6px;height:4px;overflow:hidden;margin-bottom:6px;">'+
-              '<div style="height:100%;width:'+pct+'%;background:'+warnColor+';border-radius:6px;box-shadow:0 0 6px '+warnColor+'88;"></div>'+
+            '<div style="font-size:9.5px;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.6);margin-bottom:4px;">Stay Duration</div>'+
+            '<div style="background:rgba(255,255,255,0.22);border-radius:4px;height:4px;overflow:hidden;margin-bottom:4px;">'+
+              '<div style="height:100%;width:'+pct+'%;background:'+warnColor+';border-radius:4px;box-shadow:0 0 6px '+warnColor+'88;"></div>'+
             '</div>'+
-            '<div style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.5)">'+entryDays+' / '+stayAllowed+' days</div>'+
+            '<div style="font-size:10.5px;color:rgba(255,255,255,0.9);font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.5)">'+entryDays+' / '+stayAllowed+' days</div>'+
           '</div>'+
-          '<div style="display:flex;gap:8px;flex-shrink:0;">'+
-            '<div style="background:rgba(20,20,20,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:10px;padding:8px 14px;text-align:center;flex:1">'+
-              '<div style="font-size:26px;font-weight:800;color:'+warnColor+';line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.4)">'+remaining+'</div>'+
-              '<div style="font-size:10px;color:rgba(255,255,255,0.85);margin-top:3px;font-weight:600;letter-spacing:0.3px">Days Left</div>'+
+          '<div style="display:flex;gap:6px;flex-shrink:0;">'+
+            '<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:5px 9px;text-align:center;">'+
+              '<div style="font-size:18px;font-weight:800;color:'+warnColor+';line-height:1;text-shadow:0 1px 5px rgba(0,0,0,0.5)">'+remaining+'</div>'+
+              '<div style="font-size:9px;color:#fff;margin-top:2px;font-weight:700;letter-spacing:0.2px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">Days Left</div>'+
             '</div>'+
-            '<div style="background:rgba(20,20,20,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:10px;padding:8px 14px;text-align:center;flex:1">'+
-              '<div style="font-size:26px;font-weight:800;color:#fff;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.4)">'+entryDays+'</div>'+
-              '<div style="font-size:10px;color:rgba(255,255,255,0.85);margin-top:3px;font-weight:600;letter-spacing:0.3px">Days In</div>'+
+            '<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:5px 9px;text-align:center;">'+
+              '<div style="font-size:18px;font-weight:800;color:#fff;line-height:1;text-shadow:0 1px 5px rgba(0,0,0,0.5)">'+entryDays+'</div>'+
+              '<div style="font-size:9px;color:#fff;margin-top:2px;font-weight:700;letter-spacing:0.2px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">Days In</div>'+
             '</div>'+
-            '<div style="background:rgba(20,20,20,0.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:10px;padding:8px 14px;text-align:center;flex:1">'+
-              '<div style="font-size:13px;font-weight:800;color:#fff;line-height:1.3;text-shadow:0 2px 8px rgba(0,0,0,0.4)">'+fmtDate(state.currentEntry)+'</div>'+
-              '<div style="font-size:10px;color:rgba(255,255,255,0.85);margin-top:3px;font-weight:600;letter-spacing:0.3px">Arrival</div>'+
+            '<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.35);border-radius:6px;padding:5px 9px;text-align:center;">'+
+              '<div style="font-size:10.5px;font-weight:800;color:#fff;line-height:1.2;text-shadow:0 1px 5px rgba(0,0,0,0.5)">'+fmtDate(state.currentEntry)+'</div>'+
+              '<div style="font-size:9px;color:#fff;margin-top:2px;font-weight:700;letter-spacing:0.2px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">Arrival</div>'+
             '</div>'+
           '</div>'+
         '</div>'+
@@ -6911,10 +6919,10 @@ async function sendAdminBroadcast() {
   }
 
   var icons = {
-    campaign: '🎁',
-    announcement: '📢',
-    alert: '⚠️',
-    system: 'ℹ️'
+    campaign: 'gift',
+    announcement: 'mega',
+    alert: 'alert',
+    system: 'bell'
   };
 
   var broadcastObj = {
@@ -6923,7 +6931,7 @@ async function sendAdminBroadcast() {
     body: body,
     type: type,
     target: target,
-    icon: icons[type] || '📣',
+    icon: icons[type] || 'bell',
     date: new Date().toISOString().split('T')[0],
     timestamp: Date.now(),
     actionTarget: actionTarget || null,
@@ -6958,13 +6966,13 @@ async function sendAdminBroadcast() {
     try {
       const { db, doc, setDoc } = window.firebaseServices;
       await setDoc(doc(db, "announcements", broadcastObj.id), broadcastObj);
-      showToast('📢 Announcement published to cloud database!');
+      showToast('Announcement published to cloud database!');
     } catch(err) {
       console.warn("Firestore broadcast save note:", err);
-      showToast('Announcement posted locally 📢');
+      showToast('Announcement posted locally');
     }
   } else {
-    showToast('Announcement published successfully! 📢');
+    showToast('Announcement published successfully!');
   }
 
   if (titleEl) titleEl.value = '';
@@ -7009,12 +7017,12 @@ async function renderAdminBroadcastHistory() {
     var bId = b.id || '';
     html += '<div style="background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center">'+
       '<div style="flex:1; padding-right:8px">'+
-        '<div style="font-size:12px; font-weight:700; color:var(--text)">' + (b.icon || '📣') + ' ' + b.title + '</div>'+
+        '<div style="font-size:12px; font-weight:700; color:var(--text)">' + b.title + '</div>'+
         '<div style="font-size:11px; color:var(--muted); margin-top:2px">' + b.body + '</div>'+
       '</div>'+
       '<div style="display:flex; align-items:center; gap:8px">'+
         '<span style="font-size:10px; color:var(--muted); white-space:nowrap">' + (b.date || '') + '</span>'+
-        (bId ? '<button onclick="deleteAdminBroadcast(\'' + bId + '\')" style="background:none; border:none; color:var(--red); font-size:13px; cursor:pointer; padding:2px 4px" title="Delete Announcement">🗑️</button>' : '')+
+        (bId ? '<button onclick="deleteAdminBroadcast(\'' + bId + '\')" style="background:none; border:none; color:var(--red); font-size:13px; font-weight:bold; cursor:pointer; padding:2px 4px" title="Delete Announcement">✕</button>' : '')+
       '</div>'+
     '</div>';
   });
@@ -7044,7 +7052,7 @@ async function deleteAdminBroadcast(bcastId) {
     if (typeof renderInbox === 'function') renderInbox();
   }
 
-  showToast('Announcement deleted 🗑️');
+  showToast('Announcement deleted');
   renderAdminBroadcastHistory();
 }
 
@@ -7227,22 +7235,22 @@ function renderAdminUsers(users) {
           '<div style="font-size:13px; font-weight:700; color:var(--text); word-break:break-all; display:flex; align-items:center">'+email+providerBadge+'</div>'+
           '<div style="font-size:11px; color:var(--muted); margin-top:2px">'+name+' · Kayıt/Güncelleme: '+dateStr+'</div>'+
           '<div style="font-size:11px; color:var(--text); margin-top:4px; display:flex; gap:10px; flex-wrap:wrap">'+
-            '<span>⏱️ Toplam Süre: <b>'+formatActiveTime(activeSec)+'</b></span>'+
-            '<span>🟢 Son Aktif: <b>'+formatRelativeTime(lastActiveIso)+'</b></span>'+
+            '<span>Toplam Süre: <b>'+formatActiveTime(activeSec)+'</b></span>'+
+            '<span>Son Aktif: <b>'+formatRelativeTime(lastActiveIso)+'</b></span>'+
           '</div>'+
         '</div>'+
-        '<span style="font-size:11px; font-weight:800; padding:3px 8px; border-radius:12px; background:'+(isPrem ? 'var(--orange-l)' : 'var(--bg3)')+'; color:'+(isPrem ? 'var(--orange)' : 'var(--muted)')+'; border:1px solid '+(isPrem ? 'var(--orange-b)' : 'var(--border)')+'">'+
-          (isPrem ? '⭐ PREMIUM' : '🆓 FREE')+
+        '<span style="font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:12px; background:'+(isPrem ? 'var(--orange-l)' : 'var(--bg3)')+'; color:'+(isPrem ? 'var(--orange)' : 'var(--muted)')+'; border:1px solid '+(isPrem ? 'var(--orange-b)' : 'var(--border)')+'">'+
+          (isPrem ? 'PREMIUM' : 'FREE')+
         '</span>'+
       '</div>'+
       '<div style="display:flex; gap:6px; margin-top:4px">'+
         (!isPrem ?
           '<button style="flex:1; background:var(--green); color:#fff; border:none; padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer" onclick="grantAdminUserPremium(\''+email+'\', \''+u.id+'\', \''+u.col+'\', true)">'+
-            '🎁 Grant Premium'+
+            'Grant Premium'+
           '</button>'
         :
           '<button style="flex:1; background:var(--bg3); color:var(--red); border:1px solid var(--border); padding:6px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer" onclick="grantAdminUserPremium(\''+email+'\', \''+u.id+'\', \''+u.col+'\', false)">'+
-            '❌ Revoke Premium'+
+            'Revoke Premium'+
           '</button>'
         )+
         '<button style="background:rgba(239, 68, 68, 0.15); color:var(--red); border:1px solid rgba(239, 68, 68, 0.3); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px" onclick="deleteAdminUser(\''+email+'\', \''+u.id+'\', \''+u.col+'\')">'+
@@ -7316,7 +7324,7 @@ async function deleteAdminUser(email, docId, collectionName) {
       });
     } catch(e) {}
 
-    showToast('🗑️ Account ' + cleanEmail + ' deleted from Cloud!');
+    showToast('Account ' + cleanEmail + ' deleted from Cloud');
     await refreshAdminData();
   } catch (err) {
     console.error("Failed to delete user:", err);
@@ -7386,7 +7394,7 @@ async function grantAdminUserPremium(email, docId, collectionName, enable) {
       renderProfile();
     }
 
-    showToast(enable ? '⭐ Premium granted to ' + email : 'Revoked Premium from ' + email);
+    showToast(enable ? 'Premium granted to ' + email : 'Revoked Premium from ' + email);
     await refreshAdminData();
   } catch (err) {
     console.error("Failed to update user status:", err);
@@ -7454,7 +7462,7 @@ async function createAdminPromoCode() {
     }, { merge: true });
 
     codeInput.value = '';
-    showToast('🎁 Promo Code "' + code + '" created in Cloud!');
+    showToast('Promo Code "' + code + '" created in Cloud');
     refreshAdminData();
   } catch (err) {
     console.error("Failed to create promo code:", err);
@@ -7492,7 +7500,7 @@ async function redeemPromoCode() {
     renderAll();
     renderProfile();
     closeModal('paywall-modal');
-    showToast('🎉 Promo code applied! 1-Month Premium activated!');
+    showToast('Promo code applied! 1-Month Premium activated!');
     return;
   }
 
@@ -7516,7 +7524,7 @@ async function redeemPromoCode() {
             usedCount: (data.usedCount || 0) + 1
           }, { merge: true });
 
-          showToast('🎉 Promo code "' + code + '" applied! Premium activated!');
+          showToast('Promo code "' + code + '" applied! Premium activated!');
           return;
         }
       }
@@ -7707,7 +7715,7 @@ function renderFootprintCard() {
     topCountryName = stats.topCountry || stats.uniqueCountries[0];
     categorySubtitle = 'TOP DESTINATION';
     if (stats.topCountryDays > 0) {
-      topCountryDaysText = '📍 ' + stats.topCountryDays + (stats.topCountryDays === 1 ? ' Day Stayed' : ' Days Stayed');
+      topCountryDaysText = stats.topCountryDays + (stats.topCountryDays === 1 ? ' Day Stayed' : ' Days Stayed');
     }
     var topCs = getCS(topCountryName);
     bgPhotoUrl = (topCs && topCs.code) ? 
